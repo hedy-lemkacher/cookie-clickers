@@ -333,7 +333,7 @@ function renderCasinoPane() {
   const result = S.casino.lastResult;
   const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 15 minutes.';
   const resultMarkup = result
-    ? '<span class="casino-result-number">' + result.number + '</span><span class="casino-result-color ' + result.color + '">' + result.color.toUpperCase() + '</span><small>' + (result.won ? 'GAGNÉ +' + fmt(result.payout) + ' cookies' : 'PERDU · mise de ' + fmt(result.stake)) + '</small>'
+    ? '<span class="casino-result-color ' + result.color + '">' + result.color.toUpperCase() + '</span><small>' + (result.won ? 'GAGNÉ +' + fmt(result.payout) + ' cookies' : 'PERDU · mise de ' + fmt(result.stake)) + '</small>'
     : 'Choisissez votre mise et votre pari.';
   const numberButtons = '';
   const wheelNumbers = Array.from({ length: 10 }, (_, n) => '<span style="--angle:' + (n * (360 / 10)) + 'deg"></span>').join('');
