@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookie Clicker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ Colonne gauche : le gros cookie ============ -->
+  <section class="left">
+    <canvas id="rain"></canvas>
+    <div class="world-bar" aria-label="Gestion des mondes">
+      <div class="world-current"><span id="worldName">Aucun monde</span><small id="worldMode">Créez votre premier monde</small></div>
+      <select id="worldSelect" aria-label="Changer de monde"></select>
+      <button id="newWorld" type="button">+ Monde</button>
+      <button id="deleteWorld" type="button" aria-label="Supprimer le monde actif">Supprimer</button>
+    </div>
+    <div class="bakery" id="bakery">La boulangerie de tm251297</div>
+    <div class="counter">
+      <div id="count">0</div>
+      <div class="label">cookies</div>
+      <div id="cps">par seconde : 0</div>
+      <div id="buff"></div>
+    </div>
+    <div class="fz" id="fz">
+      <div class="fz-label"><span id="fzLabel">Prochaine frénésie</span><span id="fzTime"></span></div>
+      <div class="fz-bar"><i id="fzFill"></i></div>
+    </div>
+    <div class="cookie-zone">
+      <div class="rays"></div>
+      <div class="glow"></div>
+      <div class="combo" id="combo"><span id="comboText">Combo ×1</span><div class="cb"><i id="comboFill"></i></div></div>
+      <button id="cookie" aria-label="Cliquer sur le cookie" tabindex="-1">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <radialGradient id="dough" cx="38%" cy="32%" r="75%">
+              <stop id="d0" offset="0" stop-color="#f6cd86"/>
+              <stop id="d1" offset=".55" stop-color="#dc9a4f"/>
+              <stop id="d2" offset="1" stop-color="#a5602a"/>
+            </radialGradient>
+          </defs>
+          <path id="ckEdge" d="M100 7C148 3 197 45 193 99c3 52-41 96-93 94C46 197 4 152 7 101 3 49 49 10 100 7Z" fill="url(#dough)" stroke="#8a4c1c" stroke-width="3"/>
+          <path d="M42 64c10-18 30-30 52-33" stroke="#fff4" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <g id="chips" fill="#4b2411">
+            <path d="M58 52l14-5 7 11-9 10-13-4z"/>
+            <path d="M118 40l13 2 2 12-12 6-8-9z"/>
+            <path d="M150 88l12 4-1 13-13 3-5-11z"/>
+            <path d="M92 90l14-3 5 12-10 9-11-6z"/>
+            <path d="M44 106l12-2 5 12-9 8-10-7z"/>
+            <path d="M78 140l13-4 7 11-9 9-12-5z"/>
+            <path d="M128 132l14 1 3 13-12 7-9-9z"/>
+            <path d="M104 160l9 2 1 9-9 4-5-7z"/>
+            <path d="M160 58l7 3-1 8-8 1-2-7z"/>
+            <path d="M30 80l7 1 1 8-7 3-4-6z"/>
+          </g>
+          <g id="chipsHi" fill="#7a3e1d" opacity=".8">
+            <path d="M62 53l7-2 3 5-5 4z"/>
+            <path d="M121 43l6 1 1 5-6 2z"/>
+            <path d="M96 92l7-1 2 5-6 3z"/>
+            <path d="M82 142l6-2 3 5-5 3z"/>
+            <path d="M131 135l7 0 1 6-6 2z"/>
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="mini-stats">
+      <span id="clickPower">+1 par clic</span>
+      <span id="bldTotal">0 bâtiment</span>
+    </div>
+    <div class="milestone">
+      <div class="ms-label"><span>Prochain palier</span><b id="msNext">1 000</b></div>
+      <div class="ms-bar"><i id="msFill"></i></div>
+    </div>
+  </section>
+
+  <!-- ============ Colonne du milieu : actualités + onglets ============ -->
+  <section class="middle">
+    <div class="news"><b>INFOS</b><span id="newsText">Vous rêvez de cookies. Et si vous en faisiez ?</span></div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="showcase" class="on">🏪 Vitrine</button>
+      <button data-tab="events">🎉 Événements<i class="dot" id="dotEvents"></i></button>
+      <button data-tab="play">🎮 Jouer<i class="dot" id="dotPlay"></i></button>
+      <button data-tab="ach">🏆 Succès</button>
+      <button data-tab="style">🎨 Style</button>
+      <button data-tab="worlds">🌍 Mondes</button>
+      <button data-tab="leaderboard">📊 Performances</button>
+    </nav>
+
+    <div class="pane on" id="showcase">
+      <div class="empty" id="empty"><span class="big">🏪</span>Votre boulangerie est vide.<br>Cliquez sur le cookie puis achetez vos premiers bâtiments dans la boutique.</div>
+    </div>
+
+    <div class="pane" id="events"></div>
+
+    <div class="pane" id="play">
+      <div class="pane-intro">
+        <h3>Fête foraine</h3>
+        <p>Des mini-jeux pour gagner des cookies autrement. Les gains dépendent de votre production par seconde, et chaque jeu doit se recharger avant de pouvoir y rejouer.</p>
+      </div>
+      <div class="game-grid" id="playGrid"></div>
+    </div>
+
+    <div class="pane" id="ach">
+      <div class="card">
+        <h3 class="card-title"><span>Succès</span><span id="achCount">0 / 0</span></h3>
+        <div class="ach-grid" id="achGrid"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title"><span>Statistiques</span></h3>
+        <div class="stats-grid" id="statsGrid"></div>
+      </div>
+      <div class="card ascend">
+        <h3 class="card-title"><span>😇 Ascension</span></h3>
+        <p>Quand votre boulangerie devient gigantesque, vous pouvez tout recommencer à zéro en échange de <b>pépites célestes</b>. Chaque pépite donne <b>+2 % de production pour toujours</b>. Vos succès, votre style et vos statistiques sont conservés.</p>
+        <div id="ascInfo"></div>
+        <button class="big-btn" id="ascBtn">Faire une ascension</button>
+      </div>
+      <button id="reset">Effacer complètement ma partie</button>
+    </div>
+
+    <div class="pane" id="style">
+      <div class="card">
+        <h3 class="card-title"><span>Nom de la boulangerie</span></h3>
+        <input class="text-input" id="nameInput" maxlength="40" spellcheck="false">
+      </div>
+      <div class="card">
+        <h3 class="card-title"><span>Couleur du fond</span></h3>
+        <div class="swatches" id="bgSwatches"></div>
+        <label class="custom-row" id="bgCustomRow">Couleur personnalisée <input type="color" id="bgPicker"></label>
+      </div>
+      <div class="card">
+        <h3 class="card-title"><span>Couleur du cookie</span></h3>
+        <div class="swatches" id="ckSwatches"></div>
+        <label class="custom-row" id="ckCustomRow">Couleur personnalisée <input type="color" id="ckPicker"></label>
+      </div>
+      <div class="card">
+        <h3 class="card-title"><span>Options</span></h3>
+        <label class="opt">Pluie de cookies en fond <input type="checkbox" id="optRain"></label>
+        <label class="opt">Affichage des grands nombres
+          <select id="optFmt">
+            <option value="words">1,5 milliard</option>
+            <option value="short">1,5 Md</option>
+            <option value="sci">1,5e9</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="pane" id="worlds">
+      <div class="pane-intro"><h3>Vos mondes</h3><p>Chaque monde possède ses cookies, bâtiments et améliorations indépendants. Le mode choisi à la création reste définitif.</p></div>
+      <div class="card world-menu-card">
+        <h3 class="card-title"><span>Changer de monde</span><span id="worldMenuCount">0 / 5</span></h3>
+        <select id="worldMenuSelect" class="text-input" aria-label="Choisir un monde"></select>
+        <div class="world-menu-meta" id="worldMenuMeta"></div>
+        <div class="world-actions"><button id="worldMenuDelete" type="button">Supprimer ce monde</button><button id="worldMenuNew" class="big-btn" type="button">Créer un monde</button></div>
+      </div>
+    </div>
+
+    <div class="pane" id="leaderboard">
+      <div class="pane-intro"><h3>Performances Speedrun</h3><p>Les records enregistrés dans vos mondes Speedrun, classés du meilleur temps au moins bon.</p></div>
+      <div class="card performance-card">
+        <div class="table-wrap"><table class="performance-table"><thead><tr><th>Position</th><th>Monde</th><th>Joueur</th><th>Objectif</th><th>Temps</th></tr></thead><tbody id="performanceRows"></tbody></table></div>
+        <p class="table-note">Le classement mondial nécessite la connexion Supabase décrite dans le README.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Colonne droite : la boutique ============ -->
+  <aside class="store">
+    <div class="store-head">
+      <h2>Boutique</h2>
+      <div class="amount" id="amount">
+        <button data-n="1" class="on">×1</button>
+        <button data-n="10">×10</button>
+        <button data-n="100">×100</button>
+        <button data-n="-1">Max</button>
+      </div>
+    </div>
+    <div class="section-title">Améliorations</div>
+    <div class="upgrades" id="upgrades"></div>
+    <div class="section-title">Bâtiments</div>
+    <div class="store-list" id="buildings"></div>
+  </aside>
+</div>
+
+<button id="golden" aria-label="Cookie doré">
+  <svg viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <radialGradient id="gold" cx="38%" cy="32%" r="75%">
+        <stop offset="0" stop-color="#fff3b0"/>
+        <stop offset=".5" stop-color="#ffc93c"/>
+        <stop offset="1" stop-color="#c98a00"/>
+      </radialGradient>
+    </defs>
+    <path d="M100 7C148 3 197 45 193 99c3 52-41 96-93 94C46 197 4 152 7 101 3 49 49 10 100 7Z" fill="url(#gold)" stroke="#a36d00" stroke-width="4"/>
+    <g fill="#d99a00"><circle cx="66" cy="60" r="10"/><circle cx="125" cy="50" r="8"/><circle cx="100" cy="100" r="11"/><circle cx="55" cy="118" r="9"/><circle cx="140" cy="130" r="10"/><circle cx="90" cy="150" r="8"/></g>
+  </svg>
+</button>
+
+<div id="evBanner"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head"><h3 id="mTitle"></h3><span id="mInfo"></span><button id="mClose" aria-label="Fermer">✕</button></div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<div id="toasts"></div>
+
+<div class="world-modal" id="worldModal" aria-hidden="true">
+  <div class="world-modal-card">
+    <h2 id="worldModalTitle">Créer un monde</h2>
+    <p>Chaque monde possède sa propre progression. Le mode ne pourra plus être changé.</p>
+    <label>Nom du monde <input id="worldNameInput" class="text-input" maxlength="32" placeholder="Ma boulangerie"></label>
+    <label>Mode <select id="worldModeInput" class="text-input">
+      <option value="classic">CLASSIQUE</option>
+      <option value="speedrun">SPEEDRUN</option>
+    </select></label>
+    <label id="worldGoalRow">Objectif Speedrun <input id="worldGoalInput" class="text-input" type="number" value="500000" readonly></label>
+    <div class="world-actions"><button id="cancelWorld" type="button">Annuler</button><button id="createWorld" class="big-btn" type="button">Créer le monde</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
+
