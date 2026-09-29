@@ -1248,7 +1248,7 @@ const GAMES = [
   { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true, weight: 1 },
 ];
 const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
-const gameReady = (g) => Date.now() >= (S.games[g.id] || 0);
+const gameReady = (g) => window.__adminMode || Date.now() >= (S.games[g.id] || 0);
 /* Gain maximum = 5 minutes de production (avec un minimum en début de partie) */
 const gameMax = () => Math.max(steadyCps() * 300, multiplier('cursor') * 200 + 100) * Math.pow(1.4, countUps('ticket'));
 const dailyReward = () => Math.max(steadyCps() * 600, 500);
@@ -1280,7 +1280,7 @@ function buildPlayPane() {
 function updatePlayPane() {
   const now = Date.now();
   const dBtn = document.querySelector('[data-play="daily"]');
-  dBtn.disabled = now < S.daily;
+  dBtn.disabled = !window.__adminMode && now < S.daily;
   dBtn.textContent = now < S.daily ? 'Revenez dans ' + fmtTime((S.daily - now) / 1000) : 'Ouvrir le cadeau';
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
   for (const g of GAMES) {
@@ -2555,7 +2555,7 @@ function initFlappy() {
     const maxAttempts = 3 + templeExtraAttempts();
     const attempts = S.games['flappy'].length;
     const cost = Math.max(1, cps() * 3 * 300);
-    if (attempts >= maxAttempts) {
+    if (attempts >= maxAttempts && !window.__adminMode) {
       btn.disabled = true;
       const oldest = S.games['flappy'][0];
       btn.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
