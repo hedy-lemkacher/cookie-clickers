@@ -565,9 +565,9 @@ function allowClick() {
   
   clickTimes = clickTimes.filter((time) => now - time < 1000);
   if (clickTimes.length >= 15) {
-    clickBlockedUntil = now + 2000;
+    clickBlockedUntil = now + 20000;
     clickTimes = [];
-    toast('🛡️', 'Protection anti-spam', 'Ralentissement temporaire des clics.');
+    toast('🛡️', 'Protection anti-spam', 'Trop de clics ! Blocage de 20 secondes.');
     return false;
   }
   clickTimes.push(now);
