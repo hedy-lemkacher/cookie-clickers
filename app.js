@@ -524,11 +524,30 @@ const comboCap = () => 2 + countUps('combo');
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
 function clickBase() { return multiplier('cursor') + cps() * 0.01 * countUps('mouse'); }
 function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
+let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
   const now = Date.now();
   if (now < clickBlockedUntil) return false;
+  
+  const diff = now - lastRawClick;
+  lastRawClick = now;
+  
+  if (diff < 30) {
+    fastClickWarnings++;
+    if (fastClickWarnings >= 5) {
+      clickBlockedUntil = now + 5000;
+      clickTimes = [];
+      fastClickWarnings = 0;
+      toast('🛡️', 'Autoclicker détecté', 'Vitesse anormale. Blocage de 5 s.');
+      return false;
+    }
+    return false;
+  } else if (fastClickWarnings > 0 && diff > 100) {
+    fastClickWarnings--;
+  }
+  
   clickTimes = clickTimes.filter((time) => now - time < 1000);
-  if (clickTimes.length >= 25) {
+  if (clickTimes.length >= 15) {
     clickBlockedUntil = now + 2000;
     clickTimes = [];
     toast('🛡️', 'Protection anti-spam', 'Ralentissement temporaire des clics.');
