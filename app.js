@@ -1140,17 +1140,17 @@ function renderEventsPane() {
    MINI-JEUX
    ===================================================================== */
 const GAMES = [
-  { id: 'reaction', icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
-  { id: 'simon',   icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.' },
-  { id: 'whack',   icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.' },
-  { id: 'find',    icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.' },
-  { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
-  { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
-  { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
-  { id: 'shop',   icon: '🛒', name: 'Vente de cookies',   cd: 15, start: gameShop,   desc: 'Servez un maximum de clients en 30 secondes.' },
-  { id: 'catch',  icon: '🧺', name: 'Attrape-cookies',    cd: 12, start: gameCatch,  desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
-  { id: 'memory', icon: '🃏', name: 'Memory gourmand',    cd: 15, start: gameMemory, desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.' },
-  { id: 'wheel',  icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,  desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true },
+  { id: 'reaction', req: 0,          icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
+  { id: 'simon',    req: 500,        icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.' },
+  { id: 'whack',    req: 5000,       icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.' },
+  { id: 'find',     req: 50000,      icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.' },
+  { id: 'rush',     req: 250000,     icon: '⚡', name: 'Rush de clics',     cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
+  { id: 'recipe',   req: 1000000,    icon: '🥣', name: 'Recette express',   cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
+  { id: 'oven',     req: 5000000,    icon: '🔥', name: 'Sortie du four',    cd: 12, start: gameOven,     desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
+  { id: 'shop',     req: 25000000,   icon: '🛒', name: 'Vente de cookies',  cd: 15, start: gameShop,     desc: 'Servez un maximum de clients en 30 secondes.' },
+  { id: 'catch',    req: 100000000,  icon: '🧺', name: 'Attrape-cookies',   cd: 12, start: gameCatch,    desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
+  { id: 'memory',   req: 500000000,  icon: '🃏', name: 'Memory gourmand',   cd: 15, start: gameMemory,   desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.' },
+  { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true },
 ];
 const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
 const gameReady = (g) => Date.now() >= (S.games[g.id] || 0);
@@ -1190,11 +1190,11 @@ function updatePlayPane() {
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
   for (const g of GAMES) {
     const btn = document.querySelector('[data-play="' + g.id + '"]');
-    const unlocked = !g.unlock || g.unlock();
+    const unlocked = !g.req || S.baked >= g.req;
     if (!unlocked) {
       btn.disabled = true;
-      btn.textContent = 'Débloqué à 1 000 000 cuits';
-      document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Le casino attend votre millionième cookie.';
+      btn.textContent = 'Verrouillé';
+      document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Débloqué à <b>' + fmt(g.req) + '</b> cookies cuits.';
       continue;
     }
     const ready = gameReady(g);
