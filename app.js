@@ -2686,15 +2686,31 @@ function templeExtraAttempts() {
 }
 
 function initTemple() {
-  const tab = document.getElementById('templeTab');
   const chipsEl = document.getElementById('templeChips');
   const grid = document.getElementById('templeGrid');
   if (!S.temple) S.temple = [];
 
   function renderTemple() {
     const unlocked = S.bakedAll >= 25e9;
-    if (tab) tab.style.display = unlocked ? '' : 'none';
     if (!chipsEl || !grid) return;
+
+    if (!unlocked) {
+      const needed = 25e9 - S.bakedAll;
+      const progress = Math.min(100, S.bakedAll / 25e9 * 100);
+      chipsEl.textContent = '';
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:30px 10px;">
+          <div style="font-size:60px; margin-bottom:10px; filter:grayscale(1) opacity(0.5);">🏆</div>
+          <h4 style="color:#ffeb3b; margin-bottom:8px;">Temple verrouillé</h4>
+          <p style="color:#ccc; margin-bottom:14px;">Cuisez <b style="color:#ffb347;">${fmt(needed)}</b> cookies de plus pour ouvrir le Temple des Légendes.</p>
+          <div style="background:#0005; border-radius:8px; height:14px; overflow:hidden; margin:0 auto; max-width:300px;">
+            <div style="height:100%; width:${progress.toFixed(1)}%; background:linear-gradient(90deg,#9b59b6,#ffeb3b); transition:width 0.5s;"></div>
+          </div>
+          <p style="color:#888; margin-top:8px; font-size:12px;">${progress.toFixed(1)}% accompli</p>
+        </div>`;
+      return;
+    }
+
     chipsEl.textContent = '✨ Pépites célestes disponibles : ' + S.chips;
     grid.innerHTML = '';
     TEMPLE_UPGRADES.forEach(u => {
@@ -2721,16 +2737,10 @@ function initTemple() {
   }
 
   renderTemple();
-  // Re-render when tab switches to temple
   document.getElementById('tabs').addEventListener('click', (e) => {
-    if (e.target.dataset.tab === 'temple') renderTemple();
+    if (e.target.closest('[data-tab]')?.dataset.tab === 'temple') renderTemple();
   });
-  // Also check every 5s if the tab should unlock
   setInterval(() => {
-    if (S.bakedAll >= 25e9 && tab && tab.style.display === 'none') {
-      tab.style.display = '';
-      toast('🏆', 'Temple des Légendes débloqué !', '25 milliards de cookies cuits !');
-    }
     if (document.querySelector('[data-tab="temple"].on')) renderTemple();
   }, 5000);
 }
