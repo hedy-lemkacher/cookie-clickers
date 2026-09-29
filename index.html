@@ -23,6 +23,7 @@
     <button data-menu-tab="style" type="button">🎨 <span>Style / personnalisation</span></button>
     <button data-menu-tab="ach" type="button">🏆 <span>Succès</span></button>
     <button data-menu-tab="leaderboard" type="button">📊 <span>Performances / statistiques</span></button>
+    <button data-menu-tab="secret" type="button">🔐 <span>Code secret</span></button>
   </nav>
 </aside>
 
@@ -177,6 +178,17 @@
       <div class="card performance-card">
         <div class="table-wrap"><table class="performance-table"><thead><tr><th>Position</th><th>Monde</th><th>Joueur</th><th>Objectif</th><th>Temps</th></tr></thead><tbody id="performanceRows"></tbody></table></div>
         <p class="table-note">Le classement mondial nécessite la connexion Supabase décrite dans le README.</p>
+      </div>
+    </div>
+
+    <div class="pane" id="secret">
+      <div class="pane-intro"><h3>Mode développeur</h3><p>Entrez le code secret pour tester rapidement toutes les fonctionnalités du jeu.</p></div>
+      <div class="card secret-card">
+        <div class="secret-icon">🔐</div>
+        <h3>Code d’accès</h3>
+        <input id="secretCode" class="text-input secret-input" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="CODE">
+        <button id="secretActivate" class="big-btn" type="button">Activer le mode développeur</button>
+        <p id="secretStatus" class="secret-status">Mode développeur désactivé.</p>
       </div>
     </div>
   </section>

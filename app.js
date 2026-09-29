@@ -174,6 +174,7 @@ function freshState() {
     gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
+    cheat: false,
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
 }
@@ -277,6 +278,29 @@ function updateCasinoLimit() {
   const left = casinoTimeLeft();
   limit.textContent = casinoRemaining() + ' / 5 mises restantes · nouvelle série dans ' + fmtTime(left / 1000);
 }
+function activateSecretCode() {
+  const input = $('#secretCode'), status = $('#secretStatus');
+  if (input.value.trim().toUpperCase() !== 'LMK') {
+    status.textContent = 'Code incorrect.';
+    status.classList.remove('on');
+    return;
+  }
+  S.cheat = true;
+  S.cookies = Number.MAX_VALUE;
+  S.baked = Number.MAX_VALUE;
+  S.bakedAll = Number.MAX_VALUE;
+  BUILDINGS.forEach((building) => { S.owned[building.id] = 1000; });
+  UPGRADES.forEach((upgrade) => { if (!S.ups.includes(upgrade.id)) S.ups.push(upgrade.id); });
+  recalc();
+  status.textContent = 'Mode développeur activé : cookies infinis et améliorations débloquées.';
+  status.classList.add('on');
+  input.value = '';
+  toast('🔐', 'Mode développeur', 'Toutes les améliorations sont accessibles.');
+  refreshAll();
+  save();
+}
+$('#secretActivate').addEventListener('click', activateSecretCode);
+$('#secretCode').addEventListener('keydown', (event) => { if (event.key === 'Enter') activateSecretCode(); });
 function renderCasinoPane() {
   const box = $('#casinoPane');
   if (!box) return;
@@ -1941,7 +1965,7 @@ function refreshAll() {
 }
 const msLevel = () => S.baked >= 1000 ? Math.floor(Math.log10(S.baked) / 3) : 0;
 function renderNumbers(now) {
-  $('#count').textContent = fmt(S.cookies);
+  $('#count').textContent = S.cheat ? '∞' : fmt(S.cookies);
   $('#cps').textContent = 'par seconde : ' + fmt(cps(), true);
   const base = steadyCps();
   $('#clickPower').textContent = '+' + fmt(clickPower(), true) + ' par clic' +
