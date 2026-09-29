@@ -792,23 +792,3 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 }
 @media (prefers-reduced-motion: reduce) {
 }
-
-.promo-link {
-  display: block;
-  margin: 15px auto;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 80%;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.promo-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
-}
