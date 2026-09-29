@@ -2398,6 +2398,16 @@ function loop() {
   document.body.classList.toggle('clickfrenzy', now < clickFrenzyUntil);
   drawRain(Math.min(dt, 0.1));
   renderNumbers(now);
+  
+  const banScreen = document.getElementById('banScreen');
+  const banTimer = document.getElementById('banTimer');
+  if (now < clickBlockedUntil) {
+    if (!banScreen.classList.contains('on')) banScreen.classList.add('on');
+    banTimer.textContent = Math.ceil((clickBlockedUntil - now) / 1000);
+  } else if (banScreen.classList.contains('on')) {
+    banScreen.classList.remove('on');
+  }
+  
   slowTimer += dt;
   secTimer += dt;
   if (slowTimer > 0.2) { slowTimer = 0; refreshStore(); refreshTip(); }

@@ -808,3 +808,21 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(165, 47, 60, 0.6);
 }
+
+.ban-screen {
+  position: fixed; inset: 0; background: #000c; z-index: 999999;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: 0.3s;
+}
+.ban-screen.on { opacity: 1; pointer-events: all; backdrop-filter: blur(10px); }
+.ban-card {
+  background: radial-gradient(circle at 50% 0, #8a3333, #3a1515);
+  border: 2px solid #ff4d4d; border-radius: 20px;
+  padding: 40px; text-align: center; color: white;
+  box-shadow: 0 20px 50px #000a, inset 0 0 30px #0008;
+  max-width: 400px; width: 90%;
+  animation: pop 0.4s cubic-bezier(.15,.75,.2,1);
+}
+.ban-card h2 { font-size: 28px; margin: 0 0 10px; color: #ffcccc; text-shadow: 0 2px 4px #000; }
+.ban-card p { font-size: 16px; color: #ffaaaa; margin-bottom: 20px; }
+.ban-timer { font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 4px 10px #000; margin: 20px 0; }
