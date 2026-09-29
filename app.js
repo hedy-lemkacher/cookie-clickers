@@ -17,13 +17,13 @@ const BUILDINGS = [
   { id: 'temple',      name: 'Temple',           plural: 'Temples',           icon: '🛕', base: 2e7,    cps: 7800,   desc: 'Rempli de précieux cookies antiques.' },
   { id: 'wizard',      name: 'Tour de sorcier',  plural: 'Tours de sorcier',  icon: '🧙', base: 3.3e8,  cps: 44000,  desc: 'Invoque des cookies par magie.' },
   { id: 'rocket',      name: 'Fusée',            plural: 'Fusées',            icon: '🚀', base: 5.1e9,  cps: 260000, desc: 'Rapporte des cookies de la planète Cookie.' },
-  { id: 'portal',      name: 'Portail',          plural: 'Portails',          icon: '🌀', base: 7.5e10, cps: 1.6e6,  desc: 'Ouvre une porte vers le Cookievers.' },
+  { id: 'portal',      name: "Maillot d'Adam",          plural: "Maillots d'Adam",          icon: '<img src=\"adam.png\" style=\"width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;\">', base: 7.5e10, cps: 1.6e6,  desc: 'Ouvre une porte vers le Cookievers.' },
   { id: 'timemachine', name: 'Machine temporelle', plural: 'Machines temporelles', icon: '⏳', base: 1e12, cps: 1e7, desc: 'Ramène des cookies du passé, avant qu\'ils ne soient mangés.' },
   { id: 'antimatter',  name: 'EBBY POSE',        plural: 'EBBY POSES',        icon: '<img src="ebby.png" style="width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;">', base: 1.4e13, cps: 6.5e7,  desc: 'Condense l\'antimatière de l\'univers en cookies.' },
-  { id: 'prism',       name: 'Prisme',           plural: 'Prismes',           icon: '🔮', base: 1.7e14, cps: 4.3e8,  desc: 'Transforme la lumière elle-même en cookies.' },
+  { id: 'prism',       name: 'Vikash Le BG',           plural: 'Vikash Le BG',           icon: '<img src=\"vikash.png\" style=\"width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;\">', base: 1.7e14, cps: 4.3e8,  desc: 'Transforme la lumière elle-même en cookies.' },
   { id: 'chancery',    name: 'Chancellerie',     plural: 'Chancelleries',     icon: '🏰', base: 2e15,   cps: 3e9,    desc: 'Dicte les lois de la consommation de cookies.' },
   { id: 'fractal',     name: 'Moteur Fractal',   plural: 'Moteurs Fractals',  icon: '🌌', base: 3e16,   cps: 2e10,   desc: 'Génère des cookies à partir de sous-cookies infinis.' },
-  { id: 'javascript',  name: 'Console JS',       plural: 'Consoles JS',       icon: '💻', base: 4e17,   cps: 1.5e11, desc: 'Code des cookies directement dans la matrice.' },
+  { id: 'javascript',  name: 'TOURELLE MAX',       plural: 'TOURELLES MAX',       icon: '🔫', base: 4e17,   cps: 1.5e11, desc: 'Code des cookies directement dans la matrice.' },
 ];
 
 /* --- Événements : 3 par bâtiment, débloqués à 5, 25 et 75 exemplaires --- */
@@ -1194,7 +1194,6 @@ function renderEventsPane() {
 const GAMES = [
   { id: 'reaction', req: 0,          icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.', weight: 1 },
   { id: 'simon',    req: 500,        icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.', weight: 1.2 },
-  { id: 'whack',    req: 5000,       icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.', weight: 1 },
   { id: 'find',     req: 50000,      icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.', weight: 1.5 },
   { id: 'rush',     req: 250000,     icon: '⚡', name: 'Rush de clics',     cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.', weight: 1 },
   { id: 'recipe',   req: 1000000,    icon: '🥣', name: 'Recette express',   cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.', weight: 1.2 },
@@ -1257,6 +1256,35 @@ function updatePlayPane() {
     const best = S.gameBest[g.id];
     document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Gain max : <b>' + fmt(gameMax() * (g.over ? 1.5 : 1)) + '</b>' +
       (best !== undefined ? ' · record ' + Math.round(best * 100) + ' %' : '');
+  }
+  const grid = document.getElementById('playGrid');
+  if (grid) {
+    const cards = Array.from(grid.children);
+    cards.sort((a, b) => {
+      const playBtnA = a.querySelector('.play-btn');
+      const playBtnB = b.querySelector('.play-btn');
+      if (!playBtnA || !playBtnB) return 0;
+      
+      const getCd = (btn) => {
+        const id = btn.dataset.play;
+        if (id === 'daily') return Math.max(0, S.daily - now);
+        const g = GAMES.find(x => x.id === id);
+        if (g && (!g.req || S.baked >= g.req)) return Math.max(0, (S.games[id] || 0) - now);
+        return Infinity;
+      };
+      
+      // Secondary sort: keep original order if cooldown is the same (e.g. 0)
+      const cdA = getCd(playBtnA);
+      const cdB = getCd(playBtnB);
+      if (cdA === cdB) {
+        // Special case: daily gift always first if ready
+        if (playBtnA.dataset.play === 'daily') return -1;
+        if (playBtnB.dataset.play === 'daily') return 1;
+        return 0;
+      }
+      return cdA - cdB;
+    });
+    cards.forEach(c => grid.appendChild(c));
   }
 }
 function claimDaily() {
@@ -1432,33 +1460,7 @@ function gameSimon(api) {
   return () => { alive = false; };
 }
 
-function gameWhack(api) {
-  let score = 0, time = 15, timer = 0, alive = true;
-  const goal = 20;
-  api.body.innerHTML = '<p class="game-hint">Cliquez sur les cookies qui apparaissent. Objectif : ' + goal + ' en 15s.</p><div class="whack-board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:200px;margin:0 auto;">' +
-    Array(9).fill('<div class="hole" style="width:60px;height:60px;background:#3e2723;border-radius:50%;position:relative;overflow:hidden;"><button data-whack="1" style="width:100%;height:100%;background:none;border:none;font-size:30px;position:absolute;top:100%;transition:top 0.2s;cursor:pointer;">🍪</button></div>').join('') + '</div>';
-  const holes = api.body.querySelectorAll('.hole button');
-  const spawn = () => {
-    if (!alive) return;
-    const h = holes[Math.floor(Math.random() * holes.length)];
-    if (h.style.top === '100%') {
-      h.style.top = '0%';
-      setTimeout(() => { if (alive && h.style.top === '0%') h.style.top = '100%'; }, Math.random() * 500 + 600);
-    }
-    if (alive) setTimeout(spawn, Math.random() * 300 + 200);
-  };
-  holes.forEach(b => b.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    if (!alive || b.style.top === '100%') return;
-    b.style.top = '100%';
-    score++;
-    api.frac = Math.min(1, score / goal);
-  }));
-  timer = setInterval(() => { time--; api.info(score + ' / ' + goal + ' · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' cookies frappés'); }, 1000);
-  spawn(); spawn();
-  api.info('0 / ' + goal + ' · 15 s');
-  return () => { alive = false; clearInterval(timer); };
-}
+
 
 function gameFind(api) {
   let time = 10, timer = 0, alive = true;
@@ -2474,19 +2476,45 @@ function initFlappy() {
   let lasers = []; // { axis: 'x'|'y', pos: number, state: 'warn'|'fire', timer: number, width: number }
   
   if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
+  let buyBtn = document.getElementById('flappyBuyBtn');
+  if (!buyBtn && overlay) {
+    buyBtn = document.createElement('button');
+    buyBtn.id = 'flappyBuyBtn';
+    buyBtn.className = 'big-btn';
+    buyBtn.style.cssText = 'background:linear-gradient(135deg, #e67e22, #d35400); font-size:14px; padding:10px 16px; margin-top:10px; display:none;';
+    overlay.appendChild(buyBtn);
+    buyBtn.addEventListener('click', () => {
+      const cost = Math.max(1, cps() * 3 * 300);
+      if (S.cookies >= cost && S.games['flappy'].length > 0) {
+        S.cookies -= cost;
+        S.games['flappy'].shift();
+        save();
+        toast('⚡', 'Essai acheté !', '-' + fmt(cost) + ' cookies');
+        updateBtn();
+      }
+    });
+  }
   
   const updateBtn = () => {
     const now = Date.now();
     S.games['flappy'] = S.games['flappy'].filter(t => now - t < 3600000);
     const maxAttempts = 3 + templeExtraAttempts();
     const attempts = S.games['flappy'].length;
+    const cost = Math.max(1, cps() * 3 * 300);
     if (attempts >= maxAttempts) {
       btn.disabled = true;
       const oldest = S.games['flappy'][0];
       btn.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
+      if (buyBtn) {
+        buyBtn.style.display = 'inline-block';
+        buyBtn.textContent = '⚡ Recharger 1 essai (' + fmt(cost) + ' cookies)';
+        buyBtn.disabled = S.cookies < cost;
+        buyBtn.style.opacity = S.cookies < cost ? '0.5' : '1';
+      }
     } else {
       btn.disabled = false;
       btn.textContent = `Jouer (${maxAttempts - attempts} essai(s) restant(s))`;
+      if (buyBtn) buyBtn.style.display = 'none';
     }
   };
   setInterval(updateBtn, 10000);
@@ -2515,7 +2543,7 @@ function initFlappy() {
     save();
     
     updateBtn();
-    overlay.style.display = 'none';
+    overlay.style.display = 'none'; if (buyBtn) buyBtn.style.display = 'none';
     status.textContent = 'Survivez 25 secondes !';
     status.style.color = '#fff';
     runGame();
