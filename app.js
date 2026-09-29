@@ -181,6 +181,7 @@ function freshState() {
 let S = freshState();
 let resetting = false;
 let worlds = [];
+let speedrunRecords = [];
 let activeWorldId = null;
 let creatingFirstWorld = false;
 
@@ -204,6 +205,7 @@ function load() {
       const d = JSON.parse(raw);
       if (Array.isArray(d.worlds)) {
         worlds = d.worlds.slice(0, 5);
+        speedrunRecords = d.speedrunRecords || [];
         worlds.forEach((world) => { world.speedrun = Object.assign({ startedAt: 0, durationMs: 0 }, world.speedrun); });
         activeWorldId = d.activeWorldId || (worlds[0] && worlds[0].id);
         const world = activeWorld();
@@ -230,7 +232,7 @@ function save() {
   if (!world) return;
   S.last = Date.now();
   world.state = S;
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 2, activeWorldId, worlds })); } catch (e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 2, activeWorldId, worlds, speedrunRecords })); } catch (e) {}
 }
 
 function worldModeName(world) {
@@ -377,13 +379,20 @@ function spinCasino() {
 function renderPerformance() {
   const rows = $('#performanceRows');
   if (!rows) return;
-  const records = worlds.filter((world) => world.mode === 'speedrun').sort((a, b) => {
-    const left = a.speedrun && a.speedrun.durationMs || Infinity;
-    const right = b.speedrun && b.speedrun.durationMs || Infinity;
+  const ongoing = worlds.filter((w) => w.mode === 'speedrun').map(w => ({
+    name: w.name,
+    playerName: (w.state && w.state.custom && w.state.custom.name) || 'Joueur local',
+    goal: w.goal,
+    durationMs: w.speedrun ? (Date.now() - w.speedrun.startedAt) : 0,
+    ongoing: true
+  }));
+  const records = [...ongoing, ...speedrunRecords].sort((a, b) => {
+    const left = a.ongoing ? Infinity : a.durationMs;
+    const right = b.ongoing ? Infinity : b.durationMs;
     return left - right;
   });
   rows.innerHTML = records.length
-    ? records.map((world, index) => '<tr><td>#' + (index + 1) + '</td><td>' + world.name + '</td><td>' + ((world.state.custom && world.state.custom.name) || 'Joueur local') + '</td><td>' + fmt(world.goal) + '</td><td>' + formatDuration(world.speedrun && world.speedrun.durationMs) + '</td></tr>').join('')
+    ? records.map((r, index) => '<tr><td>#' + (index + 1) + '</td><td>' + r.name + '</td><td>' + r.playerName + '</td><td>' + fmt(r.goal) + '</td><td>' + (r.ongoing ? 'En cours' : formatDuration(r.durationMs)) + '</td></tr>').join('')
     : '<tr><td colspan="5">Aucun monde Speedrun créé.</td></tr>';
 }
 function openWorldModal(first) {
@@ -576,9 +585,38 @@ function checkSpeedrun() {
   if (!world.speedrun.startedAt && S.baked > 0) world.speedrun.startedAt = Date.now();
   if (!world.speedrun.durationMs && S.cookies >= world.goal) {
     world.speedrun.durationMs = Date.now() - world.speedrun.startedAt;
-    toast('🏁', 'Speedrun terminé', 'Temps : ' + formatDuration(world.speedrun.durationMs));
-    renderPerformance();
-    save();
+    
+    speedrunRecords.push({
+      name: world.name,
+      playerName: (S.custom && S.custom.name) || 'Joueur local',
+      goal: world.goal,
+      durationMs: world.speedrun.durationMs,
+      ongoing: false
+    });
+    
+    const modal = $('#modal'), mBody = $('#mBody'), mInfo = $('#mInfo');
+    modal.classList.add('on');
+    $('#mTitle').textContent = '🏁 PARTIE FINIE !';
+    mInfo.textContent = '';
+    mBody.innerHTML = '<div style="text-align:center; padding: 20px;"><h2>Objectif atteint en ' + formatDuration(world.speedrun.durationMs) + '</h2><p>Score ajouté à vos performances.</p><button id="mOk" class="big-btn" style="margin-top:20px;">Continuer</button></div>';
+    mBody.querySelector('#mOk').addEventListener('click', () => modal.classList.remove('on'));
+    
+    worlds = worlds.filter(w => w.id !== world.id);
+    activeWorldId = worlds[0] ? worlds[0].id : null;
+    S = activeWorld() ? Object.assign(freshState(), activeWorld().state) : freshState();
+    combo = 0; lastClick = Date.now(); activeEvent = null; clickFrenzyUntil = 0;
+    
+    recalc();
+    renderWorldUI();
+    applyStyle();
+    refreshAll();
+    
+    if (activeWorld()) {
+      save();
+    } else {
+      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      openWorldModal(true);
+    }
   }
 }
 function renderSpeedrunProgress() {
