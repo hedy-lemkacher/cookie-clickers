@@ -1445,8 +1445,10 @@ function gameRush(api) {
 }
 
 function gameRecipe(api) {
-  const recipe = ['🌾', '🥚', '🧈', '🍬', '🍫'];
-  const options = shuffle(recipe.slice().concat(['🍓', '🥜', '🍋']));
+  const pool = ['🌾', '🥚', '🧈', '🍬', '🍫', '🍓', '🥜', '🍋', '🥛', '🫐', '🍒', '🍯', '🧂', '☕', '🍌'];
+  const shuffledPool = shuffle(pool.slice());
+  const recipe = shuffledPool.slice(0, 5);
+  const options = shuffle(shuffledPool.slice(0, 8));
   let position = 0, time = 15, timer = 0, alive = true;
   api.body.innerHTML = '<p class="game-hint">Mémorisez la recette, puis retrouvez les ingrédients dans le même ordre.</p><div class="recipe"><div class="recipe-preview">' + recipe.join(' ') + '</div><div class="recipe-options"></div></div>';
   const box = api.body.querySelector('.recipe-options');
