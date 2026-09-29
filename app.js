@@ -2639,7 +2639,8 @@ function initFlappy() {
     celebrate();
     toast('⌨️', 'POUVOIR ACTIVÉ', 'Maintenez ENTRÉE ! Frénésie ×200 pendant 30s !');
   }
-}\ninitFlappy();
+}
+initFlappy();
 
 /* =====================================================================
    TEMPLE DES LÉGENDES
