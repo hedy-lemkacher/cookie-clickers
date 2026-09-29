@@ -108,6 +108,7 @@
       <button data-tab="worlds">🌍 Mondes</button>
       <button data-tab="casino">🎰 Casino</button>
       <button data-tab="flappy">🕊️ Esquive</button>
+      <button data-tab="temple" id="templeTab" style="display:none;">🏆 Temple</button>
     </nav>
 
     <div class="pane on" id="showcase">
@@ -139,6 +140,15 @@
             <button id="flappyStart" class="big-btn">Jouer</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="pane" id="temple">
+      <div class="card" style="text-align:center; background:linear-gradient(160deg,#1a0a2e,#2e1a0a); border:1px solid #9b59b6;">
+        <h3 class="card-title" style="color:#ffeb3b;"><span>🏆 Temple des Légendes</span></h3>
+        <p style="color:#d4b0ff;">Vous avez accompli l'impossible. Dépensez vos <b style='color:#ffeb3b;'>pépites célestes</b> pour obtenir des améliorations <b>permanentes</b> — elles survivent à toutes vos ascensions.</p>
+        <p id="templeChips" style="font-size:18px; font-weight:bold; color:#ffeb3b; margin:10px 0;"></p>
+        <div id="templeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;"></div>
       </div>
     </div>
 

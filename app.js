@@ -181,6 +181,7 @@ function freshState() {
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
     cheat: false,
+    temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
 }
@@ -534,7 +535,7 @@ function eventBoost(id) {
 function buildingCps(b, noBoost) {
   return b.cps * multiplier(b.id) * prestigeMult() * (noBoost ? 1 : eventBoost(b.id));
 }
-function baseCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b); return s; }
+function baseCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b); return s * (S.temple && S.temple.length ? templeProdBonus() : 1); }
 function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b, true); return s; }
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() { return baseCps() * frenzyMult(); }
@@ -542,7 +543,7 @@ function cps() { return baseCps() * frenzyMult(); }
 /* Clics : base + 1 % de la prod par souris, multiplié par le combo */
 let combo = 0, lastClick = 0, clickFrenzyUntil = 0, clickFrenzyMult = 20;
 let clickTimes = [], clickBlockedUntil = 0;
-let enterPowerUntil = 0, isEnterPressed = false, enterInterval = 0;
+let enterPowerUntil = 0, enterFrenzyUntil = 0, isEnterPressed = false, enterInterval = 0;
 
 addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -555,6 +556,14 @@ addEventListener('keydown', (e) => {
           enterInterval = 0;
           return;
         }
+        // During first 30s (frenzy phase): activate x200 frenzy before each click
+        const inFrenzy = Date.now() < enterFrenzyUntil;
+        const prevFrenzyUntil = clickFrenzyUntil;
+        const prevFrenzyMult = clickFrenzyMult;
+        if (inFrenzy) {
+          clickFrenzyUntil = Date.now() + 200;
+          clickFrenzyMult = 200;
+        }
         const oldBlocked = clickBlockedUntil;
         clickBlockedUntil = 0;
         clickTimes = [];
@@ -562,6 +571,10 @@ addEventListener('keydown', (e) => {
         lastRawClick = 0;
         cookieBtn.click();
         clickBlockedUntil = oldBlocked;
+        if (inFrenzy) {
+          clickFrenzyUntil = prevFrenzyUntil;
+          clickFrenzyMult = prevFrenzyMult;
+        }
       }, 50);
     }
   }
@@ -571,7 +584,7 @@ addEventListener('keyup', (e) => {
 });
 const comboCap = () => 2 + countUps('combo');
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
-function clickBase() { return multiplier('cursor') + cps() * 0.01 * countUps('mouse'); }
+function clickBase() { return (multiplier('cursor') + cps() * 0.01 * countUps('mouse')) * (S.temple ? templeClickBonus() : 1); }
 function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
 let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
@@ -1181,7 +1194,6 @@ const GAMES = [
   { id: 'catch',    req: 100000000,  icon: '🧺', name: 'Attrape-cookies',   cd: 12, start: gameCatch,    desc: 'Attrapez les cookies qui tombent, évitez les brocolis.', weight: 1.5 },
   { id: 'memory',   req: 500000000,  icon: '🃏', name: 'Memory gourmand',   cd: 15, start: gameMemory,   desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.', weight: 2 },
   { id: 'sort',     req: 750000000,  icon: '🛍️', name: 'Le Tri Gourmand',   cd: 14, start: gameSort,     desc: 'Triez rapidement les ingrédients dans le bon sac.', weight: 1.5 },
-  { id: 'draw',     req: 850000000,  icon: '🖌️', name: 'Cookie Art',        cd: 15, start: gameDraw,     desc: 'Dessinez le plus gros cookie possible avec votre souris.', weight: 1.8 },
   { id: 'cook',     req: 950000000,  icon: '👨‍🍳',name: 'Le Chef',           cd: 18, start: gameCook,     desc: 'Pétrissez, cuisez et décorez votre cookie à la perfection.', weight: 2 },
   { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true, weight: 1 },
 ];
@@ -1946,51 +1958,7 @@ function gameSort(api) {
   return () => { alive = false; clearInterval(timer); };
 }
 
-function gameDraw(api) {
-  let time = 15, alive = true, timer;
-  api.body.innerHTML = '<p class="game-hint">Dessinez le plus grand cookie et ses pépites !</p>' +
-    '<div style="text-align:center; touch-action:none;"><canvas id="drawCanvas" width="300" height="250" style="border:2px solid #8c5e2c; border-radius:12px; background:#24150b; cursor:crosshair; touch-action:none;"></canvas></div>';
-    
-  const cv = api.body.querySelector('#drawCanvas');
-  const ctx = cv.getContext('2d');
-  let drawing = false;
-  let points = 0;
-  
-  const start = (e) => { drawing = true; draw(e); };
-  const end = () => { drawing = false; ctx.beginPath(); };
-  const draw = (e) => {
-    if (!drawing || !alive) return;
-    const rect = cv.getBoundingClientRect();
-    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-    
-    ctx.lineWidth = 14;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#c2702e'; 
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    
-    points++;
-    api.frac = Math.min(1, points / 200); 
-  };
-  
-  cv.addEventListener('mousedown', start);
-  cv.addEventListener('mouseup', end);
-  cv.addEventListener('mousemove', draw);
-  cv.addEventListener('touchstart', start, {passive: false});
-  cv.addEventListener('touchend', end);
-  cv.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
-  
-  api.info('Dessinez ! · 15 s');
-  timer = setInterval(() => { 
-    time--; 
-    api.info('Dessinez ! · ' + time + ' s'); 
-    if (time <= 0) api.end(Math.min(1, points / 200), points >= 200 ? 'Chef-d\'œuvre absolu' : 'Joli gribouillage'); 
-  }, 1000);
-  return () => { alive = false; clearInterval(timer); };
-}
+/* gameDraw removed */
 
 function gameCook(api) {
   let step = 1, time = 20, timer, alive = true;
@@ -2107,7 +2075,7 @@ $('#ascBtn').addEventListener('click', () => {
   if (activeEvent) endEvent();
   const keep = {};
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
-   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled'].forEach((k) => { keep[k] = S[k]; });
+   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
   S = Object.assign(freshState(), keep);
   S.chips = chipsPotential();
@@ -2501,14 +2469,15 @@ function initFlappy() {
   const updateBtn = () => {
     const now = Date.now();
     S.games['flappy'] = S.games['flappy'].filter(t => now - t < 3600000);
+    const maxAttempts = 3 + templeExtraAttempts();
     const attempts = S.games['flappy'].length;
-    if (attempts >= 3) {
+    if (attempts >= maxAttempts) {
       btn.disabled = true;
       const oldest = S.games['flappy'][0];
       btn.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
     } else {
       btn.disabled = false;
-      btn.textContent = `Jouer (${3 - attempts} essai(s) restant(s))`;
+      btn.textContent = `Jouer (${maxAttempts - attempts} essai(s) restant(s))`;
     }
   };
   setInterval(updateBtn, 10000);
@@ -2538,62 +2507,78 @@ function initFlappy() {
     
     updateBtn();
     overlay.style.display = 'none';
-    status.textContent = 'Survivez 15 secondes !';
+    status.textContent = 'Survivez 25 secondes !';
     status.style.color = '#fff';
     runGame();
   });
   
+  let trail = [];
+  let stars = Array.from({length: 60}, () => ({ x: Math.random()*400, y: Math.random()*400, r: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2 }));
+
   function runGame() {
     if (!playing) return;
+    const elapsed = (Date.now() - startTime) / 1000;
+    const difficulty = Math.min(1, elapsed / 20); // ramps from 0→1 over first 20s
     
-    // Spawn lasers
-    if (Math.random() < 0.03) { // Easy difficulty
-      lasers.push({
-        axis: Math.random() > 0.5 ? 'x' : 'y',
-        pos: Math.random() * 400,
-        state: 'warn',
-        timer: 60, // 1 second warning at 60fps
-        width: 30 // 30px width laser
-      });
+    // Spawn lasers — more frequent and narrower as time goes on
+    const spawnChance = 0.015 + difficulty * 0.04;
+    const laserWidth = Math.max(12, 35 - difficulty * 20);
+    const warnTime = Math.max(30, 70 - difficulty * 30);
+    if (Math.random() < spawnChance) {
+      lasers.push({ axis: Math.random() > 0.5 ? 'x' : 'y', pos: Math.random() * 380 + 10, state: 'warn', timer: warnTime, width: laserWidth });
     }
     
-    ctx.clearRect(0, 0, 400, 400);
+    // Draw starry background
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(0, 0, 400, 400);
+    stars.forEach(s => {
+      s.t += 0.04;
+      const alpha = 0.4 + 0.4 * Math.sin(s.t);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    
+    // Trail
+    trail.push({x: mouseX, y: mouseY});
+    if (trail.length > 12) trail.shift();
+    trail.forEach((p, i) => {
+      const a = i / trail.length * 0.4;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8 * (i / trail.length), 0, Math.PI*2);
+      ctx.fillStyle = `rgba(194,112,46,${a})`;
+      ctx.fill();
+    });
     
     // Update and draw lasers
     for (let i = lasers.length - 1; i >= 0; i--) {
       let l = lasers[i];
       l.timer--;
-      
+      ctx.save();
       if (l.state === 'warn') {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-        if (l.timer <= 0) {
-          l.state = 'fire';
-          l.timer = 30; // 0.5 seconds fire
-        }
+        ctx.fillStyle = 'rgba(255,80,80,0.18)';
+        ctx.shadowColor = 'rgba(255,0,0,0.3)';
+        ctx.shadowBlur = 8;
+        if (l.timer <= 0) { l.state = 'fire'; l.timer = Math.max(20, 35 - difficulty * 15); }
       } else {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
-        if (l.timer <= 0) {
-          lasers.splice(i, 1);
-          continue;
-        }
-        
-        // Collision check
+        ctx.fillStyle = 'rgba(255,40,40,0.92)';
+        ctx.shadowColor = '#ff0044';
+        ctx.shadowBlur = 22;
+        if (l.timer <= 0) { lasers.splice(i, 1); ctx.restore(); continue; }
         const cookieR = 15;
-        if (l.axis === 'x') {
-          if (Math.abs(mouseX - l.pos) < cookieR + l.width/2) die('Un laser vous a touché !');
-        } else {
-          if (Math.abs(mouseY - l.pos) < cookieR + l.width/2) die('Un laser vous a touché !');
-        }
+        if (l.axis === 'x') { if (Math.abs(mouseX - l.pos) < cookieR + l.width/2) { ctx.restore(); die('💥 Un laser vous a touché !'); return; } }
+        else { if (Math.abs(mouseY - l.pos) < cookieR + l.width/2) { ctx.restore(); die('💥 Un laser vous a touché !'); return; } }
       }
-      
-      if (l.axis === 'x') {
-        ctx.fillRect(l.pos - l.width/2, 0, l.width, 400);
-      } else {
-        ctx.fillRect(0, l.pos - l.width/2, 400, l.width);
-      }
+      if (l.axis === 'x') ctx.fillRect(l.pos - l.width/2, 0, l.width, 400);
+      else ctx.fillRect(0, l.pos - l.width/2, 400, l.width);
+      ctx.restore();
     }
     
-    // Draw cookie
+    // Draw cookie with glow
+    ctx.save();
+    ctx.shadowColor = '#ffb347';
+    ctx.shadowBlur = 18;
     ctx.beginPath();
     ctx.arc(mouseX, mouseY, 15, 0, Math.PI*2);
     ctx.fillStyle = '#c2702e';
@@ -2601,11 +2586,19 @@ function initFlappy() {
     ctx.strokeStyle = '#8a4c1c';
     ctx.lineWidth = 3;
     ctx.stroke();
+    ctx.restore();
     
-    const elapsed = (Date.now() - startTime) / 1000;
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 15 s';
+    // Timer bar at bottom
+    const progress = elapsed / 25;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(10, 385, 380, 10);
+    const barColor = progress < 0.5 ? `hsl(${120 - progress*240},90%,55%)` : `hsl(${120 - progress*240},90%,55%)`;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(10, 385, 380 * progress, 10);
     
-    if (elapsed >= 15) {
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 25 s';
+    
+    if (elapsed >= 25) {
       winGame();
     } else {
       raf = requestAnimationFrame(runGame);
@@ -2625,8 +2618,111 @@ function initFlappy() {
     overlay.style.display = 'flex';
     status.textContent = 'VICTOIRE ! POUVOIR DE LA TOUCHE ENTRÉE DÉBLOQUÉ !';
     status.style.color = '#ffeb3b';
-    enterPowerUntil = Date.now() + 60000;
+    // Lock remaining attempts for this hour (can't retry after a win)
+    const now = Date.now();
+    const maxAttempts = 3 + templeExtraAttempts();
+    while (S.games['flappy'].length < maxAttempts) S.games['flappy'].push(now);
+    save();
+    updateBtn();
+    // Activate buff: frenzy + auto-clicks
+    enterPowerUntil = now + templeEnterDuration();
+    enterFrenzyUntil = now + templeFrenzyDuration();
     celebrate();
+    toast('⌨️', 'POUVOIR ACTIVÉ', 'Maintenez ENTRÉE ! Frénésie ×200 pendant 30s !');
   }
+}\ninitFlappy();
+
+/* =====================================================================
+   TEMPLE DES LÉGENDES
+   ===================================================================== */
+const TEMPLE_UPGRADES = [
+  { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
+  { id: 'power+',     name: '⏱️ Pouvoir Prolongé',     cost: 10,  desc: 'Le buff Touche Entrée dure 90s au lieu de 60s',       apply: () => {} },
+  { id: 'frenzy+',    name: '🔥 Grande Frénésie',      cost: 20,  desc: 'La frénésie ×200 dure 45s au lieu de 30s',            apply: () => {} },
+  { id: 'click+',     name: '👆 Prestige des Clics',   cost: 30,  desc: '+5% de puissance de clic permanente',                 apply: () => { recalc(); } },
+  { id: 'prod+',      name: '🏭 Arsenal Cosmique',     cost: 50,  desc: '+10% de production globale permanente',               apply: () => { recalc(); } },
+  { id: 'legend',     name: '👑 Légende Absolue',      cost: 100, desc: 'Toutes les améliorations ci-dessus sont doublées',    apply: () => { recalc(); } },
+];
+
+// Temple bonuses applied in production calc
+function templeClickBonus() {
+  let mult = 1;
+  if (S.temple && S.temple.includes('click+')) mult *= 1.05;
+  if (S.temple && S.temple.includes('legend')) mult *= 1.05;
+  return mult;
 }
-initFlappy();
+function templeProdBonus() {
+  let mult = 1;
+  if (S.temple && S.temple.includes('prod+')) mult *= 1.10;
+  if (S.temple && S.temple.includes('legend')) mult *= 1.10;
+  return mult;
+}
+function templeEnterDuration() {
+  let dur = 60000;
+  if (S.temple && S.temple.includes('power+')) dur = 90000;
+  if (S.temple && S.temple.includes('legend')) dur += 30000;
+  return dur;
+}
+function templeFrenzyDuration() {
+  let dur = 30000;
+  if (S.temple && S.temple.includes('frenzy+')) dur = 45000;
+  if (S.temple && S.temple.includes('legend')) dur += 15000;
+  return dur;
+}
+function templeExtraAttempts() {
+  let extra = 0;
+  if (S.temple && S.temple.includes('esquive+')) extra += 1;
+  if (S.temple && S.temple.includes('legend')) extra += 1;
+  return extra;
+}
+
+function initTemple() {
+  const tab = document.getElementById('templeTab');
+  const chipsEl = document.getElementById('templeChips');
+  const grid = document.getElementById('templeGrid');
+  if (!S.temple) S.temple = [];
+
+  function renderTemple() {
+    const unlocked = S.bakedAll >= 25e9;
+    if (tab) tab.style.display = unlocked ? '' : 'none';
+    if (!chipsEl || !grid) return;
+    chipsEl.textContent = '✨ Pépites célestes disponibles : ' + S.chips;
+    grid.innerHTML = '';
+    TEMPLE_UPGRADES.forEach(u => {
+      const owned = S.temple.includes(u.id);
+      const canAfford = S.chips >= u.cost;
+      const card = document.createElement('div');
+      card.style.cssText = `padding:14px; border-radius:12px; background:${owned ? 'linear-gradient(135deg,#2e1f5e,#4a2e0a)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${owned ? '#9b59b6' : '#555'}; opacity:${owned || canAfford ? '1' : '0.5'};`;
+      card.innerHTML = `<div style="font-size:20px; font-weight:900; color:${owned ? '#ffeb3b' : '#fff'}; margin-bottom:6px;">${u.name}</div>
+        <div style="font-size:12px; color:#ccc; margin-bottom:10px;">${u.desc}</div>
+        <div style="font-size:13px; color:#ffb347; margin-bottom:8px;">Coût : ${u.cost} pépite(s)</div>
+        <button class="big-btn" data-temple="${u.id}" ${owned ? 'disabled' : ''} style="width:100%; font-size:13px; padding:8px;">${owned ? '✅ Acheté' : 'Acheter'}</button>`;
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('[data-temple]').forEach(b => b.addEventListener('click', () => {
+      const u = TEMPLE_UPGRADES.find(x => x.id === b.dataset.temple);
+      if (!u || S.temple.includes(u.id) || S.chips < u.cost) return;
+      S.chips -= u.cost;
+      S.temple.push(u.id);
+      u.apply();
+      save();
+      renderTemple();
+      toast('🏆', 'Temple des Légendes', u.name + ' acheté !');
+    }));
+  }
+
+  renderTemple();
+  // Re-render when tab switches to temple
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    if (e.target.dataset.tab === 'temple') renderTemple();
+  });
+  // Also check every 5s if the tab should unlock
+  setInterval(() => {
+    if (S.bakedAll >= 25e9 && tab && tab.style.display === 'none') {
+      tab.style.display = '';
+      toast('🏆', 'Temple des Légendes débloqué !', '25 milliards de cookies cuits !');
+    }
+    if (document.querySelector('[data-tab="temple"].on')) renderTemple();
+  }, 5000);
+}
+initTemple();
