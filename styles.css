@@ -549,6 +549,19 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .maze-controls div { display: flex; gap: 4px; }
 .maze-controls button { width: 46px; height: 42px; border: 1px solid #a07030; border-radius: 9px; background: linear-gradient(180deg, #6b4521, #452a12); font-size: 19px; }
 .maze-controls button:active { transform: translateY(2px); }
+.quiz, .recipe { display: grid; gap: 14px; text-align: center; }
+.quiz h3 { font-size: 22px; }
+.quiz-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.quiz-options button, .recipe-options button { min-height: 48px; padding: 8px; border: 1px solid #8c5e2c; border-radius: 10px; background: linear-gradient(180deg, #6b4521, #452a12); font-size: 15px; }
+.quiz-options button:active, .recipe-options button:active { transform: translateY(2px); }
+.rush { display: grid; justify-items: center; gap: 10px; }
+.rush-cookie { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f6cd86, #a5602a); border: 4px solid #8a4c1c; box-shadow: 0 8px 0 #381a09, 0 0 25px #f0a44966; font-size: 72px; touch-action: manipulation; }
+.rush-cookie:active { transform: scale(.94); }
+.rush-score { font-size: 28px; color: var(--gold); }
+.recipe-preview { min-height: 58px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0, 0, 0, .24); font-size: 30px; letter-spacing: 8px; }
+.recipe-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.recipe-options button { width: 54px; font-size: 28px; }
+.recipe-options button:disabled { opacity: .35; }
 .big-btn { padding: 12px 22px; border-radius: 12px; font-size: 17px; font-weight: 600; background: linear-gradient(180deg, #ffb347, #e0892a); color: #2a1400; box-shadow: 0 4px 0 #7a4210; }
 .big-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4210; }
 .big-btn:disabled { opacity: .5; cursor: default; transform: none; }

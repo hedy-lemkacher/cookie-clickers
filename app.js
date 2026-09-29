@@ -926,6 +926,9 @@ function renderEventsPane() {
    ===================================================================== */
 const GAMES = [
   { id: 'reaction', icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
+  { id: 'quiz',    icon: '🧠', name: 'Quiz gourmand',       cd: 10, start: gameQuiz,     desc: 'Répondez à cinq questions de pâtisserie le plus vite possible.' },
+  { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
+  { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
   { id: 'shop',   icon: '🛒', name: 'Vente de cookies',   cd: 15, start: gameShop,   desc: 'Servez un maximum de clients en 30 secondes.' },
   { id: 'catch',  icon: '🧺', name: 'Attrape-cookies',    cd: 12, start: gameCatch,  desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
@@ -1113,6 +1116,70 @@ function gameReaction(api) {
     if (timeLeft <= 0) api.end(0, 'Le temps est écoulé.');
   }, 100);
   return () => { alive = false; clearInterval(timer); removeEventListener('keydown', key); };
+}
+
+function gameQuiz(api) {
+  const questions = [
+    ['Quel ingrédient fait lever une pâte ?', ['Levure', 'Sel', 'Cacao'], 0],
+    ['Quel dessert est généralement cuit au bain-marie ?', ['Macaron', 'Flan', 'Cookie'], 1],
+    ['Quelle farine est la plus classique pour un cookie ?', ['Blé', 'Riz', 'Pois'], 0],
+    ['Que devient le sucre chauffé ?', ['Caramel', 'Glace', 'Mousse'], 0],
+    ['Quel outil sert à peser les ingrédients ?', ['Balance', 'Passoire', 'Fouet'], 0],
+  ];
+  let question = 0, score = 0, time = 20, timer = 0, alive = true;
+  api.body.innerHTML = '<p class="game-hint">Cinq questions, vingt secondes. Une mauvaise réponse ne coûte pas de points, mais le temps continue.</p><div class="quiz"></div>';
+  const box = api.body.querySelector('.quiz');
+  const render = () => {
+    const item = questions[question];
+    box.innerHTML = '<h3>' + item[0] + '</h3><div class="quiz-options">' + item[1].map((answer, i) => '<button data-answer="' + i + '">' + answer + '</button>').join('') + '</div>';
+    api.info(question + 1 + ' / ' + questions.length + ' · ' + time + ' s');
+  };
+  box.addEventListener('click', (e) => {
+    const button = e.target.closest('[data-answer]');
+    if (!button || !alive) return;
+    if (+button.dataset.answer === questions[question][2]) score++;
+    question++;
+    api.frac = score / questions.length;
+    if (question >= questions.length) api.end(score / questions.length, score + ' / ' + questions.length + ' bonnes réponses');
+    else render();
+  });
+  render();
+  timer = setInterval(() => { time--; api.info(question + 1 + ' / ' + questions.length + ' · ' + time + ' s'); if (time <= 0) api.end(score / questions.length, score + ' / ' + questions.length + ' bonnes réponses'); }, 1000);
+  return () => { alive = false; clearInterval(timer); };
+}
+
+function gameRush(api) {
+  const goal = 50;
+  let score = 0, time = 8, timer = 0, alive = true;
+  api.body.innerHTML = '<p class="game-hint">Touchez le cookie aussi vite que possible. Objectif : ' + goal + ' clics en huit secondes.</p><div class="rush"><button class="rush-cookie">🍪</button><strong class="rush-score">0</strong></div>';
+  const button = api.body.querySelector('.rush-cookie'), counter = api.body.querySelector('.rush-score');
+  button.addEventListener('pointerdown', (e) => { e.preventDefault(); if (!alive) return; score++; counter.textContent = score; api.frac = Math.min(1, score / goal); });
+  timer = setInterval(() => { time--; api.info(score + ' clics · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' clics réalisés'); }, 1000);
+  api.info('0 clic · 8 s');
+  return () => { alive = false; clearInterval(timer); };
+}
+
+function gameRecipe(api) {
+  const recipe = ['🌾', '🥚', '🧈', '🍬', '🍫'];
+  const options = shuffle(recipe.slice().concat(['🍓', '🥜', '🍋']));
+  let position = 0, time = 15, timer = 0, alive = true;
+  api.body.innerHTML = '<p class="game-hint">Mémorisez la recette, puis retrouvez les ingrédients dans le même ordre.</p><div class="recipe"><div class="recipe-preview">' + recipe.join(' ') + '</div><div class="recipe-options"></div></div>';
+  const box = api.body.querySelector('.recipe-options');
+  const showOptions = () => {
+    api.body.querySelector('.recipe-preview').textContent = 'Recette cachée !';
+    box.innerHTML = options.map((item) => '<button data-ingredient="' + item + '">' + item + '</button>').join('');
+  };
+  setTimeout(showOptions, 1200);
+  box.addEventListener('click', (e) => {
+    const button = e.target.closest('[data-ingredient]');
+    if (!button || !alive || position >= recipe.length) return;
+    if (button.dataset.ingredient !== recipe[position]) { api.end(position / recipe.length, position + ' ingrédient(s) correct(s)'); return; }
+    button.disabled = true; position++; api.frac = position / recipe.length;
+    if (position >= recipe.length) api.end(1, 'Recette réalisée sans erreur');
+  });
+  api.info('Mémorisez la recette');
+  timer = setInterval(() => { time--; api.info('Recette · ' + time + ' s'); if (time <= 0) api.end(position / recipe.length, position + ' ingrédient(s) correct(s)'); }, 1000);
+  return () => { alive = false; clearInterval(timer); };
 }
 
 function gameTarget(api) {
