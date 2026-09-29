@@ -277,7 +277,7 @@ function updateCasinoLimit() {
   const limit = $('#casinoLimit');
   if (!limit) return;
   if (casinoUnlimited()) {
-    limit.textContent = 'MODE SPEEDRUN · MISES ILLIMITÉES';
+    limit.innerHTML = '<div class="casino-limit-box speedrun"><div class="cl-icon">🔥</div><div class="cl-info"><div class="cl-title">Mode Speedrun</div><div class="cl-subtitle">Mises illimitées</div></div></div>';
     limit.classList.remove('locked');
     const speedrunSpin = $('#casinoSpin');
     if (speedrunSpin) speedrunSpin.disabled = false;
@@ -286,12 +286,12 @@ function updateCasinoLimit() {
   const remaining = casinoRemaining(), left = casinoTimeLeft();
   const spin = $('#casinoSpin');
   if (remaining === 0) {
-    limit.innerHTML = '<strong>ACCRO AU JEU · REVENEZ PLUS TARD</strong><span>Prochaine série dans ' + fmtTime(left / 1000) + '</span>';
+    limit.innerHTML = '<div class="casino-limit-box locked"><div class="cl-icon">⏳</div><div class="cl-info"><div class="cl-title">Accro au jeu</div><div class="cl-subtitle">Prochaine série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
     limit.classList.add('locked');
     if (spin) spin.disabled = true;
     return;
   }
-  limit.textContent = remaining + ' / 5 mises restantes · nouvelle série dans ' + fmtTime(left / 1000);
+  limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / 5</span> mises restantes</div><div class="cl-subtitle">Nouvelle série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
   limit.classList.remove('locked');
   if (spin) spin.disabled = false;
 }
