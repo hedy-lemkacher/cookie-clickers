@@ -2602,12 +2602,12 @@ function initFlappy() {
   function runGame() {
     if (!playing) return;
     const elapsed = (Date.now() - startTime) / 1000;
-    const difficulty = Math.min(1, elapsed / 12); // ramps from 0→1 over first 12s
+    const difficulty = Math.min(1, elapsed / 15); // ramps from 0→1 over first 12s
     
     // Spawn lasers — more frequent and narrower as time goes on
-    const spawnChance = 0.015 + difficulty * 0.04;
+    const spawnChance = 0.012 + difficulty * 0.025;
     const laserWidth = Math.max(12, 35 - difficulty * 20);
-    const warnTime = Math.max(30, 70 - difficulty * 30);
+    const warnTime = Math.max(40, 80 - difficulty * 25);
     if (Math.random() < spawnChance) {
       lasers.push({ axis: Math.random() > 0.5 ? 'x' : 'y', pos: Math.random() * 380 + 10, state: 'warn', timer: warnTime, width: laserWidth });
     }
