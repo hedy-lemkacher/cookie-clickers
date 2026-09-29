@@ -1139,17 +1139,20 @@ function renderEventsPane() {
    MINI-JEUX
    ===================================================================== */
 const GAMES = [
-  { id: 'reaction', req: 0,          icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
-  { id: 'simon',    req: 500,        icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.' },
-  { id: 'whack',    req: 5000,       icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.' },
-  { id: 'find',     req: 50000,      icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.' },
-  { id: 'rush',     req: 250000,     icon: '⚡', name: 'Rush de clics',     cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
-  { id: 'recipe',   req: 1000000,    icon: '🥣', name: 'Recette express',   cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
-  { id: 'oven',     req: 5000000,    icon: '🔥', name: 'Sortie du four',    cd: 12, start: gameOven,     desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
-  { id: 'shop',     req: 25000000,   icon: '🛒', name: 'Vente de cookies',  cd: 15, start: gameShop,     desc: 'Servez un maximum de clients en 30 secondes.' },
-  { id: 'catch',    req: 100000000,  icon: '🧺', name: 'Attrape-cookies',   cd: 12, start: gameCatch,    desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
-  { id: 'memory',   req: 500000000,  icon: '🃏', name: 'Memory gourmand',   cd: 15, start: gameMemory,   desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.' },
-  { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true },
+  { id: 'reaction', req: 0,          icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.', weight: 1 },
+  { id: 'simon',    req: 500,        icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.', weight: 1.2 },
+  { id: 'whack',    req: 5000,       icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.', weight: 1 },
+  { id: 'find',     req: 50000,      icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.', weight: 1.5 },
+  { id: 'rush',     req: 250000,     icon: '⚡', name: 'Rush de clics',     cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.', weight: 1 },
+  { id: 'recipe',   req: 1000000,    icon: '🥣', name: 'Recette express',   cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.', weight: 1.2 },
+  { id: 'oven',     req: 5000000,    icon: '🔥', name: 'Sortie du four',    cd: 12, start: gameOven,     desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !', weight: 1 },
+  { id: 'shop',     req: 25000000,   icon: '🛒', name: 'Vente de cookies',  cd: 15, start: gameShop,     desc: 'Servez un maximum de clients en 30 secondes.', weight: 1.5 },
+  { id: 'catch',    req: 100000000,  icon: '🧺', name: 'Attrape-cookies',   cd: 12, start: gameCatch,    desc: 'Attrapez les cookies qui tombent, évitez les brocolis.', weight: 1.5 },
+  { id: 'memory',   req: 500000000,  icon: '🃏', name: 'Memory gourmand',   cd: 15, start: gameMemory,   desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.', weight: 2 },
+  { id: 'sort',     req: 750000000,  icon: '🛍️', name: 'Le Tri Gourmand',   cd: 14, start: gameSort,     desc: 'Triez rapidement les ingrédients dans le bon sac.', weight: 1.5 },
+  { id: 'draw',     req: 850000000,  icon: '🖌️', name: 'Cookie Art',        cd: 15, start: gameDraw,     desc: 'Dessinez le plus gros cookie possible avec votre souris.', weight: 1.8 },
+  { id: 'cook',     req: 950000000,  icon: '👨‍🍳',name: 'Le Chef',           cd: 18, start: gameCook,     desc: 'Pétrissez, cuisez et décorez votre cookie à la perfection.', weight: 2 },
+  { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true, weight: 1 },
 ];
 const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
 const gameReady = (g) => Date.now() >= (S.games[g.id] || 0);
@@ -1241,7 +1244,7 @@ function finishGame(state, frac, detail) {
   if (state.cleanup) state.cleanup();
   const g = state.g;
   frac = Math.max(0, Math.min(g.over ? 1.5 : 1, frac || 0));
-  const reward = Math.round(gameMax() * frac);
+  const reward = Math.round(gameMax() * frac * (g.weight || 1));
   gain(reward);
   S.gamesPlayed++;
   S.gameBest[g.id] = Math.max(S.gameBest[g.id] || 0, frac);
@@ -1364,9 +1367,9 @@ function gameSimon(api) {
     b.style.opacity = '1'; setTimeout(() => b.style.opacity = '0.5', 200);
     if (seq[step] === i) {
       step++;
-      api.frac = Math.min(1, seq.length / 8);
+      api.frac = Math.min(1, seq.length / 5);
       if (step === seq.length) {
-        if (seq.length >= 8) return api.end(1, 'Séquence parfaite (8 étapes)');
+        if (seq.length >= 5) return api.end(1, 'Séquence parfaite (5 étapes)');
         setTimeout(playSeq, 800);
       }
     } else {
@@ -1455,7 +1458,7 @@ function gameRecipe(api) {
     api.body.querySelector('.recipe-preview').textContent = 'Recette cachée !';
     box.innerHTML = options.map((item) => '<button data-ingredient="' + item + '">' + item + '</button>').join('');
   };
-  setTimeout(showOptions, 1200);
+  setTimeout(showOptions, 3200);
   box.addEventListener('click', (e) => {
     const button = e.target.closest('[data-ingredient]');
     if (!button || !alive || position >= recipe.length) return;
@@ -1866,6 +1869,172 @@ function gameWheel(api) {
     raf = requestAnimationFrame(frame);
   });
   return () => cancelAnimationFrame(raf);
+}
+
+function gameSort(api) {
+  const types = [{e:'🍫', n:'Chocolat'}, {e:'🌾', n:'Farine'}, {e:'🥛', n:'Lait'}];
+  let queue = Array.from({length: 15}, () => types[Math.floor(Math.random() * types.length)]);
+  let score = 0, time = 15, alive = true, timer;
+  
+  const render = () => {
+    if (!alive) return;
+    if (queue.length === 0) {
+      api.end(1, 'Tous les ingrédients sont triés !');
+      return;
+    }
+    api.body.innerHTML = '<p class="game-hint">Triez les ingrédients dans le bon sac ! (Pénalité de 2s par erreur)</p>' +
+      '<div style="font-size:70px; text-align:center; height:90px; margin:20px 0; animation: pop 0.2s;">' + queue[0].e + '</div>' +
+      '<div style="display:flex; justify-content:center; gap:10px;">' +
+      types.map((t, i) => '<button data-bag="'+i+'" class="big-btn" style="flex:1; padding:10px; font-size:14px; background:linear-gradient(180deg, #6b4521, #452a12); box-shadow:0 4px 0 #2a1400; border:1px solid #8c5e2c;">🛍️<br>'+t.n+'</button>').join('') +
+      '</div>';
+      
+    api.body.querySelectorAll('[data-bag]').forEach(b => b.addEventListener('click', () => {
+      if (!alive) return;
+      let target = parseInt(b.dataset.bag);
+      if (types[target].e === queue[0].e) {
+        score++;
+        queue.shift();
+        api.frac = score / 15;
+        render();
+      } else {
+        time = Math.max(0, time - 2);
+        b.style.transform = 'translateY(2px)';
+        b.style.background = '#8a3333';
+        setTimeout(() => { if (alive) render(); }, 200);
+      }
+    }));
+  };
+  
+  render();
+  api.info('15 objets · 15 s');
+  timer = setInterval(() => { 
+    time--; 
+    api.info(queue.length + ' restants · ' + time + ' s'); 
+    if (time <= 0) api.end(score / 15, score + ' ingrédient(s) trié(s)'); 
+  }, 1000);
+  return () => { alive = false; clearInterval(timer); };
+}
+
+function gameDraw(api) {
+  let time = 15, alive = true, timer;
+  api.body.innerHTML = '<p class="game-hint">Dessinez le plus grand cookie et ses pépites !</p>' +
+    '<div style="text-align:center; touch-action:none;"><canvas id="drawCanvas" width="300" height="250" style="border:2px solid #8c5e2c; border-radius:12px; background:#24150b; cursor:crosshair; touch-action:none;"></canvas></div>';
+    
+  const cv = api.body.querySelector('#drawCanvas');
+  const ctx = cv.getContext('2d');
+  let drawing = false;
+  let points = 0;
+  
+  const start = (e) => { drawing = true; draw(e); };
+  const end = () => { drawing = false; ctx.beginPath(); };
+  const draw = (e) => {
+    if (!drawing || !alive) return;
+    const rect = cv.getBoundingClientRect();
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    
+    ctx.lineWidth = 14;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#c2702e'; 
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    
+    points++;
+    api.frac = Math.min(1, points / 200); 
+  };
+  
+  cv.addEventListener('mousedown', start);
+  cv.addEventListener('mouseup', end);
+  cv.addEventListener('mousemove', draw);
+  cv.addEventListener('touchstart', start, {passive: false});
+  cv.addEventListener('touchend', end);
+  cv.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
+  
+  api.info('Dessinez ! · 15 s');
+  timer = setInterval(() => { 
+    time--; 
+    api.info('Dessinez ! · ' + time + ' s'); 
+    if (time <= 0) api.end(Math.min(1, points / 200), points >= 200 ? 'Chef-d\'œuvre absolu' : 'Joli gribouillage'); 
+  }, 1000);
+  return () => { alive = false; clearInterval(timer); };
+}
+
+function gameCook(api) {
+  let step = 1, time = 20, timer, alive = true;
+  let kneadCount = 0, bakeTime = 0;
+  let bakeInterval;
+  
+  const render = () => {
+    if (!alive) return;
+    if (step === 1) {
+      api.body.innerHTML = '<p class="game-hint">Étape 1/3 : Pétrissez la pâte ! (15 clics rapides)</p>' +
+        '<div style="text-align:center; padding: 20px;"><button id="kneadBtn" style="font-size:80px; transition:0.1s; background:transparent; border:none;">🥣</button></div>';
+      const b = api.body.querySelector('#kneadBtn');
+      b.addEventListener('mousedown', () => {
+        if (!alive) return;
+        b.style.transform = 'scale(0.85)';
+        setTimeout(() => b.style.transform = 'none', 100);
+        kneadCount++;
+        api.frac = kneadCount / 15 * 0.33;
+        if (kneadCount >= 15) { step = 2; render(); }
+      });
+    } else if (step === 2) {
+      api.body.innerHTML = '<p class="game-hint">Étape 2/3 : Cuisson. Sortez-le quand il est bien doré !</p>' +
+        '<div style="text-align:center; padding: 20px;"><div id="ovenCookie" style="margin:0 auto 15px; width:100px; height:100px; border-radius:50%; background:#fbeee0; transition: background 0.1s linear;"></div><button id="takeOut" class="big-btn">Sortir du four</button></div>';
+      const c = api.body.querySelector('#ovenCookie');
+      const b = api.body.querySelector('#takeOut');
+      let localTime = 0;
+      bakeInterval = setInterval(() => {
+        if (!alive || step !== 2) return clearInterval(bakeInterval);
+        localTime += 0.1;
+        if (localTime < 1.5) c.style.background = '#fbeee0'; 
+        else if (localTime < 3) c.style.background = '#e7b56a'; 
+        else if (localTime < 4.5) c.style.background = '#c2702e'; 
+        else c.style.background = '#301d0e'; 
+      }, 100);
+      b.addEventListener('click', () => {
+        clearInterval(bakeInterval);
+        let score = 0;
+        if (localTime >= 3 && localTime < 4.5) score = 0.33;
+        else if (localTime >= 1.5 && localTime < 5) score = 0.15;
+        api.frac = 0.33 + score;
+        step = 3; render();
+      });
+    } else if (step === 3) {
+      api.body.innerHTML = '<p class="game-hint">Étape 3/3 : Décorez ! Placez 3 pépites de chocolat.</p>' +
+        '<div id="decZone" style="position:relative; margin:0 auto; width:150px; height:150px; border-radius:50%; background:#c2702e; cursor:crosshair; touch-action:none;"></div>';
+      const z = api.body.querySelector('#decZone');
+      let chips = 0;
+      z.addEventListener('mousedown', (e) => {
+        if (!alive || chips >= 3) return;
+        const rect = z.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const chip = document.createElement('div');
+        chip.style.cssText = 'position:absolute; width:18px; height:18px; background:#381a09; border-radius:50%; left:'+(x-9)+'px; top:'+(y-9)+'px; box-shadow:inset -2px -2px 0 rgba(0,0,0,0.5);';
+        z.appendChild(chip);
+        chips++;
+        api.frac += 0.11;
+        if (chips >= 3) {
+          setTimeout(() => api.end(api.frac, 'Cookie terminé !'), 500);
+        }
+      });
+    }
+  };
+  
+  render();
+  api.info('En cuisine · 20 s');
+  timer = setInterval(() => {
+    time--;
+    api.info('En cuisine · ' + time + ' s');
+    if (time <= 0) {
+      clearInterval(bakeInterval);
+      api.end(api.frac, 'Temps écoulé !');
+    }
+  }, 1000);
+  return () => { alive = false; clearInterval(timer); clearInterval(bakeInterval); };
 }
 
 /* =====================================================================
