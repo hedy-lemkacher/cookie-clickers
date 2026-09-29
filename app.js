@@ -2175,16 +2175,34 @@ function lum(hex) {
 }
 function currentBg() {
   const c = S.custom;
-  if (c.bg === 'custom') return { bg: shade(c.bgCustom, -0.82), hi: c.bgCustom };
-  return BG_THEMES.find((t) => t.id === c.bg) || BG_THEMES[0];
+  if (c.bgType === 'gradient') return { bg: c.bgGrad2, hi: c.bgGrad1, angle: c.bgAngle };
+  if (c.bgType === 'solid' || c.bg === 'custom') return { bg: shade(c.bgCustom, -0.82), hi: c.bgCustom, angle: 135 };
+  const t = BG_THEMES.find((t) => t.id === c.bg) || BG_THEMES[0];
+  return { bg: t.bg, hi: t.hi, angle: 135 };
 }
 function currentCookie() {
   const c = S.custom;
-  if (c.cookie === 'custom') {
+  let baseChip = '#4b2411';
+  let cColors, edge;
+  
+  if (c.ckType === 'gradient') {
+    cColors = [c.ckGrad1, shade(c.ckGrad1, -0.2), c.ckGrad2];
+    edge = shade(c.ckGrad2, -0.3);
+    baseChip = lum(c.ckGrad1) > 0.55 ? '#4b2411' : '#fff1dc';
+  } else if (c.ckType === 'solid' || c.cookie === 'custom') {
     const x = c.cookieCustom;
-    return { c: [shade(x, 0.4), x, shade(x, -0.35)], chip: lum(x) > 0.55 ? '#4b2411' : '#fff1dc', edge: shade(x, -0.5) };
+    cColors = [shade(x, 0.4), x, shade(x, -0.35)];
+    edge = shade(x, -0.5);
+    baseChip = lum(x) > 0.55 ? '#4b2411' : '#fff1dc';
+  } else {
+    const t = COOKIE_THEMES.find((t) => t.id === c.cookie) || COOKIE_THEMES[0];
+    cColors = t.c;
+    edge = t.edge;
+    baseChip = t.chip;
   }
-  return COOKIE_THEMES.find((t) => t.id === c.cookie) || COOKIE_THEMES[0];
+  
+  const chipColor = c.chipType === 'custom' ? c.chipCustom : baseChip;
+  return { c: cColors, chip: chipColor, edge: edge };
 }
 function miniCookieSvg(t) {
   return '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="' + t.c[1] + '" stroke="' + t.edge + '" stroke-width="2"/>' +
@@ -2192,7 +2210,20 @@ function miniCookieSvg(t) {
     '<g fill="' + t.chip + '"><circle cx="13" cy="15" r="2.6"/><circle cx="24" cy="12" r="2.2"/><circle cx="27" cy="24" r="2.6"/><circle cx="16" cy="27" r="2.4"/><circle cx="21" cy="20" r="1.8"/></g></svg>';
 }
 function buildStylePane() {
+  const c = S.custom;
+  // Ensure new fields exist for backward compatibility
+  c.bgType = c.bgType || (c.bg === 'custom' ? 'solid' : 'theme');
+  c.ckType = c.ckType || (c.cookie === 'custom' ? 'solid' : 'theme');
+  c.bgGrad1 = c.bgGrad1 || '#2a1a10';
+  c.bgGrad2 = c.bgGrad2 || '#100a06';
+  c.bgAngle = c.bgAngle || 135;
+  c.ckGrad1 = c.ckGrad1 || '#f6cd86';
+  c.ckGrad2 = c.ckGrad2 || '#a5602a';
+  c.chipType = c.chipType || 'auto';
+  c.chipCustom = c.chipCustom || '#4b2411';
+
   const bgBox = $('#bgSwatches');
+  bgBox.innerHTML = '';
   for (const t of BG_THEMES) {
     const s = document.createElement('button');
     s.className = 'swatch';
@@ -2206,7 +2237,9 @@ function buildStylePane() {
     S.custom.bg = s.dataset.bg;
     styled();
   });
+  
   const ckBox = $('#ckSwatches');
+  ckBox.innerHTML = '';
   for (const t of COOKIE_THEMES) {
     const s = document.createElement('button');
     s.className = 'swatch';
@@ -2220,16 +2253,45 @@ function buildStylePane() {
     S.custom.cookie = s.dataset.ck;
     styled();
   });
-  $('#bgPicker').value = S.custom.bgCustom;
-  $('#ckPicker').value = S.custom.cookieCustom;
-  $('#bgPicker').addEventListener('input', (e) => { S.custom.bg = 'custom'; S.custom.bgCustom = e.target.value; styled(); });
-  $('#ckPicker').addEventListener('input', (e) => { S.custom.cookie = 'custom'; S.custom.cookieCustom = e.target.value; styled(); });
-  $('#nameInput').value = S.custom.name;
-  $('#nameInput').addEventListener('input', (e) => { S.custom.name = e.target.value.trim(); styled(); });
-  $('#optRain').checked = S.custom.rain;
-  $('#optRain').addEventListener('change', (e) => { S.custom.rain = e.target.checked; styled(); });
-  $('#optFmt').value = S.custom.numfmt;
-  $('#optFmt').addEventListener('change', (e) => { S.custom.numfmt = e.target.value; styled(); refreshAll(); });
+
+  // Init values
+  $('#bgTypeSelect').value = c.bgType;
+  $('#bgSolidPicker').value = c.bgCustom;
+  $('#bgGrad1').value = c.bgGrad1;
+  $('#bgGrad2').value = c.bgGrad2;
+  $('#bgAngle').value = c.bgAngle;
+  $('#bgAngleVal').textContent = c.bgAngle + '°';
+
+  $('#ckTypeSelect').value = c.ckType;
+  $('#ckSolidPicker').value = c.cookieCustom;
+  $('#ckGrad1').value = c.ckGrad1;
+  $('#ckGrad2').value = c.ckGrad2;
+
+  $('#chipTypeSelect').value = c.chipType;
+  $('#chipPicker').value = c.chipCustom;
+
+  $('#nameInput').value = c.name;
+  $('#optRain').checked = c.rain;
+  $('#optFmt').value = c.numfmt;
+
+  // Listeners
+  $('#bgTypeSelect').addEventListener('change', e => { c.bgType = e.target.value; styled(); });
+  $('#bgSolidPicker').addEventListener('input', e => { c.bgCustom = e.target.value; styled(); });
+  $('#bgGrad1').addEventListener('input', e => { c.bgGrad1 = e.target.value; styled(); });
+  $('#bgGrad2').addEventListener('input', e => { c.bgGrad2 = e.target.value; styled(); });
+  $('#bgAngle').addEventListener('input', e => { c.bgAngle = e.target.value; $('#bgAngleVal').textContent = e.target.value + '°'; styled(); });
+
+  $('#ckTypeSelect').addEventListener('change', e => { c.ckType = e.target.value; styled(); });
+  $('#ckSolidPicker').addEventListener('input', e => { c.cookieCustom = e.target.value; styled(); });
+  $('#ckGrad1').addEventListener('input', e => { c.ckGrad1 = e.target.value; styled(); });
+  $('#ckGrad2').addEventListener('input', e => { c.ckGrad2 = e.target.value; styled(); });
+
+  $('#chipTypeSelect').addEventListener('change', e => { c.chipType = e.target.value; styled(); });
+  $('#chipPicker').addEventListener('input', e => { c.chipCustom = e.target.value; styled(); });
+
+  $('#nameInput').addEventListener('input', (e) => { c.name = e.target.value.trim(); styled(); });
+  $('#optRain').addEventListener('change', (e) => { c.rain = e.target.checked; styled(); });
+  $('#optFmt').addEventListener('change', (e) => { c.numfmt = e.target.value; styled(); refreshAll(); });
 }
 function styled() {
   S.styled = true;
@@ -2242,19 +2304,35 @@ function applyStyle() {
   root.style.setProperty('--bg', bg.bg);
   root.style.setProperty('--bg-hi', bg.hi);
   root.style.setProperty('--bg-hi2', shade(bg.hi, -0.3));
+  // Override background with proper angle for gradients
+  document.body.style.background = `linear-gradient(${bg.angle}deg, ${bg.hi}, ${bg.bg})`;
+
   const ck = currentCookie();
   $('#d0').setAttribute('stop-color', ck.c[0]);
   $('#d1').setAttribute('stop-color', ck.c[1]);
   $('#d2').setAttribute('stop-color', ck.c[2]);
   $('#ckEdge').setAttribute('stroke', ck.edge);
   $('#chips').setAttribute('fill', ck.chip);
-  $('#chipsHi').setAttribute('fill', shade(ck.chip, lum(ck.chip) > 0.5 ? -0.25 : 0.3));
+  const chipsHi = $('#chipsHi');
+  if (chipsHi) chipsHi.setAttribute('fill', shade(ck.chip, lum(ck.chip) > 0.5 ? -0.25 : 0.3));
   drawSprite(ck);
+  
   $('#bakery').textContent = S.custom.name || DEFAULT_CUSTOM.name;
-  document.querySelectorAll('[data-bg]').forEach((s) => s.classList.toggle('on', s.dataset.bg === S.custom.bg));
-  document.querySelectorAll('[data-ck]').forEach((s) => s.classList.toggle('on', s.dataset.ck === S.custom.cookie));
-  $('#bgCustomRow').classList.toggle('on', S.custom.bg === 'custom');
-  $('#ckCustomRow').classList.toggle('on', S.custom.cookie === 'custom');
+  
+  // Toggle UI visibility in the style pane
+  const c = S.custom;
+  $('#bgThemeGroup').style.display = c.bgType === 'theme' ? 'block' : 'none';
+  $('#bgSolidGroup').style.display = c.bgType === 'solid' ? 'block' : 'none';
+  $('#bgGradGroup').style.display = c.bgType === 'gradient' ? 'flex' : 'none';
+  
+  $('#ckThemeGroup').style.display = c.ckType === 'theme' ? 'block' : 'none';
+  $('#ckSolidGroup').style.display = c.ckType === 'solid' ? 'block' : 'none';
+  $('#ckGradGroup').style.display = c.ckType === 'gradient' ? 'flex' : 'none';
+
+  $('#chipCustomGroup').style.display = c.chipType === 'custom' ? 'block' : 'none';
+
+  document.querySelectorAll('[data-bg]').forEach((s) => s.classList.toggle('on', s.dataset.bg === c.bg));
+  document.querySelectorAll('[data-ck]').forEach((s) => s.classList.toggle('on', s.dataset.ck === c.cookie));
 }
 
 /* =====================================================================

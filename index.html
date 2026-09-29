@@ -176,20 +176,54 @@
         <input class="text-input" id="nameInput" maxlength="40" spellcheck="false">
       </div>
       <div class="card">
-        <h3 class="card-title"><span>Couleur du fond</span></h3>
-        <div class="swatches" id="bgSwatches"></div>
-        <label class="custom-row" id="bgCustomRow">Couleur personnalisée <input type="color" id="bgPicker"></label>
+        <h3 class="card-title"><span>Fond de page</span></h3>
+        <label class="opt" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">Type 
+          <select id="bgTypeSelect" class="text-input" style="width:auto;"><option value="theme">Thèmes prédéfinis</option><option value="solid">Couleur unie</option><option value="gradient">Dégradé</option></select>
+        </label>
+        <div id="bgThemeGroup">
+          <div class="swatches" id="bgSwatches"></div>
+        </div>
+        <div id="bgSolidGroup" style="display:none;">
+          <label class="custom-row">Couleur <input type="color" id="bgSolidPicker"></label>
+        </div>
+        <div id="bgGradGroup" style="display:none; display:flex; flex-direction:column; gap:8px;">
+          <label class="custom-row">Couleur 1 <input type="color" id="bgGrad1"></label>
+          <label class="custom-row">Couleur 2 <input type="color" id="bgGrad2"></label>
+          <label class="opt" style="display:flex; justify-content:space-between; align-items:center;">Angle 
+            <input type="range" id="bgAngle" min="0" max="360" value="135" style="flex:1; margin:0 10px;"> 
+            <span id="bgAngleVal" style="min-width:40px; text-align:right;">135°</span>
+          </label>
+        </div>
       </div>
       <div class="card">
-        <h3 class="card-title"><span>Couleur du cookie</span></h3>
-        <div class="swatches" id="ckSwatches"></div>
-        <label class="custom-row" id="ckCustomRow">Couleur personnalisée <input type="color" id="ckPicker"></label>
+        <h3 class="card-title"><span>Apparence du Cookie</span></h3>
+        <label class="opt" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">Type 
+          <select id="ckTypeSelect" class="text-input" style="width:auto;"><option value="theme">Thèmes prédéfinis</option><option value="solid">Couleur unie</option><option value="gradient">Dégradé</option></select>
+        </label>
+        <div id="ckThemeGroup">
+          <div class="swatches" id="ckSwatches"></div>
+        </div>
+        <div id="ckSolidGroup" style="display:none;">
+          <label class="custom-row">Couleur de base <input type="color" id="ckSolidPicker"></label>
+        </div>
+        <div id="ckGradGroup" style="display:none; display:flex; flex-direction:column; gap:8px;">
+          <label class="custom-row">Centre <input type="color" id="ckGrad1"></label>
+          <label class="custom-row">Bords <input type="color" id="ckGrad2"></label>
+        </div>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">
+        <h4 style="margin:0 0 10px 0; color:#b0a090; font-size:14px; text-transform:uppercase;">Pépites de chocolat</h4>
+        <label class="opt" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">Couleur 
+          <select id="chipTypeSelect" class="text-input" style="width:auto;"><option value="auto">Automatique</option><option value="custom">Personnalisée</option></select>
+        </label>
+        <div id="chipCustomGroup" style="display:none;">
+          <label class="custom-row">Couleur <input type="color" id="chipPicker"></label>
+        </div>
       </div>
       <div class="card">
         <h3 class="card-title"><span>Options</span></h3>
         <label class="opt">Pluie de cookies en fond <input type="checkbox" id="optRain"></label>
         <label class="opt">Affichage des grands nombres
-          <select id="optFmt">
+          <select id="optFmt" class="text-input" style="width:100%; margin-top:5px;">
             <option value="words">1,5 milliard</option>
             <option value="short">1,5 Md</option>
             <option value="sci">1,5e9</option>
@@ -197,7 +231,6 @@
         </label>
       </div>
     </div>
-
     <div class="pane" id="worlds">
       <div class="pane-intro">
         <div style="display:flex;justify-content:space-between;align-items:center;">
