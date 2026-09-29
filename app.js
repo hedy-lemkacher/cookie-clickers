@@ -2487,73 +2487,95 @@ function initFlappy() {
   const overlay = document.getElementById('flappyOverlay');
   const status = document.getElementById('flappyStatus');
   
-  let raf, birdY = 200, birdV = 0, pipes = [], frame = 0;
+  let raf;
   let playing = false, startTime = 0;
-  let lastFlappy = S.games['flappy'] || 0;
+  let mouseX = 200, mouseY = 200;
+  let lasers = []; // { axis: 'x'|'y', pos: number, state: 'warn'|'fire', timer: number, width: number }
   
   const updateBtn = () => {
     btn.disabled = false;
     btn.textContent = 'Jouer (pas de recharge pour l\'instant)';
   };
-  setInterval(updateBtn, 10000);
   updateBtn();
   
-  const jump = (e) => {
-    if(e) e.preventDefault();
-    if(playing) birdV = -6;
+  const move = (e) => {
+    const rect = cv.getBoundingClientRect();
+    if(e.touches) {
+      mouseX = e.touches[0].clientX - rect.left;
+      mouseY = e.touches[0].clientY - rect.top;
+    } else {
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    }
   };
-  cv.addEventListener('mousedown', jump);
-  cv.addEventListener('touchstart', jump, {passive:false});
+  cv.addEventListener('mousemove', move);
+  cv.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, {passive:false});
   
   btn.addEventListener('click', () => {
     playing = true;
-    birdY = 200; birdV = 0; pipes = []; frame = 0;
+    lasers = [];
+    mouseX = 200; mouseY = 200;
     startTime = Date.now();
-    lastFlappy = Date.now();
-    S.games['flappy'] = lastFlappy;
-    save();
     updateBtn();
     overlay.style.display = 'none';
-    status.textContent = 'Survivez 60 secondes !';
+    status.textContent = 'Survivez 30 secondes !';
     status.style.color = '#fff';
-    runFlappy();
+    runGame();
   });
   
-  function runFlappy() {
+  function runGame() {
     if (!playing) return;
-    frame++;
-    birdV += 0.25; // gravity slightly reduced
-    birdY += birdV;
     
-    if (frame % 80 === 0) {
-      let gap = 160; // gap increased
-      let pos = Math.random() * (400 - gap - 40) + 20;
-      pipes.push({ x: 400, top: pos, bottom: pos + gap });
+    // Spawn lasers
+    if (Math.random() < 0.03) { // Easy difficulty
+      lasers.push({
+        axis: Math.random() > 0.5 ? 'x' : 'y',
+        pos: Math.random() * 400,
+        state: 'warn',
+        timer: 60, // 1 second warning at 60fps
+        width: 30 // 30px width laser
+      });
     }
     
     ctx.clearRect(0, 0, 400, 400);
     
-    ctx.fillStyle = '#49250e';
-    pipes.forEach(p => {
-      p.x -= 3;
-      ctx.fillRect(p.x, 0, 50, p.top);
-      ctx.fillRect(p.x, p.bottom, 50, 400 - p.bottom);
+    // Update and draw lasers
+    for (let i = lasers.length - 1; i >= 0; i--) {
+      let l = lasers[i];
+      l.timer--;
       
-      // Collision
-      if (
-        (50 + 15 > p.x && 50 - 15 < p.x + 50) &&
-        (birdY - 15 < p.top || birdY + 15 > p.bottom)
-      ) {
-        die('Vous avez touché un obstacle !');
+      if (l.state === 'warn') {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        if (l.timer <= 0) {
+          l.state = 'fire';
+          l.timer = 30; // 0.5 seconds fire
+        }
+      } else {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+        if (l.timer <= 0) {
+          lasers.splice(i, 1);
+          continue;
+        }
+        
+        // Collision check
+        const cookieR = 15;
+        if (l.axis === 'x') {
+          if (Math.abs(mouseX - l.pos) < cookieR + l.width/2) die('Un laser vous a touché !');
+        } else {
+          if (Math.abs(mouseY - l.pos) < cookieR + l.width/2) die('Un laser vous a touché !');
+        }
       }
-    });
-    pipes = pipes.filter(p => p.x > -50);
+      
+      if (l.axis === 'x') {
+        ctx.fillRect(l.pos - l.width/2, 0, l.width, 400);
+      } else {
+        ctx.fillRect(0, l.pos - l.width/2, 400, l.width);
+      }
+    }
     
-    if (birdY > 400 || birdY < 0) die('Vous êtes tombé !');
-    
-    // Draw bird (cookie)
+    // Draw cookie
     ctx.beginPath();
-    ctx.arc(50, birdY, 15, 0, Math.PI*2);
+    ctx.arc(mouseX, mouseY, 15, 0, Math.PI*2);
     ctx.fillStyle = '#c2702e';
     ctx.fill();
     ctx.strokeStyle = '#8a4c1c';
@@ -2561,12 +2583,12 @@ function initFlappy() {
     ctx.stroke();
     
     const elapsed = (Date.now() - startTime) / 1000;
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 60 s';
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 30 s';
     
-    if (elapsed >= 60) {
+    if (elapsed >= 30) {
       winGame();
     } else {
-      raf = requestAnimationFrame(runFlappy);
+      raf = requestAnimationFrame(runGame);
     }
   }
   
