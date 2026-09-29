@@ -1022,7 +1022,11 @@ function closeModal() {
   current = null;
 }
 $('#mClose').addEventListener('click', closeModal);
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('on')) closeModal(); });
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (modal.classList.contains('on')) closeModal();
+  if (sideMenu.classList.contains('on')) setMenu(false);
+});
 
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
@@ -1643,6 +1647,22 @@ function news() {
    ONGLETS
    ===================================================================== */
 let currentTab = 'showcase';
+const menuToggle = $('#menuToggle'), menuClose = $('#menuClose'), sideMenu = $('#sideMenu'), menuBackdrop = $('#menuBackdrop');
+function setMenu(open) {
+  sideMenu.classList.toggle('on', open);
+  menuBackdrop.classList.toggle('on', open);
+  menuToggle.setAttribute('aria-expanded', String(open));
+  sideMenu.setAttribute('aria-hidden', String(!open));
+}
+menuToggle.addEventListener('click', () => setMenu(true));
+menuClose.addEventListener('click', () => setMenu(false));
+menuBackdrop.addEventListener('click', () => setMenu(false));
+sideMenu.addEventListener('click', (e) => {
+  const button = e.target.closest('[data-menu-tab]');
+  if (!button) return;
+  showTab(button.dataset.menuTab);
+  setMenu(false);
+});
 $('#tabs').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (b) showTab(b.dataset.tab);
@@ -1651,6 +1671,7 @@ function showTab(id) {
   currentTab = id;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
   document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === id));
+  document.querySelectorAll('[data-menu-tab]').forEach((b) => b.classList.toggle('on', b.dataset.menuTab === id));
   refreshPane();
 }
 function refreshPane() {
@@ -1660,8 +1681,10 @@ function refreshPane() {
   if (currentTab === 'showcase') refreshShowcase();
 }
 function updateDots() {
-  $('#dotEvents').classList.toggle('on', unlockedEvents().length > S.evViewed);
-  $('#dotPlay').classList.toggle('on', Date.now() >= S.daily || GAMES.some(gameReady));
+  const eventsDot = $('#dotEvents');
+  const playDot = $('#dotPlay');
+  if (eventsDot) eventsDot.classList.toggle('on', unlockedEvents().length > S.evViewed);
+  if (playDot) playDot.classList.toggle('on', Date.now() >= S.daily || GAMES.some(gameReady));
 }
 
 /* =====================================================================

@@ -12,6 +12,20 @@
 </head>
 <body>
 
+<button class="menu-toggle" id="menuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sideMenu">☰</button>
+<div class="menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu" aria-hidden="true">
+  <div class="side-menu-head"><h2>Menu</h2><button id="menuClose" type="button" aria-label="Fermer le menu">✕</button></div>
+  <p class="side-menu-caption">Pages secondaires</p>
+  <nav class="side-menu-links" aria-label="Pages secondaires">
+    <button data-menu-tab="events" type="button">🎉 <span>Événements</span></button>
+    <button data-menu-tab="style" type="button">🎨 <span>Style / personnalisation</span></button>
+    <button data-menu-tab="ach" type="button">🏆 <span>Succès</span></button>
+    <button data-menu-tab="worlds" type="button">🌍 <span>Mondes</span></button>
+    <button data-menu-tab="leaderboard" type="button">📊 <span>Performances / statistiques</span></button>
+  </nav>
+</aside>
+
 <div class="app">
   <!-- ============ Colonne gauche : le gros cookie ============ -->
   <section class="left">
@@ -85,12 +99,7 @@
     <div class="news"><b>INFOS</b><span id="newsText">Vous rêvez de cookies. Et si vous en faisiez ?</span></div>
     <nav class="tabs" id="tabs">
       <button data-tab="showcase" class="on">🏪 Vitrine</button>
-      <button data-tab="events">🎉 Événements<i class="dot" id="dotEvents"></i></button>
       <button data-tab="play">🎮 Jouer<i class="dot" id="dotPlay"></i></button>
-      <button data-tab="ach">🏆 Succès</button>
-      <button data-tab="style">🎨 Style</button>
-      <button data-tab="worlds">🌍 Mondes</button>
-      <button data-tab="leaderboard">📊 Performances</button>
     </nav>
 
     <div class="pane on" id="showcase">
