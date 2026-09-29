@@ -18,7 +18,7 @@ const BUILDINGS = [
   { id: 'wizard',      name: 'Tour de sorcier',  plural: 'Tours de sorcier',  icon: '🧙', base: 3.3e8,  cps: 44000,  desc: 'Invoque des cookies par magie.' },
   { id: 'rocket',      name: 'Fusée',            plural: 'Fusées',            icon: '🚀', base: 5.1e9,  cps: 260000, desc: 'Rapporte des cookies de la planète Cookie.' },
   { id: 'portal',      name: "Maillot d'Adam",          plural: "Maillots d'Adam",          icon: '<img src=\"adam.png\" style=\"width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;\">', base: 7.5e10, cps: 1.6e6,  desc: 'Ouvre une porte vers le Cookievers.' },
-  { id: 'timemachine', name: 'Machine temporelle', plural: 'Machines temporelles', icon: '⏳', base: 1e12, cps: 1e7, desc: 'Ramène des cookies du passé, avant qu\'ils ne soient mangés.' },
+  { id: 'timemachine', name: 'Le mechant chris', plural: 'Les mechants chris', icon: '<img src="chris.png" style="width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;">', base: 1e12, cps: 1e7, desc: 'Vole des cookies du passé pour son propre profit.' },
   { id: 'antimatter',  name: 'EBBY POSE',        plural: 'EBBY POSES',        icon: '<img src="ebby.png" style="width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;">', base: 1.4e13, cps: 6.5e7,  desc: 'Condense l\'antimatière de l\'univers en cookies.' },
   { id: 'prism',       name: 'Vikash Le BG',           plural: 'Vikash Le BG',           icon: '<img src=\"vikash.png\" style=\"width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;\">', base: 1.7e14, cps: 4.3e8,  desc: 'Transforme la lumière elle-même en cookies.' },
   { id: 'chancery',    name: 'Chancellerie',     plural: 'Chancelleries',     icon: '🏰', base: 2e15,   cps: 3e9,    desc: 'Dicte les lois de la consommation de cookies.' },
@@ -253,16 +253,65 @@ function renderWorldUI() {
   renderPerformance();
 }
 function renderWorldMenu() {
-  const select = $('#worldMenuSelect');
-  if (!select) return;
-  select.innerHTML = worlds.map((world) => '<option value="' + world.id + '">' + world.name + ' · ' + world.mode.toUpperCase() + '</option>').join('');
-  select.value = activeWorldId || '';
-  select.disabled = !worlds.length;
-  $('#worldMenuCount').textContent = worlds.length + ' / 5';
-  const current = activeWorld();
-  $('#worldMenuMeta').textContent = current ? worldModeName(current) : 'Aucun monde créé';
-  $('#worldMenuDelete').disabled = !current;
-  $('#worldMenuNew').disabled = worlds.length >= 5;
+  const grid = $('#worldsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  
+  if (worlds.length === 0) {
+    grid.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px;width:100%;grid-column:1/-1;">Aucun monde créé. Commencez une nouvelle partie !</div>';
+  }
+  
+  for (let i = 0; i < worlds.length; i++) {
+    const w = worlds[i];
+    const isCurrent = (i === current);
+    const card = document.createElement('div');
+    card.className = 'world-card' + (isCurrent ? ' active' : '');
+    
+    const modeName = w.mode === 'speedrun' ? 'Speedrun ⚡' : (w.mode === 'zen' ? 'Zen 🧘' : 'Classique 🍪');
+    
+    card.innerHTML = `
+      <div class="world-card-header">
+        <h4 class="world-card-title">${w.name}</h4>
+        <span class="world-card-mode ${w.mode}">${modeName}</span>
+      </div>
+      <div class="world-card-stats">
+        <div><span>Cookies</span><strong>${fmt(w.data.baked || 0)}</strong></div>
+      </div>
+      <div class="world-card-actions">
+        ${!isCurrent ? `<button class="btn-play" data-idx="${i}">Jouer</button>` : `<span class="active-badge">Actuel</span>`}
+        ${w.name !== 'defaut' && !isCurrent ? `<button class="btn-delete" data-idx="${i}" title="Supprimer">🗑️</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+  
+  const countEl = $('#worldMenuCount');
+  if (countEl) countEl.textContent = worlds.length + ' / 5';
+  
+  const newBtn = $('#worldMenuNew');
+  if (newBtn) newBtn.disabled = worlds.length >= 5;
+  
+  // Attach events
+  grid.querySelectorAll('.btn-play').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      switchWorld(parseInt(e.currentTarget.dataset.idx));
+    });
+  });
+  grid.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // Temporarily switch to this world to delete it? 
+      // Actually deleteWorld uses `current`. 
+      // We should modify deleteWorld to accept an index, or we handle it here.
+      const idx = parseInt(e.currentTarget.dataset.idx);
+      if (confirm('Voulez-vous vraiment supprimer ce monde ?')) {
+        worlds.splice(idx, 1);
+        if (current >= idx && current > 0) current--;
+        saveWorlds();
+        loadWorld();
+        renderWorldMenu();
+      }
+    });
+  });
 }
 function formatDuration(ms) {
   if (!ms) return 'En cours';
@@ -508,9 +557,7 @@ function deleteWorld() {
     openWorldModal(true);
   }
 }
-$('#worldMenuSelect').addEventListener('change', (e) => switchWorld(e.target.value));
 $('#worldMenuNew').addEventListener('click', () => openWorldModal(false));
-$('#worldMenuDelete').addEventListener('click', deleteWorld);
 $('#cancelWorld').addEventListener('click', closeWorldModal);
 $('#createWorld').addEventListener('click', createWorld);
 $('#worldModeInput').addEventListener('change', updateWorldFields);

@@ -19,6 +19,7 @@
   <div class="side-menu-head"><h2>Menu</h2><button id="menuClose" type="button" aria-label="Fermer le menu">✕</button></div>
   <p class="side-menu-caption">Pages secondaires</p>
   <nav class="side-menu-links" aria-label="Pages secondaires">
+    <button data-menu-tab="worlds" type="button">🌍 <span>Vos mondes</span></button>
     <button data-menu-tab="events" type="button">🎉 <span>Événements</span></button>
     <button data-menu-tab="style" type="button">🎨 <span>Style / personnalisation</span></button>
     <button data-menu-tab="ach" type="button">🏆 <span>Succès</span></button>
@@ -198,13 +199,16 @@
     </div>
 
     <div class="pane" id="worlds">
-      <div class="pane-intro"><h3>Vos mondes</h3><p>Chaque monde possède ses cookies, bâtiments et améliorations indépendants. Le mode choisi à la création reste définitif.</p></div>
-      <div class="card world-menu-card">
-        <h3 class="card-title"><span>Changer de monde</span><span id="worldMenuCount">0 / 5</span></h3>
-        <select id="worldMenuSelect" class="text-input" aria-label="Choisir un monde"></select>
-        <div class="world-menu-meta" id="worldMenuMeta"></div>
-        <div class="world-actions"><button id="worldMenuDelete" type="button">Supprimer ce monde</button><button id="worldMenuNew" class="big-btn" type="button">Créer un monde</button></div>
+      <div class="pane-intro">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3>Vos mondes</h3>
+          <span id="worldMenuCount" style="background:#3a2413;padding:4px 10px;border-radius:12px;font-size:13px;color:#f0d090;border:1px solid #705030;">0 / 5</span>
+        </div>
+        <p>Chaque monde possède ses cookies, bâtiments et améliorations indépendants. Le mode choisi à la création reste définitif.</p>
       </div>
+      <div id="worldsGrid" class="worlds-grid"></div>
+      <button id="worldMenuNew" class="big-btn world-new-btn" type="button">✨ Créer un nouveau monde</button>
+    </div>
     </div>
 
     <div class="pane" id="leaderboard">
