@@ -912,7 +912,11 @@ function refreshShowcase() {
     const want = Math.min(n, 48);
     while (icons.children.length < want) {
       const s = document.createElement('span');
-      s.textContent = b.icon;
+      if (b.icon.startsWith('<')) {
+        s.innerHTML = b.icon;
+      } else {
+        s.textContent = b.icon;
+      }
       icons.appendChild(s);
     }
     while (icons.children.length > want) icons.lastChild.remove();
