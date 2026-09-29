@@ -1193,11 +1193,11 @@ function gameRecipe(api) {
 function gameCasino(api) {
   const colors = { green: 'vert', red: 'rouge', black: 'noir' };
   let stake = 1, betType = null, betValue = null, spinning = false;
-  api.body.innerHTML = '<p class="game-hint">Misez de 1 à 10 cookies. Le 0 est vert, les nombres pairs sont rouges et les impairs sont noirs. Un bon chiffre paie ×10, une bonne couleur ×2.</p>' +
-    '<div class="casino"><label>Mise <input class="casino-stake" type="number" min="1" max="10" value="1"></label>' +
-    '<div class="casino-bets"><button data-bet="green">🟢 Vert</button><button data-bet="red">🔴 Rouge</button><button data-bet="black">⚫ Noir</button></div>' +
-    '<div class="casino-numbers">' + Array.from({ length: 11 }, (_, n) => '<button data-number="' + n + '">' + n + '</button>').join('') + '</div>' +
-    '<div class="casino-result">Choisissez une couleur ou un chiffre.</div><button class="big-btn casino-spin">Lancer la roulette</button></div>';
+  api.body.innerHTML = '<div class="casino"><div class="casino-hero"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La roulette de la boulangerie</h3><p>Couleur : ×2 · Chiffre exact : ×10</p></div><div class="casino-wheel"><span>0</span><i>2</i><b>4</b><i>6</i><b>8</b><i>10</i></div></div>' +
+    '<div class="casino-panel"><div class="casino-stake-row"><label>Mise <strong><input class="casino-stake" type="number" min="1" max="10" value="1"></strong> cookies</label><small>Maximum 10</small></div>' +
+    '<div class="casino-section-title">Choisissez votre pari</div><div class="casino-bets"><button data-bet="green">🟢 <span>Vert</span><small>0 · ×2</small></button><button data-bet="red">🔴 <span>Rouge</span><small>Pairs · ×2</small></button><button data-bet="black">⚫ <span>Noir</span><small>Impairs · ×2</small></button></div>' +
+    '<div class="casino-section-title">Ou choisissez un chiffre · ×10</div><div class="casino-numbers">' + Array.from({ length: 11 }, (_, n) => '<button data-number="' + n + '">' + n + '</button>').join('') + '</div>' +
+    '<div class="casino-result">Choisissez une couleur ou un chiffre.</div><button class="big-btn casino-spin">Lancer la roulette</button></div></div>';
   const stakeInput = api.body.querySelector('.casino-stake');
   const result = api.body.querySelector('.casino-result');
   const allBetButtons = api.body.querySelectorAll('[data-bet], [data-number]');
