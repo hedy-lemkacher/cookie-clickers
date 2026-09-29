@@ -173,6 +173,7 @@ function freshState() {
     evTotal: 0, evSeen: {}, evNext: now + rand(60, 120) * 1000, evViewed: 0,
     gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
+    casino: { windowStart: 0, bets: 0, lastResult: null },
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
 }
@@ -217,6 +218,7 @@ function load() {
       }
       S.custom = Object.assign({}, DEFAULT_CUSTOM, S.custom);
       S.fz = Object.assign(freshState().fz, S.fz);
+      S.casino = Object.assign(freshState().casino, S.casino);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
   if (S.bakedAll < S.baked) S.bakedAll = S.baked;
@@ -236,6 +238,7 @@ function worldModeName(world) {
   return 'CLASSIQUE';
 }
 function renderWorldUI() {
+  casinoBuilt = false;
   renderWorldMenu();
   renderPerformance();
 }
@@ -254,6 +257,70 @@ function renderWorldMenu() {
 function formatDuration(ms) {
   if (!ms) return 'En cours';
   return fmtTime(ms / 1000);
+}
+const CASINO_WINDOW = 100 * 60 * 1000;
+let casinoBuilt = false, casinoSelectedBet = null;
+function resetCasinoWindow() {
+  const now = Date.now();
+  if (!S.casino.windowStart || now - S.casino.windowStart >= CASINO_WINDOW) {
+    S.casino.windowStart = now;
+    S.casino.bets = 0;
+    S.casino.lastResult = null;
+  }
+}
+function casinoColor(number) { return number === 0 ? 'vert' : number % 2 === 0 ? 'rouge' : 'noir'; }
+function casinoRemaining() { resetCasinoWindow(); return Math.max(0, 5 - S.casino.bets); }
+function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
+function updateCasinoLimit() {
+  const limit = $('#casinoLimit');
+  if (!limit) return;
+  const left = casinoTimeLeft();
+  limit.textContent = casinoRemaining() + ' / 5 mises restantes · nouvelle série dans ' + fmtTime(left / 1000);
+}
+function renderCasinoPane() {
+  const box = $('#casinoPane');
+  if (!box) return;
+  casinoBuilt = true;
+  resetCasinoWindow();
+  if (S.baked < 1e6) {
+    box.innerHTML = '<div class="casino-lock"><div class="casino-lock-icon">🎰</div><h3>Casino verrouillé</h3><p>Cuisez encore <b>' + fmt(Math.max(0, 1e6 - S.baked)) + '</b> cookies pour débloquer la roulette.</p></div>';
+    return;
+  }
+  const result = S.casino.lastResult;
+  const numberButtons = Array.from({ length: 11 }, (_, n) => '<button data-casino-number="' + n + '">' + n + '</button>').join('');
+  const wheelNumbers = Array.from({ length: 11 }, (_, n) => '<span style="--angle:' + (n * (360 / 11)) + 'deg">' + n + '</span>').join('');
+  box.innerHTML = '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>Une table indépendante de la fête foraine. Cinq mises toutes les 100 minutes.</p></div><div class="casino-bankroll"><span>Solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div></div>' +
+    '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="1000000" step="1000000" value="1000000"> cookies</label><div class="casino-presets"><button data-casino-stake="1000000">1 M</button><button data-casino-stake="5000000">5 M</button><button data-casino-stake="10000000">10 M</button><button data-casino-stake="50000000">50 M</button><button data-casino-stake="max">MAX</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="vert">🟢 Vert <small>0</small></button><button data-casino-color="rouge">🔴 Rouge <small>Pairs</small></button><button data-casino-color="noir">⚫ Noir <small>Impairs</small></button></div><div class="casino-section-title">Chiffre exact · ×10</div><div class="casino-numbers">' + numberButtons + '</div><p class="casino-result" id="casinoResult">' + (result ? 'Dernier tirage : ' + result.number + ' (' + result.color + ')' + (result.won ? ' · gagné +' + fmt(result.payout) : ' · perdu') : 'Choisissez votre mise et votre pari.') + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
+  updateCasinoLimit();
+  box.querySelectorAll('[data-casino-stake]').forEach((button) => button.addEventListener('click', () => { $('#casinoStake').value = button.dataset.casinoStake === 'max' ? Math.floor(S.cookies) : button.dataset.casinoStake; }));
+  box.querySelectorAll('[data-casino-color], [data-casino-number]').forEach((button) => button.addEventListener('click', () => {
+    casinoSelectedBet = button.dataset.casinoColor ? { type: 'color', value: button.dataset.casinoColor } : { type: 'number', value: Number(button.dataset.casinoNumber) };
+    box.querySelectorAll('[data-casino-color], [data-casino-number]').forEach((item) => item.classList.toggle('selected', item === button));
+  }));
+  $('#casinoSpin').addEventListener('click', spinCasino);
+}
+function spinCasino() {
+  if (S.baked < 1e6 || casinoRemaining() <= 0 || !casinoSelectedBet) return;
+  const stake = Math.floor(Number($('#casinoStake').value) || 0);
+  if (stake < 1e6 || stake > S.cookies) { $('#casinoResult').textContent = stake < 1e6 ? 'La mise minimum est de 1 000 000 cookies.' : 'Solde insuffisant pour cette mise.'; return; }
+  const button = $('#casinoSpin'), wheel = $('#rouletteWheel');
+  button.disabled = true;
+  S.cookies -= stake;
+  S.casino.bets++;
+  const number = Math.floor(Math.random() * 11), color = casinoColor(number);
+  const won = casinoSelectedBet.type === 'number' ? casinoSelectedBet.value === number : casinoSelectedBet.value === color;
+  const payout = won ? stake * (casinoSelectedBet.type === 'number' ? 10 : 2) : 0;
+  wheel.style.setProperty('--roulette-turn', (1440 + number * (360 / 11) + Math.random() * 20) + 'deg');
+  wheel.classList.remove('roulette-spinning');
+  void wheel.offsetWidth;
+  wheel.classList.add('roulette-spinning');
+  setTimeout(() => {
+    if (payout) gain(payout);
+    S.casino.lastResult = { number, color, won, payout, stake };
+    casinoSelectedBet = null;
+    save();
+    renderCasinoPane();
+  }, 1400);
 }
 function renderPerformance() {
   const rows = $('#performanceRows');
@@ -929,7 +996,6 @@ const GAMES = [
   { id: 'quiz',    icon: '🧠', name: 'Quiz gourmand',       cd: 10, start: gameQuiz,     desc: 'Répondez à cinq questions de pâtisserie le plus vite possible.' },
   { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
   { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
-  { id: 'casino',  icon: '🎰', name: 'Casino cookie',         cd: 8, start: gameCasino,   desc: 'Misez directement des millions de cookies sur un chiffre ou une couleur.', unlock: () => S.baked >= 1e6 },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
   { id: 'shop',   icon: '🛒', name: 'Vente de cookies',   cd: 15, start: gameShop,   desc: 'Servez un maximum de clients en 30 secondes.' },
   { id: 'catch',  icon: '🧺', name: 'Attrape-cookies',    cd: 12, start: gameCatch,  desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
@@ -1850,6 +1916,7 @@ function showTab(id) {
 function refreshPane() {
   if (currentTab === 'events') { S.evViewed = unlockedEvents().length; renderEventsPane(); }
   if (currentTab === 'play') updatePlayPane();
+  if (currentTab === 'casino') { if (!casinoBuilt) renderCasinoPane(); else updateCasinoLimit(); }
   if (currentTab === 'ach') renderAchPane();
   if (currentTab === 'showcase') refreshShowcase();
 }
