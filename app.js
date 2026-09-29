@@ -929,6 +929,7 @@ const GAMES = [
   { id: 'quiz',    icon: '🧠', name: 'Quiz gourmand',       cd: 10, start: gameQuiz,     desc: 'Répondez à cinq questions de pâtisserie le plus vite possible.' },
   { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
   { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
+  { id: 'casino',  icon: '🎰', name: 'Casino cookie',         cd: 8, start: gameCasino,   desc: 'Misez jusqu’à 10 cookies sur un chiffre ou une couleur.', unlock: () => S.baked >= 1e6 },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
   { id: 'shop',   icon: '🛒', name: 'Vente de cookies',   cd: 15, start: gameShop,   desc: 'Servez un maximum de clients en 30 secondes.' },
   { id: 'catch',  icon: '🧺', name: 'Attrape-cookies',    cd: 12, start: gameCatch,  desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
@@ -973,6 +974,13 @@ function updatePlayPane() {
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
   for (const g of GAMES) {
     const btn = document.querySelector('[data-play="' + g.id + '"]');
+    const unlocked = !g.unlock || g.unlock();
+    if (!unlocked) {
+      btn.disabled = true;
+      btn.textContent = 'Débloqué à 1 000 000 cuits';
+      document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Le casino attend votre millionième cookie.';
+      continue;
+    }
     const ready = gameReady(g);
     btn.disabled = !ready;
     btn.textContent = ready ? 'Jouer' : 'Recharge · ' + fmtTime((S.games[g.id] - now) / 1000);
@@ -994,7 +1002,7 @@ function claimDaily() {
 }
 
 function openGame(g) {
-  if (!g || !gameReady(g) || current) return;
+  if (!g || (g.unlock && !g.unlock()) || !gameReady(g) || current) return;
   S.games[g.id] = Date.now() + gameCooldown(g);
   save();
   hideTip();
@@ -1180,6 +1188,48 @@ function gameRecipe(api) {
   api.info('Mémorisez la recette');
   timer = setInterval(() => { time--; api.info('Recette · ' + time + ' s'); if (time <= 0) api.end(position / recipe.length, position + ' ingrédient(s) correct(s)'); }, 1000);
   return () => { alive = false; clearInterval(timer); };
+}
+
+function gameCasino(api) {
+  const colors = { green: 'vert', red: 'rouge', black: 'noir' };
+  let stake = 1, betType = null, betValue = null, spinning = false;
+  api.body.innerHTML = '<p class="game-hint">Misez de 1 à 10 cookies. Le 0 est vert, les nombres pairs sont rouges et les impairs sont noirs. Un bon chiffre paie ×10, une bonne couleur ×2.</p>' +
+    '<div class="casino"><label>Mise <input class="casino-stake" type="number" min="1" max="10" value="1"></label>' +
+    '<div class="casino-bets"><button data-bet="green">🟢 Vert</button><button data-bet="red">🔴 Rouge</button><button data-bet="black">⚫ Noir</button></div>' +
+    '<div class="casino-numbers">' + Array.from({ length: 11 }, (_, n) => '<button data-number="' + n + '">' + n + '</button>').join('') + '</div>' +
+    '<div class="casino-result">Choisissez une couleur ou un chiffre.</div><button class="big-btn casino-spin">Lancer la roulette</button></div>';
+  const stakeInput = api.body.querySelector('.casino-stake');
+  const result = api.body.querySelector('.casino-result');
+  const allBetButtons = api.body.querySelectorAll('[data-bet], [data-number]');
+  const spin = api.body.querySelector('.casino-spin');
+  allBetButtons.forEach((button) => button.addEventListener('click', () => {
+    allBetButtons.forEach((item) => item.classList.remove('selected'));
+    button.classList.add('selected');
+    betType = button.dataset.bet ? 'color' : 'number';
+    betValue = button.dataset.bet || Number(button.dataset.number);
+    result.textContent = 'Mise sur ' + (betType === 'color' ? colors[betValue] : 'le ' + betValue) + '.';
+  }));
+  spin.addEventListener('click', () => {
+    if (spinning) return;
+    stake = Math.min(10, Math.max(1, Math.floor(Number(stakeInput.value) || 1)));
+    if (!betType) { result.textContent = 'Choisissez d’abord une couleur ou un chiffre.'; return; }
+    if (stake > S.cookies) { result.textContent = 'Vous ne possédez pas assez de cookies.'; return; }
+    spinning = true;
+    spin.disabled = true;
+    S.cookies -= stake;
+    const number = Math.floor(Math.random() * 11);
+    const color = number === 0 ? 'green' : number % 2 === 0 ? 'red' : 'black';
+    const won = betType === 'number' ? Number(betValue) === number : betValue === color;
+    const payout = won ? stake * (betType === 'number' ? 10 : 2) : 0;
+    setTimeout(() => {
+      if (payout) gain(payout);
+      result.textContent = 'La roulette tombe sur ' + number + ' (' + colors[color] + ') · ' + (won ? 'gagné +' + payout : 'perdu');
+      api.frac = won ? 1 : 0;
+      api.end(0, won ? 'Gain casino : +' + payout + ' cookies' : 'La roulette a gagné cette fois.');
+    }, 650);
+  });
+  api.info('Mise maximale : 10 cookies');
+  return () => { spinning = true; };
 }
 
 function gameTarget(api) {
