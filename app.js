@@ -259,7 +259,7 @@ function formatDuration(ms) {
   if (!ms) return 'En cours';
   return fmtTime(ms / 1000);
 }
-const CASINO_WINDOW = 100 * 60 * 1000;
+const CASINO_WINDOW = 15 * 60 * 1000;
 let casinoBuilt = false, casinoSelectedBet = null;
 function resetCasinoWindow() {
   const now = Date.now();
@@ -329,7 +329,7 @@ function renderCasinoPane() {
     return;
   }
   const result = S.casino.lastResult;
-  const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 100 minutes.';
+  const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 15 minutes.';
   const resultMarkup = result
     ? '<span class="casino-result-number">' + result.number + '</span><span class="casino-result-color ' + result.color + '">' + result.color.toUpperCase() + '</span><small>' + (result.won ? 'GAGNÉ +' + fmt(result.payout) + ' cookies' : 'PERDU · mise de ' + fmt(result.stake)) + '</small>'
     : 'Choisissez votre mise et votre pari.';
