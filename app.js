@@ -542,6 +542,33 @@ function cps() { return baseCps() * frenzyMult(); }
 /* Clics : base + 1 % de la prod par souris, multiplié par le combo */
 let combo = 0, lastClick = 0, clickFrenzyUntil = 0, clickFrenzyMult = 20;
 let clickTimes = [], clickBlockedUntil = 0;
+let enterPowerUntil = 0, isEnterPressed = false, enterInterval = 0;
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    isEnterPressed = true;
+    if (Date.now() < enterPowerUntil && !enterInterval) {
+      const cookieBtn = document.getElementById('cookie');
+      enterInterval = setInterval(() => {
+        if (!isEnterPressed || Date.now() >= enterPowerUntil) {
+          clearInterval(enterInterval);
+          enterInterval = 0;
+          return;
+        }
+        const oldBlocked = clickBlockedUntil;
+        clickBlockedUntil = 0;
+        clickTimes = [];
+        fastClickWarnings = 0;
+        lastRawClick = 0;
+        cookieBtn.click();
+        clickBlockedUntil = oldBlocked;
+      }, 50);
+    }
+  }
+});
+addEventListener('keyup', (e) => {
+  if (e.key === 'Enter') isEnterPressed = false;
+});
 const comboCap = () => 2 + countUps('combo');
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
 function clickBase() { return multiplier('cursor') + cps() * 0.01 * countUps('mouse'); }
@@ -2407,6 +2434,16 @@ function loop() {
   } else if (banScreen.classList.contains('on')) {
     banScreen.classList.remove('on');
   }
+
+  const ep = document.getElementById('enterPower');
+  if (now < enterPowerUntil) {
+    ep.style.display = 'block';
+    const left = enterPowerUntil - now;
+    document.getElementById('enterPowerTime').textContent = Math.ceil(left / 1000) + 's';
+    document.getElementById('enterPowerFill').style.width = (left / 60000 * 100) + '%';
+  } else {
+    ep.style.display = 'none';
+  }
   
   slowTimer += dt;
   secTimer += dt;
@@ -2443,3 +2480,115 @@ addEventListener('beforeunload', save);
 addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 requestAnimationFrame(loop);
 
+function initFlappy() {
+  const cv = document.getElementById('flappyCanvas');
+  const ctx = cv.getContext('2d');
+  const btn = document.getElementById('flappyStart');
+  const overlay = document.getElementById('flappyOverlay');
+  const status = document.getElementById('flappyStatus');
+  
+  let raf, birdY = 200, birdV = 0, pipes = [], frame = 0;
+  let playing = false, startTime = 0;
+  let lastFlappy = S.games['flappy'] || 0;
+  
+  const updateBtn = () => {
+    if (Date.now() < lastFlappy + 3600000) {
+      btn.disabled = true;
+      btn.textContent = 'Recharge : ' + Math.ceil((lastFlappy + 3600000 - Date.now())/60000) + ' min';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Jouer (1h de recharge)';
+    }
+  };
+  setInterval(updateBtn, 10000);
+  updateBtn();
+  
+  const jump = (e) => {
+    if(e) e.preventDefault();
+    if(playing) birdV = -6;
+  };
+  cv.addEventListener('mousedown', jump);
+  cv.addEventListener('touchstart', jump, {passive:false});
+  
+  btn.addEventListener('click', () => {
+    playing = true;
+    birdY = 200; birdV = 0; pipes = []; frame = 0;
+    startTime = Date.now();
+    lastFlappy = Date.now();
+    S.games['flappy'] = lastFlappy;
+    save();
+    updateBtn();
+    overlay.style.display = 'none';
+    status.textContent = 'Survivez 60 secondes !';
+    status.style.color = '#fff';
+    runFlappy();
+  });
+  
+  function runFlappy() {
+    if (!playing) return;
+    frame++;
+    birdV += 0.3; // gravity
+    birdY += birdV;
+    
+    if (frame % 80 === 0) {
+      let gap = 120;
+      let pos = Math.random() * (400 - gap - 40) + 20;
+      pipes.push({ x: 400, top: pos, bottom: pos + gap });
+    }
+    
+    ctx.clearRect(0, 0, 400, 400);
+    
+    ctx.fillStyle = '#49250e';
+    pipes.forEach(p => {
+      p.x -= 3;
+      ctx.fillRect(p.x, 0, 50, p.top);
+      ctx.fillRect(p.x, p.bottom, 50, 400 - p.bottom);
+      
+      // Collision
+      if (
+        (50 + 15 > p.x && 50 - 15 < p.x + 50) &&
+        (birdY - 15 < p.top || birdY + 15 > p.bottom)
+      ) {
+        die('Vous avez touché un obstacle !');
+      }
+    });
+    pipes = pipes.filter(p => p.x > -50);
+    
+    if (birdY > 400 || birdY < 0) die('Vous êtes tombé !');
+    
+    // Draw bird (cookie)
+    ctx.beginPath();
+    ctx.arc(50, birdY, 15, 0, Math.PI*2);
+    ctx.fillStyle = '#c2702e';
+    ctx.fill();
+    ctx.strokeStyle = '#8a4c1c';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    const elapsed = (Date.now() - startTime) / 1000;
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 60 s';
+    
+    if (elapsed >= 60) {
+      winGame();
+    } else {
+      raf = requestAnimationFrame(runFlappy);
+    }
+  }
+  
+  function die(msg) {
+    playing = false;
+    overlay.style.display = 'flex';
+    status.textContent = msg + ' Réessayez dans une heure.';
+    status.style.color = '#ff4d4d';
+  }
+  
+  function winGame() {
+    playing = false;
+    overlay.style.display = 'flex';
+    status.textContent = 'VICTOIRE ! POUVOIR DE LA TOUCHE ENTRÉE DÉBLOQUÉ !';
+    status.style.color = '#ffeb3b';
+    enterPowerUntil = Date.now() + 60000;
+    celebrate();
+  }
+}
+initFlappy();

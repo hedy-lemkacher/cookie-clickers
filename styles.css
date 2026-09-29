@@ -826,3 +826,25 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .ban-card h2 { font-size: 28px; margin: 0 0 10px; color: #ffcccc; text-shadow: 0 2px 4px #000; }
 .ban-card p { font-size: 16px; color: #ffaaaa; margin-bottom: 20px; }
 .ban-timer { font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 4px 10px #000; margin: 20px 0; }
+
+.enter-power {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  width: 90%; max-width: 400px; z-index: 100;
+  text-align: center;
+  animation: pulsePower 1s infinite alternate;
+}
+@keyframes pulsePower { from { filter: drop-shadow(0 0 10px #ffb347); } to { filter: drop-shadow(0 0 20px #ff4747); } }
+.enter-power-label {
+  font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 2px 4px #000;
+  margin-bottom: 5px;
+}
+.enter-power-label span { color: #ffeb3b; }
+.enter-power-bar {
+  height: 20px; border-radius: 10px; background: #0008; border: 2px solid #ffb347;
+  overflow: hidden;
+}
+.enter-power-bar i {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, #ffb347, #ff4747);
+  box-shadow: inset 0 0 10px #fff8;
+}
