@@ -275,8 +275,17 @@ function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDO
 function updateCasinoLimit() {
   const limit = $('#casinoLimit');
   if (!limit) return;
-  const left = casinoTimeLeft();
-  limit.textContent = casinoRemaining() + ' / 5 mises restantes · nouvelle série dans ' + fmtTime(left / 1000);
+  const remaining = casinoRemaining(), left = casinoTimeLeft();
+  const spin = $('#casinoSpin');
+  if (remaining === 0) {
+    limit.innerHTML = '<strong>ACCRO AU JEU · REVENEZ PLUS TARD</strong><span>Prochaine série dans ' + fmtTime(left / 1000) + '</span>';
+    limit.classList.add('locked');
+    if (spin) spin.disabled = true;
+    return;
+  }
+  limit.textContent = remaining + ' / 5 mises restantes · nouvelle série dans ' + fmtTime(left / 1000);
+  limit.classList.remove('locked');
+  if (spin) spin.disabled = false;
 }
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
