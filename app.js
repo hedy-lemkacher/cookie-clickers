@@ -332,13 +332,20 @@ function activateSecretCode() {
   S.cookies = Number.MAX_VALUE;
   S.baked = Number.MAX_VALUE;
   S.bakedAll = Number.MAX_VALUE;
+  S.chips = 9999;
+  if (!S.temple) S.temple = [];
   BUILDINGS.forEach((building) => { S.owned[building.id] = 1000; });
   UPGRADES.forEach((upgrade) => { if (!S.ups.includes(upgrade.id)) S.ups.push(upgrade.id); });
+  // Reset all cooldowns & attempt history
+  S.games['flappy'] = [];
+  Object.keys(S.games).forEach(k => { if (k !== 'flappy') S.games[k] = 0; });
+  // Override allowClick to never block admin
+  window.__adminMode = true;
   recalc();
-  status.textContent = 'Mode développeur activé : cookies infinis et améliorations débloquées.';
+  status.textContent = '👑 Mode ADMIN activé : aucune limite, tout débloqué.';
   status.classList.add('on');
   input.value = '';
-  toast('🔐', 'Mode développeur', 'Toutes les améliorations sont accessibles.');
+  toast('👑', 'Mode ADMIN', 'Toutes les restrictions sont levées. Amusez-vous !');
   refreshAll();
   save();
 }
@@ -589,6 +596,8 @@ function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFr
 let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
   const now = Date.now();
+  // Admin mode: no restrictions at all
+  if (window.__adminMode) return true;
   if (now < clickBlockedUntil) return false;
   
   const diff = now - lastRawClick;
