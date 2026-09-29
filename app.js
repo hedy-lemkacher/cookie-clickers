@@ -21,6 +21,9 @@ const BUILDINGS = [
   { id: 'timemachine', name: 'Machine temporelle', plural: 'Machines temporelles', icon: '⏳', base: 1e12, cps: 1e7, desc: 'Ramène des cookies du passé, avant qu\'ils ne soient mangés.' },
   { id: 'antimatter',  name: 'Condensateur',     plural: 'Condensateurs',     icon: '⚛️', base: 1.4e13, cps: 6.5e7,  desc: 'Condense l\'antimatière de l\'univers en cookies.' },
   { id: 'prism',       name: 'Prisme',           plural: 'Prismes',           icon: '🔮', base: 1.7e14, cps: 4.3e8,  desc: 'Transforme la lumière elle-même en cookies.' },
+  { id: 'chancery',    name: 'Chancellerie',     plural: 'Chancelleries',     icon: '🏰', base: 2e15,   cps: 3e9,    desc: 'Dicte les lois de la consommation de cookies.' },
+  { id: 'fractal',     name: 'Moteur Fractal',   plural: 'Moteurs Fractals',  icon: '🌌', base: 3e16,   cps: 2e10,   desc: 'Génère des cookies à partir de sous-cookies infinis.' },
+  { id: 'javascript',  name: 'Console JS',       plural: 'Consoles JS',       icon: '💻', base: 4e17,   cps: 1.5e11, desc: 'Code des cookies directement dans la matrice.' },
 ];
 
 /* --- Événements : 3 par bâtiment, débloqués à 5, 25 et 75 exemplaires --- */
@@ -38,6 +41,9 @@ const EVENT_NAMES = {
   timemachine: ['Déjà-vu', 'Paradoxe gourmand', 'Boucle temporelle'],
   antimatter:  ['Fluctuation quantique', 'Réaction en chaîne', 'Big Bang sucré'],
   prism:       ['Arc-en-ciel', 'Aurore boréale', 'Supernova de lumière'],
+  chancery:    ['Décret royal', 'Loi martiale sucrée', 'Constitution du Cookie'],
+  fractal:     ['Mise en abyme', 'Récursivité infinie', 'Équation parfaite'],
+  javascript:  ['Console.log(cookie)', 'Boucle infinie', 'Hack de la matrice'],
 };
 const EV_NEED = [5, 25, 75];      // exemplaires nécessaires
 const EV_COUNT = [8, 12, 16];     // bâtiments qui défilent
@@ -1135,7 +1141,9 @@ function renderEventsPane() {
    ===================================================================== */
 const GAMES = [
   { id: 'reaction', icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
-  { id: 'pinata',  icon: '🪅', name: 'La Piñata',         cd: 10, start: gamePinata,   desc: 'Frappez la piñata le plus vite possible pour récolter des cookies.' },
+  { id: 'simon',   icon: '🔲', name: 'Simon Cookie',      cd: 10, start: gameSimon,    desc: 'Répétez la séquence de cookies dans le bon ordre.' },
+  { id: 'whack',   icon: '🔨', name: 'Tape-Cookie',       cd: 12, start: gameWhack,    desc: 'Frappez les cookies qui apparaissent le plus vite possible.' },
+  { id: 'find',    icon: '🕵️', name: 'Le Cookie Doré',    cd: 15, start: gameFind,     desc: 'Trouvez le cookie doré caché parmi les autres.' },
   { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
   { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
@@ -1334,22 +1342,94 @@ function gameReaction(api) {
   return () => { alive = false; clearInterval(timer); removeEventListener('keydown', key); };
 }
 
-function gamePinata(api) {
-  const goal = 30;
-  let score = 0, time = 8, timer = 0, alive = true;
-  api.body.innerHTML = '<p class="game-hint">Frappez la piñata géante pour la casser. Objectif : ' + goal + ' clics en huit secondes.</p><div class="rush" style="flex-direction:column;"><button class="rush-cookie" style="font-size:60px; filter:drop-shadow(0 0 10px #ff0055); transition:transform 0.1s;">🪅</button><strong class="rush-score" style="margin-top:10px;">0</strong></div>';
-  const button = api.body.querySelector('.rush-cookie'), counter = api.body.querySelector('.rush-score');
-  button.addEventListener('pointerdown', (e) => { 
-    e.preventDefault(); 
-    if (!alive) return; 
-    score++; 
-    counter.textContent = score; 
-    button.style.transform = 'scale(0.9) rotate(' + (Math.random()*30-15) + 'deg)';
-    setTimeout(() => button.style.transform = 'none', 50);
-    api.frac = Math.min(1, score / goal); 
-  });
-  timer = setInterval(() => { time--; api.info(score + ' coups · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' coups réalisés'); }, 1000);
-  api.info('0 coup · 8 s');
+function gameSimon(api) {
+  let seq = [], step = 0, state = 'watch', alive = true;
+  api.body.innerHTML = '<p class="game-hint">Répétez la séquence lumineuse.</p><div class="simon-board" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:150px;margin:0 auto;">' +
+    ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71'].map((c, i) => '<button data-simon="'+i+'" style="width:70px;height:70px;background:'+c+';border:none;border-radius:10px;opacity:0.5;transition:0.2s;"></button>').join('') + '</div>';
+  const btns = api.body.querySelectorAll('[data-simon]');
+  const playSeq = () => {
+    state = 'watch'; step = 0; api.info('Observez...');
+    seq.push(Math.floor(Math.random() * 4));
+    let i = 0;
+    const interval = setInterval(() => {
+      if (!alive) return clearInterval(interval);
+      if (i >= seq.length) { clearInterval(interval); state = 'play'; api.info('À vous de jouer ! (' + seq.length + ' étapes)'); return; }
+      const b = btns[seq[i]];
+      b.style.opacity = '1'; b.style.transform = 'scale(1.1)';
+      setTimeout(() => { if(alive) { b.style.opacity = '0.5'; b.style.transform = 'none'; } }, 300);
+      i++;
+    }, 600);
+  };
+  btns.forEach((b, i) => b.addEventListener('mousedown', () => {
+    if (state !== 'play' || !alive) return;
+    b.style.opacity = '1'; setTimeout(() => b.style.opacity = '0.5', 200);
+    if (seq[step] === i) {
+      step++;
+      api.frac = Math.min(1, seq.length / 8);
+      if (step === seq.length) {
+        if (seq.length >= 8) return api.end(1, 'Séquence parfaite (8 étapes)');
+        setTimeout(playSeq, 800);
+      }
+    } else {
+      api.end(Math.min(1, (seq.length-1)/8), 'Erreur après ' + (seq.length-1) + ' étapes');
+    }
+  }));
+  setTimeout(playSeq, 500);
+  return () => { alive = false; };
+}
+
+function gameWhack(api) {
+  let score = 0, time = 15, timer = 0, alive = true;
+  const goal = 20;
+  api.body.innerHTML = '<p class="game-hint">Cliquez sur les cookies qui apparaissent. Objectif : ' + goal + ' en 15s.</p><div class="whack-board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:200px;margin:0 auto;">' +
+    Array(9).fill('<div class="hole" style="width:60px;height:60px;background:#3e2723;border-radius:50%;position:relative;overflow:hidden;"><button data-whack="1" style="width:100%;height:100%;background:none;border:none;font-size:30px;position:absolute;top:100%;transition:top 0.2s;cursor:pointer;">🍪</button></div>').join('') + '</div>';
+  const holes = api.body.querySelectorAll('.hole button');
+  const spawn = () => {
+    if (!alive) return;
+    const h = holes[Math.floor(Math.random() * holes.length)];
+    if (h.style.top === '100%') {
+      h.style.top = '0%';
+      setTimeout(() => { if (alive && h.style.top === '0%') h.style.top = '100%'; }, Math.random() * 500 + 600);
+    }
+    if (alive) setTimeout(spawn, Math.random() * 300 + 200);
+  };
+  holes.forEach(b => b.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (!alive || b.style.top === '100%') return;
+    b.style.top = '100%';
+    score++;
+    api.frac = Math.min(1, score / goal);
+  }));
+  timer = setInterval(() => { time--; api.info(score + ' / ' + goal + ' · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' cookies frappés'); }, 1000);
+  spawn(); spawn();
+  api.info('0 / ' + goal + ' · 15 s');
+  return () => { alive = false; clearInterval(timer); };
+}
+
+function gameFind(api) {
+  let time = 10, timer = 0, alive = true;
+  const count = 40;
+  let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps.</p><div style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
+  const goldenIdx = Math.floor(Math.random() * count);
+  for (let i=0; i<count; i++) {
+    const isG = i === goldenIdx;
+    const x = Math.random() * 90, y = Math.random() * 85;
+    html += '<button data-find="'+(isG?1:0)+'" style="position:absolute;left:'+x+'%;top:'+y+'%;font-size:24px;background:none;border:none;cursor:pointer;filter:'+(isG?'hue-rotate(40deg) brightness(1.5)':'none')+'">🍪</button>';
+  }
+  html += '</div>';
+  api.body.innerHTML = html;
+  api.body.querySelectorAll('[data-find]').forEach(b => b.addEventListener('click', () => {
+    if (!alive) return;
+    if (b.dataset.find === "1") {
+      b.style.transform = 'scale(2)';
+      api.frac = 1;
+      api.end(1, 'Cookie doré trouvé en ' + (10 - time) + 's !');
+    } else {
+      b.style.opacity = '0.2';
+    }
+  }));
+  timer = setInterval(() => { time--; api.info('Cherchez... ' + time + ' s'); if (time <= 0) api.end(0, 'Temps écoulé, introuvable'); }, 1000);
+  api.info('Cherchez... 10 s');
   return () => { alive = false; clearInterval(timer); };
 }
 
