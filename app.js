@@ -2096,23 +2096,13 @@ function news() {
   if (S.chips > 0) msgs.push('Des pépites célestes brillent au-dessus de votre boulangerie.');
   msgs.push('Astuce : cliquez vite et sans arrêt pour faire monter le combo !',
     'Astuce : un cookie doré apparaît parfois. Cliquez vite !',
-    'Astuce : l\'onglet Jouer contient des mini-jeux qui rapportent gros.',
-    "Vikash a été apercu mangeant des panipuri",
-    "Attention Accident d'avion cree par le gros crane d'Ayoub");
+    'Astuce : l\'onglet Jouer contient des mini-jeux qui rapportent gros.');
   const el = $('#newsText');
   el.classList.add('out');
   setTimeout(() => { 
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
     el.textContent = msg; 
     el.classList.remove('out'); 
-    
-    if (msg === "Vikash a été apercu mangeant des panipuri" || msg === "Attention Accident d'avion cree par le gros crane d'Ayoub") {
-      const modal = $('#modal'), mBody = $('#mBody'), mInfo = $('#mInfo');
-      modal.classList.add('on');
-      $('#mTitle').textContent = 'Flash Info 🚨';
-      mInfo.textContent = '';
-      mBody.innerHTML = '<div style="text-align:center; padding: 30px;"><h2>' + msg + '</h2></div>';
-    }
   }, 400);
 }
 
