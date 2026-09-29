@@ -2492,13 +2492,8 @@ function initFlappy() {
   let lastFlappy = S.games['flappy'] || 0;
   
   const updateBtn = () => {
-    if (Date.now() < lastFlappy + 3600000) {
-      btn.disabled = true;
-      btn.textContent = 'Recharge : ' + Math.ceil((lastFlappy + 3600000 - Date.now())/60000) + ' min';
-    } else {
-      btn.disabled = false;
-      btn.textContent = 'Jouer (1h de recharge)';
-    }
+    btn.disabled = false;
+    btn.textContent = 'Jouer (pas de recharge pour l\'instant)';
   };
   setInterval(updateBtn, 10000);
   updateBtn();
@@ -2527,11 +2522,11 @@ function initFlappy() {
   function runFlappy() {
     if (!playing) return;
     frame++;
-    birdV += 0.3; // gravity
+    birdV += 0.25; // gravity slightly reduced
     birdY += birdV;
     
     if (frame % 80 === 0) {
-      let gap = 120;
+      let gap = 160; // gap increased
       let pos = Math.random() * (400 - gap - 40) + 20;
       pipes.push({ x: 400, top: pos, bottom: pos + gap });
     }
@@ -2578,7 +2573,7 @@ function initFlappy() {
   function die(msg) {
     playing = false;
     overlay.style.display = 'flex';
-    status.textContent = msg + ' Réessayez dans une heure.';
+    status.textContent = msg + ' Réessayez sans attendre !';
     status.style.color = '#ff4d4d';
   }
   
