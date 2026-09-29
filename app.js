@@ -2492,10 +2492,22 @@ function initFlappy() {
   let mouseX = 200, mouseY = 200;
   let lasers = []; // { axis: 'x'|'y', pos: number, state: 'warn'|'fire', timer: number, width: number }
   
+  if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
+  
   const updateBtn = () => {
-    btn.disabled = false;
-    btn.textContent = 'Jouer (pas de recharge pour l\'instant)';
+    const now = Date.now();
+    S.games['flappy'] = S.games['flappy'].filter(t => now - t < 3600000);
+    const attempts = S.games['flappy'].length;
+    if (attempts >= 3) {
+      btn.disabled = true;
+      const oldest = S.games['flappy'][0];
+      btn.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
+    } else {
+      btn.disabled = false;
+      btn.textContent = `Jouer (${3 - attempts} essai(s) restant(s))`;
+    }
   };
+  setInterval(updateBtn, 10000);
   updateBtn();
   
   const move = (e) => {
@@ -2516,9 +2528,13 @@ function initFlappy() {
     lasers = [];
     mouseX = 200; mouseY = 200;
     startTime = Date.now();
+    
+    S.games['flappy'].push(Date.now());
+    save();
+    
     updateBtn();
     overlay.style.display = 'none';
-    status.textContent = 'Survivez 30 secondes !';
+    status.textContent = 'Survivez 15 secondes !';
     status.style.color = '#fff';
     runGame();
   });
@@ -2583,9 +2599,9 @@ function initFlappy() {
     ctx.stroke();
     
     const elapsed = (Date.now() - startTime) / 1000;
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 30 s';
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 15 s';
     
-    if (elapsed >= 30) {
+    if (elapsed >= 15) {
       winGame();
     } else {
       raf = requestAnimationFrame(runGame);
@@ -2595,7 +2611,8 @@ function initFlappy() {
   function die(msg) {
     playing = false;
     overlay.style.display = 'flex';
-    status.textContent = msg + ' Réessayez sans attendre !';
+    updateBtn();
+    status.textContent = msg;
     status.style.color = '#ff4d4d';
   }
   
