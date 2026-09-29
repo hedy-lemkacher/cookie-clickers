@@ -598,7 +598,13 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .casino-numbers button[data-number="1"], .casino-numbers button[data-number="3"], .casino-numbers button[data-number="5"], .casino-numbers button[data-number="7"], .casino-numbers button[data-number="9"] { background: #17141b; border-color: #696370; }
 .casino-bets button:hover, .casino-numbers button:hover { transform: translateY(-2px); }
 .casino-bets button.selected, .casino-numbers button.selected { border-color: #ffd166; box-shadow: 0 0 0 2px #ffd16666, 0 0 18px #ffd16633; }
-.casino-result { min-height: 25px; padding: 9px; border-radius: 8px; background: rgba(255, 209, 102, .08); color: var(--gold); font-weight: 600; text-align: center; }
+.casino-result { min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px; border-radius: 8px; background: rgba(255, 209, 102, .08); color: var(--gold); font-weight: 600; text-align: center; }
+.casino-result-number { font-size: 30px; line-height: 1; }
+.casino-result-color { font-size: 18px; font-weight: 800; }
+.casino-result-color.vert { color: #55d18d; }
+.casino-result-color.rouge { color: #f06a76; }
+.casino-result-color.noir { color: #ddd4e2; }
+.casino-result small { display: block; color: var(--muted); font-size: 11px; }
 .casino-spin { width: 100%; }
 .casino-page { display: grid; gap: 16px; max-width: 900px; margin: 0 auto; }
 .casino-page-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid #a07030; border-radius: 18px; background: radial-gradient(circle at 0 0, #75471f, transparent 45%), linear-gradient(135deg, #32190c, #160a05); }
