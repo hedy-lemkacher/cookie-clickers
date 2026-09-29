@@ -2464,10 +2464,22 @@ function loop() {
   if (now < enterPowerUntil) {
     ep.style.display = 'block';
     const left = enterPowerUntil - now;
-    document.getElementById('enterPowerTime').textContent = Math.ceil(left / 1000) + 's';
+    const cookieEl = document.getElementById('cookie');
+    
+    if (now < enterFrenzyUntil) {
+      const frenzyLeft = enterFrenzyUntil - now;
+      document.getElementById('enterPowerTime').innerHTML = Math.ceil(left / 1000) + 's <span style="color:#ffb347; font-weight:bold; font-size:1.4em; text-shadow: 0 0 10px #ffb347;">(' + Math.ceil(frenzyLeft / 1000) + 's x200)</span>';
+      if (cookieEl) cookieEl.style.filter = 'hue-rotate(' + ((now / 10) % 360) + 'deg) drop-shadow(0 0 30px rgba(255, 255, 255, 0.8))';
+    } else {
+      document.getElementById('enterPowerTime').textContent = Math.ceil(left / 1000) + 's';
+      if (cookieEl) cookieEl.style.filter = '';
+    }
+    
     document.getElementById('enterPowerFill').style.width = (left / 60000 * 100) + '%';
   } else {
     ep.style.display = 'none';
+    const cookieEl = document.getElementById('cookie');
+    if (cookieEl) cookieEl.style.filter = '';
   }
   
   slowTimer += dt;
