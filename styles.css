@@ -790,5 +790,21 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 @media (prefers-reduced-motion: reduce) {
   .menu-backdrop, .side-menu { transition: none; }
 }
-@media (prefers-reduced-motion: reduce) {
+}
+.buy-spin-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #a52f3c, #8b2531);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(165, 47, 60, 0.4);
+}
+.buy-spin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(165, 47, 60, 0.6);
 }

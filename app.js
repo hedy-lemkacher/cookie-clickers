@@ -288,9 +288,26 @@ function updateCasinoLimit() {
   const remaining = casinoRemaining(), left = casinoTimeLeft();
   const spin = $('#casinoSpin');
   if (remaining === 0) {
-    limit.innerHTML = '<div class="casino-limit-box locked"><div class="cl-icon">⏳</div><div class="cl-info"><div class="cl-title">Accro au jeu</div><div class="cl-subtitle">Prochaine série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
+    const cost = Math.max(1, Math.floor(steadyCps() * 300));
+    limit.innerHTML = '<div class="casino-limit-box locked"><div class="cl-icon">⏳</div><div class="cl-info"><div class="cl-title">Accro au jeu</div><div class="cl-subtitle">Prochaine série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div><button id="buyExtraSpin" class="buy-spin-btn">Acheter 1 tour (' + fmt(cost) + ' 🍪)</button></div></div>';
     limit.classList.add('locked');
     if (spin) spin.disabled = true;
+    
+    const buyBtn = $('#buyExtraSpin');
+    if (buyBtn) {
+      buyBtn.addEventListener('click', () => {
+        const currentCost = Math.max(1, Math.floor(steadyCps() * 300));
+        if (S.cookies >= currentCost) {
+          S.cookies -= currentCost;
+          S.casino.bets--;
+          save();
+          updateCasinoLimit();
+          toast('🎰', 'Tour supplémentaire !', 'Vous avez acheté un tour de roulette.');
+        } else {
+          toast('❌', 'Fonds insuffisants', 'Vous avez besoin de ' + fmt(currentCost) + ' cookies.');
+        }
+      });
+    }
     return;
   }
   limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / 5</span> mises restantes</div><div class="cl-subtitle">Nouvelle série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
