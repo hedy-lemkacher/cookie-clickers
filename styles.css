@@ -192,6 +192,17 @@ body.clickfrenzy #cookie { filter: drop-shadow(0 0 34px rgba(255, 110, 70, .9));
 .ms-label b { color: var(--text); font-weight: 600; }
 .ms-bar { height: 6px; background: rgba(0, 0, 0, .45); border-radius: 6px; overflow: hidden; }
 .ms-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #7bd88f, #c6f07a); }
+.speedrun-progress { position: relative; width: min(320px, 94%); display: none; margin-top: 12px; padding: 10px 12px; border: 1px solid #a07030; border-radius: 12px; background: linear-gradient(135deg, #38200f, #1b0c06); box-shadow: 0 0 18px #d5a24b22; }
+.speedrun-progress.on { display: block; }
+.speedrun-head, .speedrun-goal { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
+.speedrun-head { color: var(--gold); font-size: 13px; font-weight: 600; }
+.speedrun-goal { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.speedrun-goal span:first-child { color: var(--text); font-weight: 700; }
+.speedrun-bar { height: 9px; margin-top: 8px; overflow: hidden; border: 1px solid #68451f; border-radius: 999px; background: #160a05; }
+.speedrun-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #c0792f, #ffd166); box-shadow: 0 0 12px #ffd16699; transition: width .2s ease; }
+.speedrun-time { margin-top: 6px; color: var(--dim); font-size: 11px; text-align: right; }
+.speedrun-progress.complete { border-color: #8fe39b; box-shadow: 0 0 22px #8fe39b55; }
+.speedrun-progress.complete .speedrun-bar i { background: #8fe39b; }
 
 .float {
   position: fixed;

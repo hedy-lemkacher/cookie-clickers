@@ -566,6 +566,21 @@ function checkSpeedrun() {
     save();
   }
 }
+function renderSpeedrunProgress() {
+  const box = $('#speedrunProgress'), world = activeWorld();
+  if (!box) return;
+  if (!world || world.mode !== 'speedrun') { box.classList.remove('on'); return; }
+  box.classList.add('on');
+  const goal = world.goal || SPEEDRUN_GOAL;
+  const percent = Math.min(100, S.cookies / goal * 100);
+  $('#speedrunCurrent').textContent = fmt(S.cookies);
+  $('#speedrunPercent').textContent = Math.floor(percent) + ' %';
+  $('#speedrunFill').style.width = percent + '%';
+  $('#speedrunProgress').classList.toggle('complete', percent >= 100);
+  $('#speedrunTime').textContent = world.speedrun && world.speedrun.startedAt
+    ? 'Temps : ' + fmtTime((Date.now() - world.speedrun.startedAt) / 1000)
+    : 'Chronomètre prêt · premier clic pour démarrer';
+}
 
 /* =====================================================================
    PETITS EFFETS VISUELS
@@ -1975,6 +1990,7 @@ function refreshAll() {
 const msLevel = () => S.baked >= 1000 ? Math.floor(Math.log10(S.baked) / 3) : 0;
 function renderNumbers(now) {
   $('#count').textContent = S.cheat ? '∞' : fmt(S.cookies);
+  renderSpeedrunProgress();
   $('#cps').textContent = 'par seconde : ' + fmt(cps(), true);
   const base = steadyCps();
   $('#clickPower').textContent = '+' + fmt(clickPower(), true) + ' par clic' +
