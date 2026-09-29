@@ -412,7 +412,7 @@ function renderCasinoPane() {
     : 'Choisissez votre mise et votre pari.';
   const numberButtons = '';
   const wheelNumbers = Array.from({ length: 10 }, (_, n) => '<span style="--angle:' + (n * (360 / 10)) + 'deg"></span>').join('');
-  const minBet = casinoUnlimited() ? 1 : 1000000;
+  const minBet = casinoUnlimited() ? 1 : 100000;
   box.innerHTML = '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>Une table indépendante de la fête foraine. ' + casinoRule + '</p></div><div class="casino-bankroll"><span>Solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div></div>' +
     '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"> cookies</label><div class="casino-presets"><button data-casino-stake="10">10%</button><button data-casino-stake="25">25%</button><button data-casino-stake="50">50%</button><button data-casino-stake="75">75%</button><button data-casino-stake="100">100%</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="rouge">🔴 Rouge</button><button data-casino-color="noir">⚫ Noir</button></div><p class="casino-result" id="casinoResult">' + resultMarkup + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
   updateCasinoLimit();
@@ -1570,12 +1570,12 @@ function gameRecipe(api) {
 function gameCasino(api) {
   const colors = { green: 'vert', red: 'rouge', black: 'noir' };
   let stake = 1, betType = null, betValue = null, spinning = false;
-  const minBet = casinoUnlimited() ? 1 : 1000000;
-  const minText = casinoUnlimited() ? 'Mises illimitées' : 'Minimum 1 M';
-  const p1 = casinoUnlimited() ? 10 : 1000000, p1L = casinoUnlimited() ? '10' : '1 M';
-  const p2 = casinoUnlimited() ? 100 : 5000000, p2L = casinoUnlimited() ? '100' : '5 M';
-  const p3 = casinoUnlimited() ? 1000 : 10000000, p3L = casinoUnlimited() ? '1 K' : '10 M';
-  const p4 = casinoUnlimited() ? 10000 : 50000000, p4L = casinoUnlimited() ? '10 K' : '50 M';
+  const minBet = casinoUnlimited() ? 1 : 100000;
+  const minText = casinoUnlimited() ? 'Mises illimitées' : 'Minimum 100 K';
+  const p1 = casinoUnlimited() ? 10 : 100000, p1L = casinoUnlimited() ? '10' : '100 K';
+  const p2 = casinoUnlimited() ? 100 : 500000, p2L = casinoUnlimited() ? '100' : '500 K';
+  const p3 = casinoUnlimited() ? 1000 : 1000000, p3L = casinoUnlimited() ? '1 K' : '1 M';
+  const p4 = casinoUnlimited() ? 10000 : 5000000, p4L = casinoUnlimited() ? '10 K' : '5 M';
   api.body.innerHTML = '<div class="casino"><div class="casino-hero"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La roulette de la boulangerie</h3><p>Couleur : ×2 · Chiffre exact : ×10</p></div><div class="casino-wheel"><span>0</span><i>2</i><b>4</b><i>6</i><b>8</b><i>10</i></div></div>' +
     '<div class="casino-panel"><div class="casino-bankroll"><span>Votre solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div><div class="casino-stake-row"><label>Mise <strong><input class="casino-stake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"></strong> cookies</label><small>' + minText + '</small></div><div class="casino-presets"><button data-stake="' + p1 + '">' + p1L + '</button><button data-stake="' + p2 + '">' + p2L + '</button><button data-stake="' + p3 + '">' + p3L + '</button><button data-stake="' + p4 + '">' + p4L + '</button><button data-stake="max">MAX</button></div>' +
     '<div class="casino-section-title">Choisissez votre pari</div><div class="casino-bets"><button data-bet="green">🟢 <span>Vert</span><small>0 · ×2</small></button><button data-bet="red">🔴 <span>Rouge</span><small>Pairs · ×2</small></button><button data-bet="black">⚫ <span>Noir</span><small>Impairs · ×2</small></button></div>' +
@@ -1598,7 +1598,7 @@ function gameCasino(api) {
   spin.addEventListener('click', () => {
     if (spinning) return;
     stake = Math.floor(Number(stakeInput.value) || 0);
-    const minBet = casinoUnlimited() ? 1 : 1000000;
+    const minBet = casinoUnlimited() ? 1 : 100000;
     if (stake < minBet) { result.textContent = 'La mise minimum est de ' + fmt(minBet) + ' cookies.'; return; }
     if (!betType) { result.textContent = 'Choisissez d’abord une couleur ou un chiffre.'; return; }
     if (stake > S.cookies) { result.textContent = 'Vous ne possédez pas assez de cookies.'; return; }
