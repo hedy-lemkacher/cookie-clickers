@@ -554,9 +554,9 @@ function allowClick() {
   const diff = now - lastRawClick;
   lastRawClick = now;
   
-  if (diff < 30) {
+  if (diff < 50) {
     fastClickWarnings++;
-    if (fastClickWarnings >= 5) {
+    if (fastClickWarnings >= 3) {
       clickBlockedUntil = now + 5000;
       clickTimes = [];
       fastClickWarnings = 0;
@@ -564,12 +564,12 @@ function allowClick() {
       return false;
     }
     return false;
-  } else if (fastClickWarnings > 0 && diff > 100) {
+  } else if (fastClickWarnings > 0 && diff > 150) {
     fastClickWarnings--;
   }
   
   clickTimes = clickTimes.filter((time) => now - time < 1000);
-  if (clickTimes.length >= 15) {
+  if (clickTimes.length >= 10) {
     clickBlockedUntil = now + 20000;
     clickTimes = [];
     toast('🛡️', 'Protection anti-spam', 'Trop de clics ! Blocage de 20 secondes.');
