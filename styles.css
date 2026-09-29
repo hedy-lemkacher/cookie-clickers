@@ -538,6 +538,17 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   touch-action: none;
 }
 .arena canvas { width: 100%; height: 100%; display: block; }
+.maze-arena { display: grid; gap: 12px; }
+.maze-grid { display: grid; width: min(520px, 100%); margin: 0 auto; aspect-ratio: 15 / 9; overflow: hidden; border: 3px solid #140a04; border-radius: 12px; background: #140a04; box-shadow: inset 0 0 20px #000b; }
+.maze-cell { display: grid; place-items: center; min-width: 0; min-height: 0; font-size: clamp(10px, 3vw, 22px); }
+.maze-cell.wall { background: linear-gradient(135deg, #684321, #2d180b); box-shadow: inset 1px 1px 0 #a0703044, inset -1px -1px 0 #160a04; }
+.maze-cell.path { background: #f0c47b; box-shadow: inset 0 0 0 1px #8c5e2c55; }
+.maze-cell.exit { background: #8fe39b; box-shadow: 0 0 12px #8fe39b99; }
+.maze-cell.player { background: #ffd166; box-shadow: 0 0 14px #ffd166; z-index: 1; }
+.maze-controls { display: grid; justify-items: center; gap: 4px; }
+.maze-controls div { display: flex; gap: 4px; }
+.maze-controls button { width: 46px; height: 42px; border: 1px solid #a07030; border-radius: 9px; background: linear-gradient(180deg, #6b4521, #452a12); font-size: 19px; }
+.maze-controls button:active { transform: translateY(2px); }
 .big-btn { padding: 12px 22px; border-radius: 12px; font-size: 17px; font-weight: 600; background: linear-gradient(180deg, #ffb347, #e0892a); color: #2a1400; box-shadow: 0 4px 0 #7a4210; }
 .big-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4210; }
 .big-btn:disabled { opacity: .5; cursor: default; transform: none; }

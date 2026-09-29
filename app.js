@@ -390,10 +390,24 @@ function cps() { return baseCps() * frenzyMult(); }
 
 /* Clics : base + 1 % de la prod par souris, multiplié par le combo */
 let combo = 0, lastClick = 0, clickFrenzyUntil = 0, clickFrenzyMult = 20;
+let clickTimes = [], clickBlockedUntil = 0;
 const comboCap = () => 2 + countUps('combo');
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
 function clickBase() { return multiplier('cursor') + cps() * 0.01 * countUps('mouse'); }
 function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
+function allowClick() {
+  const now = Date.now();
+  if (now < clickBlockedUntil) return false;
+  clickTimes = clickTimes.filter((time) => now - time < 1000);
+  if (clickTimes.length >= 25) {
+    clickBlockedUntil = now + 2000;
+    clickTimes = [];
+    toast('🛡️', 'Protection anti-spam', 'Ralentissement temporaire des clics.');
+    return false;
+  }
+  clickTimes.push(now);
+  return true;
+}
 
 /* Prix : chaque exemplaire coûte 15 % de plus que le précédent */
 let buyAmount = 1;
@@ -514,6 +528,7 @@ cookieBtn.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') e.preventDefault();
 });
 cookieBtn.addEventListener('click', (e) => {
+  if (!allowClick()) return;
   const now = Date.now();
   combo++;
   lastClick = now;
@@ -732,8 +747,10 @@ const FRENZY_LEVELS = [10, 15, 20, 50];
 const fzCooldown = () => 300 * Math.pow(0.92, countUps('fzcd'));
 function rollFrenzyPower() {
   const upgrades = countUps('fzpow');
-  const available = FRENZY_LEVELS.slice(0, upgrades >= 1 ? 4 : 3);
-  const weights = available.map((value, index) => index === 3 ? 4 + upgrades * 8 : 30 - index * 5);
+  const progression = Math.min(3, Math.floor(Math.log10(Math.max(1, S.baked)) / 3));
+  const highestLevel = Math.min(3, Math.max(2, progression + upgrades));
+  const available = FRENZY_LEVELS.slice(0, highestLevel + 1);
+  const weights = available.map((value, index) => 28 + index * (progression * 5 + upgrades * 4));
   const total = weights.reduce((sum, value) => sum + value, 0);
   let pick = Math.random() * total;
   for (let i = 0; i < available.length; i++) {
@@ -908,7 +925,7 @@ function renderEventsPane() {
    MINI-JEUX
    ===================================================================== */
 const GAMES = [
-  { id: 'reaction', icon: '!', name: 'Reflexe eclair',   cd: 12, start: gameReaction, desc: 'Touchez le bouton des qu il s allume. Mini-jeu de reaction.' },
+  { id: 'reaction', icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
   { id: 'shop',   icon: '🛒', name: 'Vente de cookies',   cd: 15, start: gameShop,   desc: 'Servez un maximum de clients en 30 secondes.' },
   { id: 'catch',  icon: '🧺', name: 'Attrape-cookies',    cd: 12, start: gameCatch,  desc: 'Attrapez les cookies qui tombent, évitez les brocolis.' },
@@ -1033,34 +1050,69 @@ function shuffle(a) {
   return a;
 }
 
-/* --- 1. Tir aux cibles --- */
+/* --- 1. Évasion du labyrinthe --- */
 function gameReaction(api) {
-  api.body.innerHTML = '<p class="game-hint">Wait for the button to turn green, then tap it. Eight rounds.</p><div class="arena reaction-arena"><button class="big-btn reaction-btn">Wait...</button></div>';
-  const button = api.body.querySelector('.reaction-btn');
-  let round = 0, score = 0, ready = false, timer = 0, alive = true;
-  const next = () => {
-    if (!alive) return;
-    ready = false;
-    button.disabled = true;
-    button.textContent = 'Wait...';
-    timer = setTimeout(() => {
-      ready = true;
-      button.disabled = false;
-      button.textContent = 'NOW!';
-      button.dataset.started = String(performance.now());
-    }, 700 + Math.random() * Math.max(250, 1300 - round * 120));
-    api.info('Round ' + (round + 1) + ' / 8');
+  const width = 15, height = 9;
+  const maze = Array.from({ length: height }, () => Array(width).fill('#'));
+  const dirs = [[2, 0], [-2, 0], [0, 2], [0, -2]];
+  const stack = [[1, 1]];
+  maze[1][1] = ' ';
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    const options = dirs.filter(([dx, dy]) => {
+      const nx = x + dx, ny = y + dy;
+      return nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && maze[ny][nx] === '#';
+    });
+    if (!options.length) { stack.pop(); continue; }
+    const [dx, dy] = options[Math.floor(Math.random() * options.length)];
+    maze[y + dy / 2][x + dx / 2] = ' ';
+    maze[y + dy][x + dx] = ' ';
+    stack.push([x + dx, y + dy]);
+  }
+  maze[1][1] = 'S';
+  maze[height - 2][width - 2] = 'E';
+  api.body.innerHTML = '<p class="game-hint">Échappez-vous en moins de 18 secondes. Utilisez les flèches, ZQSD ou les boutons tactiles.</p>' +
+    '<div class="maze-arena"><div class="maze-grid"></div><div class="maze-controls"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div></div>';
+  const grid = api.body.querySelector('.maze-grid');
+  const duration = 18, player = { x: 1, y: 1 };
+  let timeLeft = duration, timer = 0, alive = true;
+  const render = () => {
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = 'repeat(' + width + ', 1fr)';
+    maze.forEach((row, y) => row.forEach((cell, x) => {
+      const tile = document.createElement('span');
+      tile.className = 'maze-cell ' + (cell === '#' ? 'wall' : cell === 'E' ? 'exit' : 'path');
+      if (player.x === x && player.y === y) tile.className += ' player';
+      tile.textContent = player.x === x && player.y === y ? '🍪' : cell === 'E' ? '🚪' : '';
+      grid.appendChild(tile);
+    }));
   };
-  button.addEventListener('pointerdown', () => {
-    if (!ready) score = Math.max(0, score - 1);
-    else score += Math.max(0, 1 - (performance.now() - Number(button.dataset.started)) / 1200);
-    round++;
-    api.frac = score / 8;
-    if (round >= 8) api.end(score / 8, Math.round(score * 100) + ' reaction points');
-    else next();
-  });
-  next();
-  return () => { alive = false; clearTimeout(timer); };
+  const move = (direction) => {
+    if (!alive) return;
+    const deltas = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    const [dx, dy] = deltas[direction];
+    const nx = player.x + dx, ny = player.y + dy;
+    if (nx < 0 || nx >= width || ny < 0 || ny >= height || !maze[ny] || maze[ny][nx] === '#') return;
+    player.x = nx; player.y = ny;
+    render();
+    api.frac = Math.max(0, timeLeft / duration);
+    if (maze[ny][nx] === 'E') api.end(Math.max(.15, timeLeft / duration), 'Sortie trouvée avec ' + timeLeft.toFixed(1) + ' s restantes');
+  };
+  const key = (e) => {
+    const keys = { ArrowUp: 'up', z: 'up', q: 'left', ArrowLeft: 'left', s: 'down', ArrowDown: 'down', d: 'right', ArrowRight: 'right' };
+    const direction = keys[e.key];
+    if (direction) { e.preventDefault(); move(direction); }
+  };
+  addEventListener('keydown', key);
+  api.body.querySelectorAll('[data-dir]').forEach((button) => button.addEventListener('pointerdown', () => move(button.dataset.dir)));
+  render();
+  api.info('18,0 s');
+  timer = setInterval(() => {
+    timeLeft = Math.max(0, timeLeft - .1);
+    api.info(timeLeft.toFixed(1).replace('.', ',') + ' s');
+    if (timeLeft <= 0) api.end(0, 'Le temps est écoulé.');
+  }, 100);
+  return () => { alive = false; clearInterval(timer); removeEventListener('keydown', key); };
 }
 
 function gameTarget(api) {

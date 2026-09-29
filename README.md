@@ -14,6 +14,27 @@ Jeu de cookies statique en HTML, CSS et JavaScript. Le navigateur peut lancer la
 
 La version fournie reste un prototype local. `localStorage` ne permet ni comptes ni classement mondial fiable. Les etapes ci-dessous ajoutent ces fonctions avec Supabase et Vercel.
 
+## Securite importante
+
+Le code `HTML`, `CSS` et JavaScript execute dans un navigateur est forcement visible par le joueur. Il est donc impossible d'empecher completement `Inspecter`, de cacher le code frontend ou d'empecher un joueur de modifier sa copie locale du jeu. Ces modifications ne changent pas les fichiers du depot et ne donnent pas acces au serveur si celui-ci est correctement configure.
+
+Pour securiser une vraie version en ligne :
+
+1. Ne jamais mettre de mot de passe, token prive, cle `service_role` ou secret dans `index.html`, `app.js`, `styles.css` ou GitHub.
+2. La cle `anon` Supabase peut etre visible dans le frontend. La protection vient des policies RLS, pas du fait de cacher cette cle.
+3. Activer RLS sur toutes les tables et tester les policies avec un compte normal.
+4. Ne jamais accepter depuis le navigateur un score Speedrun, un solde de cookies ou un classement sans validation serveur.
+5. Valider les records avec une Edge Function Supabase et enregistrer uniquement le temps calcule côté serveur.
+6. Ajouter une limitation de requetes et une validation des entrees pour eviter le spam.
+7. Activer la confirmation email, une politique de mot de passe forte et la protection contre les redirections non autorisees dans Supabase Auth.
+8. Utiliser HTTPS en production. Vercel fournit HTTPS automatiquement ; GitHub Pages aussi.
+
+Une politique CSP de base est incluse dans `index.html`. Elle limite les scripts, les connexions et les ressources autorises, mais elle ne remplace pas l'authentification, RLS ou la validation serveur.
+
+`vercel.json` ajoute les en-tetes HTTP de securite si le projet est deploye sur Vercel. GitHub Pages ne permet pas de definir ces en-tetes avec ce fichier ; dans ce cas, utiliser un proxy HTTPS comme Cloudflare ou deployer la version securisee sur Vercel.
+
+Le jeu contient aussi un ralentissement contre les rafales de plus de 25 clics par seconde. C'est une protection de confort contre les scripts simples, pas une preuve anti-triche : un utilisateur qui controle son navigateur peut modifier JavaScript. Les records officiels doivent donc etre calcules et valides par une Edge Function Supabase.
+
 ## 1. Tester en local
 
 Option rapide : ouvrir `index.html` dans un navigateur.
