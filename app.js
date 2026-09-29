@@ -283,7 +283,8 @@ function renderCasinoPane() {
   casinoBuilt = true;
   resetCasinoWindow();
   if (S.baked < 1e6) {
-    box.innerHTML = '<div class="casino-lock"><div class="casino-lock-icon">🎰</div><h3>Casino verrouillé</h3><p>Cuisez encore <b>' + fmt(Math.max(0, 1e6 - S.baked)) + '</b> cookies pour débloquer la roulette.</p></div>';
+    const progress = Math.min(100, S.baked / 1e6 * 100);
+    box.innerHTML = '<div class="casino-page casino-locked-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>La table ouvre ses portes après votre premier million de cookies cuits.</p></div><div class="casino-lock-icon">🎰</div></div><div class="casino-unlock-bar"><div><span>Casino à débloquer</span><strong>Encore ' + fmt(Math.max(0, 1e6 - S.baked)) + ' cookies cuits</strong></div><div class="casino-progress"><i style="width:' + progress + '%"></i></div><small>' + fmt(S.baked) + ' / 1 million cookies cuits</small></div><div class="casino-preview"><div class="roulette-wheel-live"><span style="--angle:0deg">0</span><span style="--angle:120deg">4</span><span style="--angle:240deg">8</span><b>🔒</b></div><p>Les mises en millions, la roulette animée et les récompenses seront disponibles ici.</p></div></div>';
     return;
   }
   const result = S.casino.lastResult;
