@@ -88,7 +88,7 @@ function special(prefix, icon, name, desc, costs, stat, needs) {
 }
 special('fzcd',   '⏱️', 'Levure express',         'La prochaine frénésie arrive <b>15 %</b> plus vite.',              [1e4, 1e7, 1e10],  () => S.frenzies,  [1, 5, 15]);
 special('fzdur',  '⌛', 'Four à chaleur tournante', 'Les frénésies durent <b>25 %</b> plus longtemps.',               [3e4, 3e7, 3e10],  () => S.frenzies,  [2, 8, 20]);
-special('fzpow',  '⚡', 'Sucre de canne',          'Frénésies plus fortes : multiplicateur <b>+2</b> au minimum, <b>+5</b> au maximum.', [1e5, 1e8, 1e11], () => S.frenzies, [3, 10, 25]);
+special('fzpow',  '⚡', 'Sucre de canne',          'Débloque des frénésies plus puissantes : <b>×10</b>, <b>×15</b>, <b>×20</b>, puis rarement <b>×50</b>.', [1e5, 1e8, 1e11], () => S.frenzies, [3, 10, 25]);
 special('gold',   '🍀', 'Trèfle à quatre feuilles', 'Les cookies dorés apparaissent <b>20 %</b> plus souvent.',      [5e5, 5e9],        () => S.golden,    [1, 5]);
 special('evfreq', '🎪', 'Office du tourisme',      'Les événements de bâtiments arrivent <b>20 %</b> plus souvent.', [1e6, 1e9, 1e12],  () => S.evTotal,   [1, 5, 15]);
 special('evgain', '🎟️', 'Tapis rouge',             'Les événements rapportent <b>50 %</b> de cookies en plus.',      [5e6, 5e10],       () => S.evTotal,   [3, 10]);
@@ -236,15 +236,6 @@ function worldModeName(world) {
   return 'CLASSIQUE';
 }
 function renderWorldUI() {
-  const current = activeWorld();
-  $('#worldName').textContent = current ? current.name : 'Aucun monde';
-  $('#worldMode').textContent = worldModeName(current);
-  const select = $('#worldSelect');
-  select.innerHTML = worlds.map((world) => '<option value="' + world.id + '">' + world.name + ' · ' + world.mode.toUpperCase() + '</option>').join('');
-  select.value = activeWorldId || '';
-  select.disabled = worlds.length < 2;
-  $('#newWorld').disabled = worlds.length >= 5;
-  $('#deleteWorld').disabled = !current;
   renderWorldMenu();
   renderPerformance();
 }
@@ -358,9 +349,6 @@ function deleteWorld() {
     openWorldModal(true);
   }
 }
-$('#worldSelect').addEventListener('change', (e) => switchWorld(e.target.value));
-$('#newWorld').addEventListener('click', () => openWorldModal(false));
-$('#deleteWorld').addEventListener('click', deleteWorld);
 $('#worldMenuSelect').addEventListener('change', (e) => switchWorld(e.target.value));
 $('#worldMenuNew').addEventListener('click', () => openWorldModal(false));
 $('#worldMenuDelete').addEventListener('click', deleteWorld);
@@ -401,11 +389,11 @@ function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() { return baseCps() * frenzyMult(); }
 
 /* Clics : base + 1 % de la prod par souris, multiplié par le combo */
-let combo = 0, lastClick = 0, clickFrenzyUntil = 0;
+let combo = 0, lastClick = 0, clickFrenzyUntil = 0, clickFrenzyMult = 20;
 const comboCap = () => 2 + countUps('combo');
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
 function clickBase() { return multiplier('cursor') + cps() * 0.01 * countUps('mouse'); }
-function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? 777 : 1); }
+function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
 
 /* Prix : chaque exemplaire coûte 15 % de plus que le précédent */
 let buyAmount = 1;
@@ -740,12 +728,23 @@ function upgradeTip(u) {
 /* =====================================================================
    FRÉNÉSIE : arrive toute seule quand la barre est pleine
    ===================================================================== */
-const fzCooldown = () => 180 * Math.pow(0.85, countUps('fzcd'));
+const FRENZY_LEVELS = [10, 15, 20, 50];
+const fzCooldown = () => 300 * Math.pow(0.92, countUps('fzcd'));
+function rollFrenzyPower() {
+  const upgrades = countUps('fzpow');
+  const available = FRENZY_LEVELS.slice(0, upgrades >= 1 ? 4 : 3);
+  const weights = available.map((value, index) => index === 3 ? 4 + upgrades * 8 : 30 - index * 5);
+  const total = weights.reduce((sum, value) => sum + value, 0);
+  let pick = Math.random() * total;
+  for (let i = 0; i < available.length; i++) {
+    pick -= weights[i];
+    if (pick <= 0) return available[i];
+  }
+  return available[0];
+}
 function startFrenzy() {
   const now = Date.now();
-  const p = countUps('fzpow');
-  const lo = 4 + 2 * p, hi = 20 + 5 * p;
-  const mult = Math.round(rand(lo, hi));
+  const mult = rollFrenzyPower();
   const dur = rand(3, 25) * (1 + 0.25 * countUps('fzdur'));
   S.fz.mult = mult;
   S.fz.dur = dur;
@@ -785,8 +784,9 @@ golden.addEventListener('click', (e) => {
     floatText(e.clientX, e.clientY, '+' + fmt(bonus));
     toast('🍀', 'Cookie doré', 'Chanceux ! +' + fmt(bonus) + ' cookies');
   } else if (r < 0.7) {
-    clickFrenzyUntil = now + 13000;
-    toast('👆', 'Cookie doré', 'Clic frénétique ! Clics ×777 pendant 13 s');
+    clickFrenzyMult = rollFrenzyPower();
+    clickFrenzyUntil = now + 10000 * (1 + 0.25 * countUps('fzdur'));
+    toast('👆', 'Cookie doré', 'Clic frénétique ! Clics ×' + clickFrenzyMult + ' pendant 10 s');
   } else if (now < S.fz.until) {
     S.fz.until += 10000; S.fz.dur += 10; S.fz.start = S.fz.until; S.fz.next += 10000;
     toast('⚡', 'Cookie doré', 'Frénésie prolongée de 10 s !');
@@ -1719,7 +1719,7 @@ function renderNumbers(now) {
 
   // Clic frénétique
   const buff = $('#buff');
-  if (now < clickFrenzyUntil) { buff.style.display = 'inline-block'; buff.textContent = '👆 Clic frénétique ×777 · ' + Math.ceil((clickFrenzyUntil - now) / 1000) + ' s'; }
+  if (now < clickFrenzyUntil) { buff.style.display = 'inline-block'; buff.textContent = '👆 Clic frénétique ×' + clickFrenzyMult + ' · ' + Math.ceil((clickFrenzyUntil - now) / 1000) + ' s'; }
   else buff.style.display = 'none';
 
   // Combo

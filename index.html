@@ -21,7 +21,6 @@
     <button data-menu-tab="events" type="button">🎉 <span>Événements</span></button>
     <button data-menu-tab="style" type="button">🎨 <span>Style / personnalisation</span></button>
     <button data-menu-tab="ach" type="button">🏆 <span>Succès</span></button>
-    <button data-menu-tab="worlds" type="button">🌍 <span>Mondes</span></button>
     <button data-menu-tab="leaderboard" type="button">📊 <span>Performances / statistiques</span></button>
   </nav>
 </aside>
@@ -30,12 +29,6 @@
   <!-- ============ Colonne gauche : le gros cookie ============ -->
   <section class="left">
     <canvas id="rain"></canvas>
-    <div class="world-bar" aria-label="Gestion des mondes">
-      <div class="world-current"><span id="worldName">Aucun monde</span><small id="worldMode">Créez votre premier monde</small></div>
-      <select id="worldSelect" aria-label="Changer de monde"></select>
-      <button id="newWorld" type="button">+ Monde</button>
-      <button id="deleteWorld" type="button" aria-label="Supprimer le monde actif">Supprimer</button>
-    </div>
     <div class="bakery" id="bakery">La boulangerie de tm251297</div>
     <div class="counter">
       <div id="count">0</div>
@@ -100,6 +93,7 @@
     <nav class="tabs" id="tabs">
       <button data-tab="showcase" class="on">🏪 Vitrine</button>
       <button data-tab="play">🎮 Jouer<i class="dot" id="dotPlay"></i></button>
+      <button data-tab="worlds">🌍 Mondes</button>
     </nav>
 
     <div class="pane on" id="showcase">
