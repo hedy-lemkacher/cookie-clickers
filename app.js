@@ -263,7 +263,7 @@ function renderWorldMenu() {
   
   for (let i = 0; i < worlds.length; i++) {
     const w = worlds[i];
-    const isCurrent = (i === current);
+    const isCurrent = (w.id === activeWorldId);
     const card = document.createElement('div');
     card.className = 'world-card' + (isCurrent ? ' active' : '');
     
@@ -275,11 +275,11 @@ function renderWorldMenu() {
         <span class="world-card-mode ${w.mode}">${modeName}</span>
       </div>
       <div class="world-card-stats">
-        <div><span>Cookies</span><strong>${fmt(w.data.baked || 0)}</strong></div>
+        <div><span>Cookies</span><strong>${fmt(w.data ? (w.data.baked || 0) : 0)}</strong></div>
       </div>
       <div class="world-card-actions">
-        ${!isCurrent ? `<button class="btn-play" data-idx="${i}">Jouer</button>` : `<span class="active-badge">Actuel</span>`}
-        ${w.name !== 'defaut' && !isCurrent ? `<button class="btn-delete" data-idx="${i}" title="Supprimer">🗑️</button>` : ''}
+        ${!isCurrent ? `<button class="btn-play" data-id="${w.id}">Jouer</button>` : `<span class="active-badge">Actuel</span>`}
+        ${w.name !== 'defaut' && !isCurrent ? `<button class="btn-delete" data-id="${w.id}" title="Supprimer">🗑️</button>` : ''}
       </div>
     `;
     grid.appendChild(card);
@@ -294,20 +294,15 @@ function renderWorldMenu() {
   // Attach events
   grid.querySelectorAll('.btn-play').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      switchWorld(parseInt(e.currentTarget.dataset.idx));
+      switchWorld(e.currentTarget.dataset.id);
     });
   });
   grid.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      // Temporarily switch to this world to delete it? 
-      // Actually deleteWorld uses `current`. 
-      // We should modify deleteWorld to accept an index, or we handle it here.
-      const idx = parseInt(e.currentTarget.dataset.idx);
+      const idToDel = e.currentTarget.dataset.id;
       if (confirm('Voulez-vous vraiment supprimer ce monde ?')) {
-        worlds.splice(idx, 1);
-        if (current >= idx && current > 0) current--;
-        saveWorlds();
-        loadWorld();
+        worlds = worlds.filter(item => item.id !== idToDel);
+        save();
         renderWorldMenu();
       }
     });
