@@ -2586,7 +2586,7 @@ function initFlappy() {
     
     updateBtn();
     overlay.style.display = 'none'; if (buyBtn) buyBtn.style.display = 'none';
-    status.textContent = 'Survivez 15 secondes !';
+    status.textContent = 'Survivez 10 secondes !';
     status.style.color = '#fff';
     runGame();
   });
@@ -2597,7 +2597,7 @@ function initFlappy() {
   function runGame() {
     if (!playing) return;
     const elapsed = (Date.now() - startTime) / 1000;
-    const difficulty = Math.min(1, elapsed / 15); // ramps from 0→1 over first 12s
+    const difficulty = Math.min(1, elapsed / 10); // ramps from 0→1 over first 12s
     
     // Spawn lasers — more frequent and narrower as time goes on
     const spawnChance = 0.012 + difficulty * 0.025;
@@ -2668,16 +2668,16 @@ function initFlappy() {
     ctx.restore();
     
     // Timer bar at bottom
-    const progress = elapsed / 15;
+    const progress = elapsed / 10;
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(10, 385, 380, 10);
     const barColor = progress < 0.5 ? `hsl(${120 - progress*240},90%,55%)` : `hsl(${120 - progress*240},90%,55%)`;
     ctx.fillStyle = barColor;
     ctx.fillRect(10, 385, 380 * progress, 10);
     
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 15 s';
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 10 s';
     
-    if (elapsed >= 15) {
+    if (elapsed >= 10) {
       winGame();
     } else {
       raf = requestAnimationFrame(runGame);
