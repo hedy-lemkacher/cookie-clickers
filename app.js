@@ -1099,7 +1099,7 @@ function renderEventsPane() {
    ===================================================================== */
 const GAMES = [
   { id: 'reaction', icon: '🧭', name: 'Évasion du labyrinthe', cd: 12, start: gameReaction, desc: 'Trouvez la sortie avant la fin du temps. Le parcours change à chaque partie.' },
-  { id: 'quiz',    icon: '🧠', name: 'Quiz gourmand',       cd: 10, start: gameQuiz,     desc: 'Répondez à cinq questions de pâtisserie le plus vite possible.' },
+  { id: 'pinata',  icon: '🪅', name: 'La Piñata',         cd: 10, start: gamePinata,   desc: 'Frappez la piñata le plus vite possible pour récolter des cookies.' },
   { id: 'rush',    icon: '⚡', name: 'Rush de clics',        cd: 12, start: gameRush,     desc: 'Cliquez le plus vite possible pendant huit secondes.' },
   { id: 'recipe',  icon: '🥣', name: 'Recette express',      cd: 14, start: gameRecipe,   desc: 'Mémorisez une recette puis sélectionnez les ingrédients dans le bon ordre.' },
   { id: 'oven',   icon: '🔥', name: 'Sortie du four',     cd: 12, start: gameOven,   desc: 'Sortez 5 fournées pile au bon moment. Ni cru, ni brûlé !' },
@@ -1298,33 +1298,22 @@ function gameReaction(api) {
   return () => { alive = false; clearInterval(timer); removeEventListener('keydown', key); };
 }
 
-function gameQuiz(api) {
-  const questions = [
-    ['Quel ingrédient fait lever une pâte ?', ['Levure', 'Sel', 'Cacao'], 0],
-    ['Quel dessert est généralement cuit au bain-marie ?', ['Macaron', 'Flan', 'Cookie'], 1],
-    ['Quelle farine est la plus classique pour un cookie ?', ['Blé', 'Riz', 'Pois'], 0],
-    ['Que devient le sucre chauffé ?', ['Caramel', 'Glace', 'Mousse'], 0],
-    ['Quel outil sert à peser les ingrédients ?', ['Balance', 'Passoire', 'Fouet'], 0],
-  ];
-  let question = 0, score = 0, time = 20, timer = 0, alive = true;
-  api.body.innerHTML = '<p class="game-hint">Cinq questions, vingt secondes. Une mauvaise réponse ne coûte pas de points, mais le temps continue.</p><div class="quiz"></div>';
-  const box = api.body.querySelector('.quiz');
-  const render = () => {
-    const item = questions[question];
-    box.innerHTML = '<h3>' + item[0] + '</h3><div class="quiz-options">' + item[1].map((answer, i) => '<button data-answer="' + i + '">' + answer + '</button>').join('') + '</div>';
-    api.info(question + 1 + ' / ' + questions.length + ' · ' + time + ' s');
-  };
-  box.addEventListener('click', (e) => {
-    const button = e.target.closest('[data-answer]');
-    if (!button || !alive) return;
-    if (+button.dataset.answer === questions[question][2]) score++;
-    question++;
-    api.frac = score / questions.length;
-    if (question >= questions.length) api.end(score / questions.length, score + ' / ' + questions.length + ' bonnes réponses');
-    else render();
+function gamePinata(api) {
+  const goal = 30;
+  let score = 0, time = 8, timer = 0, alive = true;
+  api.body.innerHTML = '<p class="game-hint">Frappez la piñata géante pour la casser. Objectif : ' + goal + ' clics en huit secondes.</p><div class="rush" style="flex-direction:column;"><button class="rush-cookie" style="font-size:60px; filter:drop-shadow(0 0 10px #ff0055); transition:transform 0.1s;">🪅</button><strong class="rush-score" style="margin-top:10px;">0</strong></div>';
+  const button = api.body.querySelector('.rush-cookie'), counter = api.body.querySelector('.rush-score');
+  button.addEventListener('pointerdown', (e) => { 
+    e.preventDefault(); 
+    if (!alive) return; 
+    score++; 
+    counter.textContent = score; 
+    button.style.transform = 'scale(0.9) rotate(' + (Math.random()*30-15) + 'deg)';
+    setTimeout(() => button.style.transform = 'none', 50);
+    api.frac = Math.min(1, score / goal); 
   });
-  render();
-  timer = setInterval(() => { time--; api.info(question + 1 + ' / ' + questions.length + ' · ' + time + ' s'); if (time <= 0) api.end(score / questions.length, score + ' / ' + questions.length + ' bonnes réponses'); }, 1000);
+  timer = setInterval(() => { time--; api.info(score + ' coups · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' coups réalisés'); }, 1000);
+  api.info('0 coup · 8 s');
   return () => { alive = false; clearInterval(timer); };
 }
 
@@ -1989,10 +1978,24 @@ function news() {
   if (S.chips > 0) msgs.push('Des pépites célestes brillent au-dessus de votre boulangerie.');
   msgs.push('Astuce : cliquez vite et sans arrêt pour faire monter le combo !',
     'Astuce : un cookie doré apparaît parfois. Cliquez vite !',
-    'Astuce : l\'onglet Jouer contient des mini-jeux qui rapportent gros.');
+    'Astuce : l\'onglet Jouer contient des mini-jeux qui rapportent gros.',
+    "Vikash a été apercu mangeant des panipuri",
+    "Attention Accident d'avion cree par le gros crane d'Ayoub");
   const el = $('#newsText');
   el.classList.add('out');
-  setTimeout(() => { el.textContent = msgs[Math.floor(Math.random() * msgs.length)]; el.classList.remove('out'); }, 400);
+  setTimeout(() => { 
+    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    el.textContent = msg; 
+    el.classList.remove('out'); 
+    
+    if (msg === "Vikash a été apercu mangeant des panipuri" || msg === "Attention Accident d'avion cree par le gros crane d'Ayoub") {
+      const modal = $('#modal'), mBody = $('#mBody'), mInfo = $('#mInfo');
+      modal.classList.add('on');
+      $('#mTitle').textContent = 'Flash Info 🚨';
+      mInfo.textContent = '';
+      mBody.innerHTML = '<div style="text-align:center; padding: 30px;"><h2>' + msg + '</h2></div>';
+    }
+  }, 400);
 }
 
 /* =====================================================================
