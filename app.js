@@ -361,17 +361,12 @@ function renderCasinoPane() {
   const numberButtons = '';
   const wheelNumbers = Array.from({ length: 10 }, (_, n) => '<span style="--angle:' + (n * (360 / 10)) + 'deg"></span>').join('');
   const minBet = casinoUnlimited() ? 1 : 1000000;
-  const p1 = casinoUnlimited() ? 10 : 10000000, p1L = casinoUnlimited() ? '10' : '10 M';
-  const p2 = casinoUnlimited() ? 100 : 100000000, p2L = casinoUnlimited() ? '100' : '100 M';
-  const p3 = casinoUnlimited() ? 1000 : 1000000000, p3L = casinoUnlimited() ? '1 K' : '1 Md';
-  const p4 = casinoUnlimited() ? 10000 : 500000000000, p4L = casinoUnlimited() ? '10 K' : '500 Md';
   box.innerHTML = '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>Une table indépendante de la fête foraine. ' + casinoRule + '</p></div><div class="casino-bankroll"><span>Solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div></div>' +
-    '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"> cookies</label><div class="casino-presets"><button data-casino-stake="' + p1 + '">' + p1L + '</button><button data-casino-stake="' + p2 + '">' + p2L + '</button><button data-casino-stake="' + p3 + '">' + p3L + '</button><button data-casino-stake="' + p4 + '">' + p4L + '</button><button data-casino-stake="half">50%</button><button data-casino-stake="max">MAX</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="rouge">🔴 Rouge</button><button data-casino-color="noir">⚫ Noir</button></div><p class="casino-result" id="casinoResult">' + resultMarkup + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
+    '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"> cookies</label><div class="casino-presets"><button data-casino-stake="25">25%</button><button data-casino-stake="50">50%</button><button data-casino-stake="75">75%</button><button data-casino-stake="100">100%</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="rouge">🔴 Rouge</button><button data-casino-color="noir">⚫ Noir</button></div><p class="casino-result" id="casinoResult">' + resultMarkup + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
   updateCasinoLimit();
   box.querySelectorAll('[data-casino-stake]').forEach((button) => button.addEventListener('click', () => { 
-    if (button.dataset.casinoStake === 'max') $('#casinoStake').value = Math.floor(S.cookies);
-    else if (button.dataset.casinoStake === 'half') $('#casinoStake').value = Math.max(minBet, Math.floor(S.cookies / 2));
-    else $('#casinoStake').value = button.dataset.casinoStake; 
+    const pct = parseInt(button.dataset.casinoStake, 10) / 100;
+    $('#casinoStake').value = Math.max(minBet, Math.floor(S.cookies * pct));
   }));
   box.querySelectorAll('[data-casino-color]').forEach((button) => button.addEventListener('click', () => {
     casinoSelectedBet = { type: 'color', value: button.dataset.casinoColor };
