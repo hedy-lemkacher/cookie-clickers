@@ -2458,7 +2458,8 @@ function updateDots() {
   const eventsDot = $('#dotEvents');
   const playDot = $('#dotPlay');
   if (eventsDot) eventsDot.classList.toggle('on', unlockedEvents().length > S.evViewed);
-  if (playDot) playDot.classList.toggle('on', Date.now() >= S.daily || GAMES.some(gameReady));
+  const flappyReady = Array.isArray(S.games['flappy']) ? S.games['flappy'].length < (3 + templeExtraAttempts()) : true;
+  if (playDot) playDot.classList.toggle('on', Date.now() >= S.daily || GAMES.some(gameReady) || flappyReady);
 }
 
 /* =====================================================================
