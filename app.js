@@ -3624,54 +3624,121 @@ function gameCelestialFootball(api, g) {
 }
 
 
+/* =====================================================================
+   MACHINE À SOUS & COMPAGNONS (SYSTÈME COMPLET & INTUITIF)
+   ===================================================================== */
+
 const RARITIES = {
   commun: { name: 'Commun', prob: 50, color: '#bdc3c7' },
   peu_commun: { name: 'Peu commun', prob: 25, color: '#2ecc71' },
   rare: { name: 'Rare', prob: 15, color: '#3498db' },
   epique: { name: 'Épique', prob: 7, color: '#9b59b6' },
   legendaire: { name: 'Légendaire', prob: 2.5, color: '#f1c40f' },
-  mythique: { name: 'Mythique', prob: 0.5, color: '#e74c3c' }
+  mythique: { name: 'Mythique', prob: 0.5, color: '#ff4757' }
 };
 
 const COMPANIONS = [
-  // Communs
-  { id: 'c_classic', name: 'Cookie classique', img: 'cookie_classique.png', rarity: 'commun', powerType: 'cps', powerBase: 0.05, powerStep: 0.02, desc: 'Augmente la production de {val}%' },
-  { id: 'c_mini', name: 'Mini-cookie', img: 'mini_cookie.png', rarity: 'commun', powerType: 'click', powerBase: 0.05, powerStep: 0.02, desc: 'Augmente la puissance des clics de {val}%' },
-  { id: 'c_choco', name: 'Cookie chocolat', img: 'cookie_chocolat.png', rarity: 'commun', powerType: 'cps', powerBase: 0.06, powerStep: 0.02, desc: 'Augmente la production de {val}%' },
-  { id: 'c_pepite', name: 'Cookie pépite', img: 'cookie_pepite.png', rarity: 'commun', powerType: 'click', powerBase: 0.06, powerStep: 0.02, desc: 'Augmente la puissance des clics de {val}%' },
-  { id: 'c_caramel', name: 'Cookie au caramel', img: 'cookie_au_caramel.png', rarity: 'commun', powerType: 'building_grandma', powerBase: 0.1, powerStep: 0.05, desc: 'Les grands-mères produisent {val}% de plus' },
-  // Peu communs
-  { id: 'c_ghost', name: 'Cookie fantôme', img: 'cookie_fantome.png', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.1, powerStep: 0.03, desc: 'Augmente la production de {val}%' },
-  { id: 'c_ninja', name: 'Cookie ninja', img: 'cookie_ninja.png', rarity: 'peu_commun', powerType: 'click', powerBase: 0.1, powerStep: 0.03, desc: 'Augmente la puissance des clics de {val}%' },
-  { id: 'c_pirate', name: 'Cookie pirate', img: 'cookie_pirate.png', rarity: 'peu_commun', powerType: 'events', powerBase: 0.1, powerStep: 0.05, desc: 'Récompenses des événements +{val}%' },
-  { id: 'c_robot', name: 'Cookie robot', img: 'cookie_robot.png', rarity: 'peu_commun', powerType: 'building_factory', powerBase: 0.15, powerStep: 0.05, desc: 'Les usines produisent {val}% de plus' },
-  { id: 'c_choc_blanc', name: 'Cookie chocolat blanc', img: 'cookie_au_chocolat_blanc.png', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.12, powerStep: 0.03, desc: 'Augmente la production de {val}%' },
-  { id: 'c_fraise', name: 'Cookie à la fraise', img: 'cookie_a_la_fraise.png', rarity: 'peu_commun', powerType: 'building_farm', powerBase: 0.15, powerStep: 0.05, desc: 'Les fermes produisent {val}% de plus' },
-  // Rares
-  { id: 'c_knight', name: 'Cookie chevalier', img: 'cookie_chevalier.png', rarity: 'rare', powerType: 'click', powerBase: 0.2, powerStep: 0.05, desc: 'Augmente la puissance des clics de {val}%' },
-  { id: 'c_astro', name: 'Cookie astronaute', img: 'cookie_astronaute.png', rarity: 'rare', powerType: 'building_ship', powerBase: 0.2, powerStep: 0.1, desc: 'Les fusées produisent {val}% de plus' },
-  { id: 'c_mage', name: 'Cookie magicien', img: 'cookie_magicien.png', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.1, powerStep: 0.02, desc: 'Les cookies dorés apparaissent {val}% plus souvent' },
-  { id: 'c_dragon', name: 'Cookie dragon', img: 'cookie_dragon.png', rarity: 'rare', powerType: 'cps', powerBase: 0.2, powerStep: 0.05, desc: 'Augmente la production de {val}%' },
-  // Épiques
-  { id: 'c_demon', name: 'Cookie démon', img: 'cookie_demon.png', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.25, powerStep: 0.08, desc: 'Production et clics +{val}%' },
-  { id: 'c_ange', name: 'Cookie ange', img: 'cookie_ange.png', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.05, powerStep: 0.01, desc: 'Les pépites célestes sont {val}% plus efficaces' },
-  { id: 'c_roi', name: 'Cookie roi', img: 'cookie_roi.png', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.1, powerStep: 0.03, desc: 'Tous les bâtiments produisent {val}% de plus' },
-  { id: 'c_gold', name: 'Cookie doré', img: 'cookie_dore.png', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.3, powerStep: 0.1, desc: 'Gains des cookies dorés +{val}%' },
-  // Légendaires
-  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', rarity: 'legendaire', powerType: 'luck_mult', powerBase: 0.2, powerStep: 0.05, desc: '{val}% de chances de doubler n\'importe quel gain' },
-  { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.5, powerStep: 0.1, desc: 'Durée des frénésies +{val}%' },
-  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', rarity: 'legendaire', powerType: 'discount', powerBase: 0.1, powerStep: 0.02, desc: 'Réduit le coût de tout de {val}%' },
-  // Mythiques
-  { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.0, powerStep: 0.5, desc: 'Production +{val}% et l\'esprit s\'ouvre' },
-  { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', rarity: 'mythique', powerType: 'speed', powerBase: 2.0, powerStep: 0.5, desc: 'La vitesse globale du jeu augmente de {val}%' },
-  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', rarity: 'mythique', powerType: 'double_edged', powerBase: 3.0, powerStep: 1.0, desc: 'Production +{val}%, mais clics -50%' },
-  { id: 'c_tableau', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', rarity: 'mythique', powerType: 'upgrade_discount', powerBase: 0.5, powerStep: 0.1, desc: 'Améliorations {val}% moins chères' },
-  { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.0, powerStep: 0.5, desc: 'Gains des mini-jeux +{val}%' }
+  // Communs (Cookies CSS/SVG)
+  { id: 'c_classic', name: 'Cookie classique', rarity: 'commun', powerType: 'cps', powerBase: 0.05, powerStep: 0.02, desc: 'Production globale +{val}%', style: { c: ['#f6cd86', '#dc9a4f', '#a5602a'], chip: '#4b2411', edge: '#8a4c1c' } },
+  { id: 'c_mini', name: 'Mini-cookie', rarity: 'commun', powerType: 'click', powerBase: 0.05, powerStep: 0.02, desc: 'Puissance des clics +{val}%', style: { c: ['#ffd384', '#e2a85e', '#b87532'], chip: '#5c2c16', edge: '#8a4f1e', isMini: true } },
+  { id: 'c_choco', name: 'Cookie chocolat', rarity: 'commun', powerType: 'cps', powerBase: 0.06, powerStep: 0.02, desc: 'Production globale +{val}%', style: { c: ['#5a2f17', '#3d1d0c', '#241006'], chip: '#180a03', edge: '#220d04' } },
+  { id: 'c_pepite', name: 'Cookie pépite', rarity: 'commun', powerType: 'click', powerBase: 0.06, powerStep: 0.02, desc: 'Puissance des clics +{val}%', style: { c: ['#fab86b', '#de9141', '#a86221'], chip: '#7a3e1d', edge: '#7a3e1d', extraChips: true } },
+  { id: 'c_caramel', name: 'Cookie au caramel', rarity: 'commun', powerType: 'building_grandma', powerBase: 0.15, powerStep: 0.05, desc: 'Les grands-mères produisent +{val}%', style: { c: ['#f8c291', '#e58e26', '#b71540'], chip: '#b71540', edge: '#e58e26', glaze: '#f6b93b' } },
+  
+  // Peu communs (Cookies CSS/SVG)
+  { id: 'c_ghost', name: 'Cookie fantôme', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.10, powerStep: 0.03, desc: 'Production globale +{val}%', style: { c: ['#ffffff', '#dff9fb', '#c7ecee'], chip: '#00d2d3', edge: '#22a6b3', isGhost: true } },
+  { id: 'c_ninja', name: 'Cookie ninja', rarity: 'peu_commun', powerType: 'click', powerBase: 0.10, powerStep: 0.03, desc: 'Puissance des clics +{val}%', style: { c: ['#3d3d3d', '#2f3542', '#1e272e'], chip: '#ff4757', edge: '#ff4757', isNinja: true } },
+  { id: 'c_pirate', name: 'Cookie pirate', rarity: 'peu_commun', powerType: 'events', powerBase: 0.15, powerStep: 0.05, desc: 'Gains des événements +{val}%', style: { c: ['#8c531b', '#6d3c0e', '#482404'], chip: '#f1c40f', edge: '#2c3e50', isPirate: true } },
+  { id: 'c_robot', name: 'Cookie robot', rarity: 'peu_commun', powerType: 'building_factory', powerBase: 0.20, powerStep: 0.05, desc: 'Les usines produisent +{val}%', style: { c: ['#dcdde1', '#718093', '#2f3640'], chip: '#00d2d3', edge: '#00d2d3', isRobot: true } },
+  { id: 'c_choc_blanc', name: 'Cookie chocolat blanc', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.12, powerStep: 0.03, desc: 'Production globale +{val}%', style: { c: ['#fff9e6', '#f5e6cb', '#deb887'], chip: '#ffffff', edge: '#c49a6c', berryChips: true } },
+  { id: 'c_fraise', name: 'Cookie à la fraise', rarity: 'peu_commun', powerType: 'building_farm', powerBase: 0.20, powerStep: 0.05, desc: 'Les fermes produisent +{val}%', style: { c: ['#ff9ff3', '#f368e0', '#b83b5e'], chip: '#6ab04c', edge: '#b83b5e', isStrawberry: true } },
+
+  // Rares (Cookies CSS/SVG)
+  { id: 'c_knight', name: 'Cookie chevalier', rarity: 'rare', powerType: 'click', powerBase: 0.20, powerStep: 0.05, desc: 'Puissance des clics +{val}%', style: { c: ['#dfe4ea', '#a4b0be', '#57606f'], chip: '#2f3542', edge: '#2f3542', isKnight: true } },
+  { id: 'c_astro', name: 'Cookie astronaute', rarity: 'rare', powerType: 'building_ship', powerBase: 0.25, powerStep: 0.08, desc: 'Les fusées produisent +{val}%', style: { c: ['#341f97', '#1e272e', '#010a15'], chip: '#f1c40f', edge: '#54a0ff', isSpace: true } },
+  { id: 'c_mage', name: 'Cookie magicien', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.15, powerStep: 0.03, desc: 'Apparition des cookies dorés +{val}%', style: { c: ['#8854d0', '#5f27cd', '#341f97'], chip: '#ffd32a', edge: '#ff5e57', isMagic: true } },
+  { id: 'c_dragon', name: 'Cookie dragon', rarity: 'rare', powerType: 'cps', powerBase: 0.25, powerStep: 0.05, desc: 'Production globale +{val}%', style: { c: ['#eb3b5a', '#b71540', '#4b1218'], chip: '#fed330', edge: '#fc5c65', isDragon: true } },
+
+  // Épiques (Cookies CSS/SVG)
+  { id: 'c_demon', name: 'Cookie démon', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
+  { id: 'c_ange', name: 'Cookie ange', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.10, powerStep: 0.02, desc: 'Efficacité des pépites célestes +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
+  { id: 'c_roi', name: 'Cookie roi', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.15, powerStep: 0.04, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#f9ca24', '#f0932b', '#eb4d4b'], chip: '#6ab04c', edge: '#f0932b', isKing: true } },
+  { id: 'c_gold', name: 'Cookie doré', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.35, powerStep: 0.10, desc: 'Gains des cookies dorés +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
+
+  // Légendaires (Amis avec photo OU thématiques)
+  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'legendaire', powerType: 'luck_mult', powerBase: 0.25, powerStep: 0.05, desc: '{val}% de chances de doubler n\'importe quel gain' },
+  { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.12, powerStep: 0.03, desc: 'Réduit le coût de tous les achats de {val}%' },
+
+  // Mythiques (Amis avec photo)
+  { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)' },
+  { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'speed', powerBase: 2.00, powerStep: 0.50, desc: 'Vitesse de production +{val}%' },
+  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'double_edged', powerBase: 3.50, powerStep: 1.00, desc: 'Production +{val}%, mais clics -50%' },
+  { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' }
 ];
+
+/* Générateur visuel : Photos d'amis OU Cookie SVG vectoriel stylé */
+function renderCompanionVisual(c, size = 50) {
+  if (c.isFriend && c.img) {
+    return `<img src="${c.img}" class="friend-photo-img" alt="${c.name}" style="width:100%; height:100%;">`;
+  }
+  
+  const s = c.style || { c: ['#f6cd86', '#dc9a4f', '#a5602a'], chip: '#4b2411', edge: '#8a4c1c' };
+  const gradId = 'c_grad_' + c.id;
+  
+  let extraSvg = '';
+  if (s.isNinja) {
+    extraSvg += `<rect x="15" y="40" width="70" height="18" rx="4" fill="#ff4757"/><circle cx="40" cy="49" r="3.5" fill="#fff"/><circle cx="60" cy="49" r="3.5" fill="#fff"/>`;
+  } else if (s.isGhost) {
+    extraSvg += `<circle cx="38" cy="42" r="5" fill="#22a6b3"/><circle cx="62" cy="42" r="5" fill="#22a6b3"/><ellipse cx="50" cy="62" rx="6" ry="9" fill="#22a6b3" opacity="0.6"/>`;
+  } else if (s.isRobot) {
+    extraSvg += `<rect x="28" y="36" width="16" height="12" rx="3" fill="#00d2d3"/><rect x="56" y="36" width="16" height="12" rx="3" fill="#00d2d3"/><rect x="35" y="62" width="30" height="6" rx="2" fill="#2ed573"/><line x1="50" y1="12" x2="50" y2="24" stroke="#718093" stroke-width="4"/><circle cx="50" cy="10" r="5" fill="#ff4757"/>`;
+  } else if (s.isAngel) {
+    extraSvg += `<ellipse cx="50" cy="18" rx="28" ry="8" fill="none" stroke="#f9ca24" stroke-width="5" filter="drop-shadow(0 0 4px #f9ca24)"/><circle cx="38" cy="45" r="4" fill="#485460"/><circle cx="62" cy="45" r="4" fill="#485460"/>`;
+  } else if (s.isDemon) {
+    extraSvg += `<polygon points="20,25 32,38 18,45" fill="#ff3838"/><polygon points="80,25 68,38 82,45" fill="#ff3838"/><circle cx="38" cy="48" r="4.5" fill="#fed330"/><circle cx="62" cy="48" r="4.5" fill="#fed330"/>`;
+  } else if (s.isKing) {
+    extraSvg += `<polygon points="24,28 34,10 50,22 66,10 76,28" fill="#f9ca24" stroke="#e1b12c" stroke-width="2"/><circle cx="34" cy="10" r="3" fill="#eb4d4b"/><circle cx="50" cy="22" r="3" fill="#4cd137"/><circle cx="66" cy="10" r="3" fill="#eb4d4b"/>`;
+  } else if (s.isSpace) {
+    extraSvg += `<ellipse cx="50" cy="50" rx="32" ry="22" fill="#54a0ff" opacity="0.4" stroke="#70a1ff" stroke-width="3"/><polygon points="50,24 53,30 60,31 55,36 56,42 50,39 44,42 45,36 40,31 47,30" fill="#ffd32a"/>`;
+  } else if (s.isKnight) {
+    extraSvg += `<rect x="25" y="42" width="50" height="12" rx="3" fill="#2f3542"/><line x1="50" y1="25" x2="50" y2="75" stroke="#f1f2f6" stroke-width="3" opacity="0.7"/>`;
+  } else if (s.isMagic) {
+    extraSvg += `<polygon points="50,15 54,26 65,27 57,34 59,45 50,40 41,45 43,34 35,27 46,26" fill="#ffd32a" filter="drop-shadow(0 0 5px #ffd32a)"/>`;
+  } else if (s.isDragon) {
+    extraSvg += `<polygon points="22,35 12,20 32,25" fill="#fed330"/><polygon points="78,35 88,20 68,25" fill="#fed330"/><circle cx="36" cy="48" r="5" fill="#fed330"/><circle cx="64" cy="48" r="5" fill="#fed330"/><polygon points="36,48 38,48 37,51" fill="#000"/><polygon points="64,48 66,48 65,51" fill="#000"/>`;
+  } else if (s.isPirate) {
+    extraSvg += `<polygon points="20,32 50,14 80,32 50,26" fill="#2c3e50"/><circle cx="50" cy="22" r="4" fill="#f1c40f"/><line x1="30" y1="36" x2="48" y2="56" stroke="#111" stroke-width="3"/><circle cx="42" cy="48" r="7" fill="#111"/>`;
+  } else if (s.isStrawberry) {
+    extraSvg += `<polygon points="50,8 44,20 56,20" fill="#4cd137"/><polygon points="40,12 36,22 48,20" fill="#4cd137"/><polygon points="60,12 64,22 52,20" fill="#4cd137"/>`;
+  }
+
+  return `<svg viewBox="0 0 100 100" class="cookie-svg-art" style="width:100%; height:100%;">
+    <defs>
+      <radialGradient id="${gradId}" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="${s.c[0]}"/>
+        <stop offset="55%" stop-color="${s.c[1]}"/>
+        <stop offset="100%" stop-color="${s.c[2]}"/>
+      </radialGradient>
+    </defs>
+    <path d="M50 5 C75 3 98 25 96 52 C98 78 76 97 50 95 C24 97 2 78 4 52 C2 25 25 3 50 5 Z" fill="url(#${gradId})" stroke="${s.edge}" stroke-width="3.5"/>
+    <g fill="${s.chip}">
+      <circle cx="30" cy="32" r="5.5"/>
+      <circle cx="68" cy="28" r="4.8"/>
+      <circle cx="74" cy="58" r="5.8"/>
+      <circle cx="34" cy="70" r="5.2"/>
+      <circle cx="52" cy="48" r="4.2"/>
+      ${s.extraChips ? '<circle cx="52" cy="74" r="5.2"/><circle cx="22" cy="52" r="4.5"/><circle cx="78" cy="42" r="4.2"/>' : ''}
+      ${s.berryChips ? '<circle cx="46" cy="28" r="4" fill="#e84118"/><circle cx="62" cy="70" r="4" fill="#e84118"/>' : ''}
+    </g>
+    ${extraSvg}
+  </svg>`;
+}
 
 function companionVal(cId) {
   const c = COMPANIONS.find(x => x.id === cId);
   if (!c) return 0;
+  if (!S.compData || !S.compData.levels) return c.powerBase;
   const lvl = S.compData.levels[cId] || 1;
   return c.powerBase + (lvl - 1) * c.powerStep;
 }
@@ -3680,6 +3747,7 @@ function compHas(powerType) {
   if (!S.compData || !S.compData.equipped) return 0;
   let total = 0;
   for (let id of S.compData.equipped) {
+    if (!id) continue;
     const c = COMPANIONS.find(x => x.id === id);
     if (c && c.powerType === powerType) {
       total += companionVal(id);
@@ -3688,6 +3756,7 @@ function compHas(powerType) {
   return total;
 }
 
+/* Affichage des compagnons sous le gros cookie principal */
 function renderCompanions() {
   const ctn = document.getElementById('companions-container');
   if (!ctn) return;
@@ -3695,29 +3764,48 @@ function renderCompanions() {
     ctn.innerHTML = '';
     return;
   }
+  
   let html = '';
-  for (let id of S.compData.equipped) {
+  S.compData.equipped.forEach((id, idx) => {
+    if (!id) return;
     const c = COMPANIONS.find(x => x.id === id);
-    if (c) {
-      html += `<div class="companion-slot rarity-${c.rarity}" title="${c.name}\n${c.desc.replace('{val}', Math.round(companionVal(id)*100))}"><img src="${c.img}" alt="${c.name}"></div>`;
-    }
-  }
+    if (!c) return;
+    const val = Math.round(companionVal(id) * 100);
+    const lvl = S.compData.levels[id] || 1;
+    const slotLabel = idx === 0 ? 'Slot G' : 'Slot D';
+    
+    html += `
+      <div class="active-comp-wrapper" title="${c.name} (${slotLabel})\n${c.desc.replace('{val}', val)}\nNiveau ${lvl}" onclick="showTab('gacha')">
+        <div class="active-comp-slot rarity-${c.rarity}">
+          ${renderCompanionVisual(c, 52)}
+          <span class="active-comp-lvl">Lvl ${lvl}</span>
+        </div>
+        <span class="active-comp-label">${c.name.length > 14 ? c.name.slice(0, 12) + '…' : c.name}</span>
+      </div>
+    `;
+  });
+  
   ctn.innerHTML = html;
 }
 
 function gachaCost() {
-  return Math.max(1e6, cps() * 1800) * Math.pow(1.1, S.compData.pulls || 0); // 30 mins of CPS
+  const pulls = (S.compData && S.compData.pulls) || 0;
+  return Math.max(1e6, cps() * 1800) * Math.pow(1.08, pulls);
 }
 
+/* Machine à sous / Roulette sans bug de défilement */
 let isGachaSpinning = false;
+
 function spinGacha() {
   if (isGachaSpinning) return;
   const cost = gachaCost();
   if (S.cookies < cost) {
-    toast('❌', 'Fonds insuffisants', 'Il vous faut ' + fmt(cost) + ' cookies.');
+    toast('❌', 'Fonds insuffisants', 'Il vous faut ' + fmt(cost) + ' cookies pour un tirage.');
     return;
   }
+  
   S.cookies -= cost;
+  if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   S.compData.pulls = (S.compData.pulls || 0) + 1;
   S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
   
@@ -3725,229 +3813,407 @@ function spinGacha() {
   renderGachaPane();
   
   const reel = document.getElementById('gachaReel');
-  if (!reel) { isGachaSpinning = false; return; }
+  const container = document.querySelector('.gacha-reel-container');
+  if (!reel || !container) {
+    isGachaSpinning = false;
+    return;
+  }
   
-  // Decide result
+  // Calcul du résultat
   let rVal = Math.random() * 100;
   let rarity = 'commun';
   let pityActive = false;
   
   if (S.compData.pityTracker >= 20) {
-    rarity = 'epique'; // Guaranteed epic+ every 20 pulls
     S.compData.pityTracker = 0;
     pityActive = true;
-    rVal = Math.random() * 10; // 0-10 -> epique(7), legendaire(2.5), mythique(0.5)
-  }
-  
-  let acc = 0;
-  for (let k in RARITIES) {
-    if (pityActive && (k==='commun' || k==='peu_commun' || k==='rare')) continue;
-    acc += RARITIES[k].prob;
-    if (rVal <= acc) { rarity = k; break; }
+    const highRoll = Math.random() * 10;
+    if (highRoll < 7) rarity = 'epique';
+    else if (highRoll < 9.5) rarity = 'legendaire';
+    else rarity = 'mythique';
+  } else {
+    let acc = 0;
+    for (let k in RARITIES) {
+      acc += RARITIES[k].prob;
+      if (rVal <= acc) { rarity = k; break; }
+    }
   }
   
   const possible = COMPANIONS.filter(c => c.rarity === rarity);
-  const result = possible[Math.floor(Math.random() * possible.length)];
+  const result = possible[Math.floor(Math.random() * possible.length)] || COMPANIONS[0];
   
-  // Create reel items
+  // Construction des 45 éléments de la roulette
+  const totalItems = 45;
+  const targetIndex = 35; // L'élément gagnant s'arrêtera exactement ici
   let reelHtml = '';
-  for(let i=0; i<30; i++) {
-    const rc = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
-    reelHtml += `<div class="gacha-item rarity-${rc.rarity}"><img src="${rc.img}"></div>`;
-  }
-  reelHtml += `<div class="gacha-item rarity-${result.rarity}"><img src="${result.img}"></div>`;
-  for(let i=0; i<5; i++) {
-    const rc = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
-    reelHtml += `<div class="gacha-item rarity-${rc.rarity}"><img src="${rc.img}"></div>`;
+  
+  for (let i = 0; i < totalItems; i++) {
+    const itemComp = (i === targetIndex) ? result : COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+    reelHtml += `
+      <div class="gacha-item rarity-${itemComp.rarity}" data-idx="${i}">
+        ${renderCompanionVisual(itemComp, 70)}
+      </div>
+    `;
   }
   reel.innerHTML = reelHtml;
   
-  // Animate
+  // Calcul exact du défilement centré sous le pointeur
+  const itemWidth = 96; // 84px + 12px margin
+  const containerWidth = container.clientWidth || 500;
+  const finalOffset = (targetIndex * itemWidth) + (itemWidth / 2) - (containerWidth / 2);
+  
+  // Réinitialisation instantanée
   reel.style.transition = 'none';
-  reel.style.transform = 'translateX(0)';
+  reel.style.transform = 'translateX(0px)';
   
-  setTimeout(() => {
-    reel.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)';
-    reel.style.transform = `translateX(-${30 * 100}px)`;
-  }, 50);
+  // Lancement fluide de la rotation
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      reel.style.transition = 'transform 4.3s cubic-bezier(0.12, 0.85, 0.15, 1)';
+      reel.style.transform = `translateX(-${finalOffset}px)`;
+    }, 40);
+  });
   
+  // Résolution à l'arrêt
   setTimeout(() => {
     isGachaSpinning = false;
     
-    // Add to collection
     if (!S.compData.unlocked.includes(result.id)) {
       S.compData.unlocked.push(result.id);
       S.compData.levels[result.id] = 1;
-      toast('🎉', 'Nouveau Compagnon !', result.name + ' (' + RARITIES[result.rarity].name + ')');
+      toast('🎉', 'Nouveau Compagnon !', `${result.name} (${RARITIES[result.rarity].name}) a rejoint votre équipe !`);
+      if (result.rarity === 'mythique' || result.rarity === 'legendaire') celebrate();
     } else {
       S.compData.shards[result.id] = (S.compData.shards[result.id] || 0) + 1;
-      toast('✨', 'Doublon', '+1 Éclat pour ' + result.name);
+      toast('✨', 'Doublon obtenu !', `+1 Éclat pour ${result.name} (Total : ${S.compData.shards[result.id]})`);
     }
-    
-    if (rarity === 'mythique') celebrate();
     
     save();
     renderGachaPane();
     renderCompanions();
     recalc();
-  }, 4100);
+  }, 4500);
 }
 
-function equipCompanion(id) {
-  if (S.compData.equipped.includes(id)) {
-    // desequip
-    S.compData.equipped = S.compData.equipped.filter(x => x !== id);
+/* Système d'équipement 2 slots intuitif */
+function equipCompanionSlot(id, slotIndex) {
+  if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {} };
+  if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [];
+  
+  // Si déjà équipé dans ce slot -> on le retire
+  if (S.compData.equipped[slotIndex] === id) {
+    S.compData.equipped[slotIndex] = null;
   } else {
-    // limit to 2 equipped
-    if (S.compData.equipped.length >= 2) {
-      // remove first equipped
-      S.compData.equipped.shift();
+    // Si déjà dans l'autre slot, on le déplace
+    const otherSlot = slotIndex === 0 ? 1 : 0;
+    if (S.compData.equipped[otherSlot] === id) {
+      S.compData.equipped[otherSlot] = null;
     }
-    S.compData.equipped.push(id);
+    S.compData.equipped[slotIndex] = id;
   }
+  
+  // Nettoyer les slots vides en conservant l'ordre ou compactant si besoin
+  S.compData.equipped = [S.compData.equipped[0] || null, S.compData.equipped[1] || null].filter(Boolean);
+  
   renderEquippedCompanions();
-  renderGachaPane(); // re-render collection to update equip state
-
-} else {
-    if (S.compData.equipped.length >= 2) {
-      S.compData.equipped.shift();
-    }
-    S.compData.equipped.push(id);
-  }
-  save();
-  renderGachaPane();
   renderCompanions();
+  renderGachaPane();
+  save();
   recalc();
 }
 
+function unequipCompanionSlot(slotIndex) {
+  if (!S.compData || !S.compData.equipped) return;
+  S.compData.equipped.splice(slotIndex, 1);
+  renderEquippedCompanions();
+  renderCompanions();
+  renderGachaPane();
+  save();
+  recalc();
+}
+
+function renderEquippedCompanions() {
+  renderCompanions();
+}
+
 function upgradeCompanion(id) {
-  const cost = S.compData.levels[id] || 1;
-  if ((S.compData.shards[id] || 0) >= cost) {
+  if (!S.compData) return;
+  const currentLvl = S.compData.levels[id] || 1;
+  const cost = currentLvl;
+  const shards = S.compData.shards[id] || 0;
+  
+  if (shards >= cost) {
     S.compData.shards[id] -= cost;
-    S.compData.levels[id]++;
+    S.compData.levels[id] = currentLvl + 1;
+    const c = COMPANIONS.find(x => x.id === id);
+    toast('⚡', 'Niveau Supérieur !', `${c.name} passe au niveau ${S.compData.levels[id]} !`);
+    celebrate();
     save();
     renderGachaPane();
     renderCompanions();
     recalc();
+  } else {
+    toast('ℹ️', 'Éclats insuffisants', `Il vous faut ${cost} éclat(s) pour améliorer ce compagnon.`);
   }
 }
 
-
-window.showGachaInfo = function() {
-  current = { ended: true, api: { frac: 0 } }; // fake state to allow closeModal
-  mInfo.textContent = '';
-  mBody.innerHTML = `<div style="padding:20px; text-align:left;">
-      <h2 style="color:#f1c40f; margin-bottom:15px; text-align:center;">🎰 Guide de la Machine à Sous</h2>
-      <p>Bienvenue dans la Machine à Sous ! Utilisez vos cookies pour débloquer des <b>Compagnons</b> uniques qui boosteront votre progression.</p>
-      
-      <h4 style="margin-top:15px; color:#3498db; border-bottom:1px solid #444; padding-bottom:5px;">📊 Les Raretés</h4>
-      <p style="font-size:13px; line-height:1.5;">Il existe 6 niveaux de rareté :<br>
-      <span style="color:#bdc3c7">Commun</span> (50%), 
-      <span style="color:#2ecc71">Peu commun</span> (25%), 
-      <span style="color:#3498db">Rare</span> (15%), 
-      <span style="color:#9b59b6">Épique</span> (7%), 
-      <span style="color:#f1c40f; text-shadow:0 0 5px #f1c40f;">Légendaire</span> (2.5%), et 
-      <span style="color:#e74c3c; font-weight:bold; text-shadow:0 0 10px #e74c3c;">Mythique</span> (0.5%).</p>
-      
-      <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">💡 Équipement & Stratégie</h4>
-      <p style="font-size:13px; line-height:1.5;">Vous pouvez équiper jusqu'à <b>2 compagnons actifs</b> simultanément en cliquant dessus dans votre collection. Ils s'afficheront sous votre Cookie principal. Modifiez votre duo à volonté pour créer des "Builds" (orienté clics, production, événements, etc.).</p>
-      
-      <h4 style="margin-top:15px; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px;">✨ Doublons et Niveaux</h4>
-      <p style="font-size:13px; line-height:1.5;">Obtenir un compagnon que vous possédez déjà vous octroie un <b>Éclat</b> de ce compagnon. Utilisez ces éclats pour le faire monter de niveau et augmenter son pouvoir !<br><br><b>Pour améliorer :</b> Faites un clic-droit (ou un appui long sur mobile) sur un compagnon de votre collection.</p>
-      
-      <h4 style="margin-top:15px; color:#e74c3c; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Garantie (Pity)</h4>
-      <p style="font-size:13px; line-height:1.5;">Le jeu vous garantit une rareté minimale <b>Épique (ou mieux)</b> tous les 20 tirages.</p>
-      
-      <div style="text-align:center; margin-top:25px;">
-        <button class="big-btn" onclick="closeModal()" style="width:200px;">J'ai compris !</button>
-      </div>
-    </div>`;
-  modal.classList.add('on');
-};
+let currentRarityFilter = 'all';
 
 function renderGachaPane() {
   const pane = document.getElementById('gachaPane');
   if (!pane) return;
   
+  if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  
   if (S.ascensions === 0) {
-    pane.innerHTML = `<div class="gacha-locked">
-      <div class="lock-icon">🔒</div>
-      <h2>MACHINE À SOUS VERROUILLÉE</h2>
-      <p>Effectuez votre première Ascension pour débloquer la Machine à sous et recruter des compagnons.</p>
-    </div>`;
+    pane.innerHTML = `
+      <div class="gacha-locked">
+        <div class="lock-icon">🔒</div>
+        <h2>MACHINE À SOUS VERROUILLÉE</h2>
+        <p>Effectuez votre première Ascension pour débloquer la Machine à sous et recruter vos compagnons.</p>
+      </div>
+    `;
     return;
   }
   
-  let html = `<div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <div><h3 style="display:flex; align-items:center; gap:10px;">Machine à sous <button style="background:#3498db; border:none; border-radius:50%; width:24px; height:24px; color:white; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.5);" onclick="showGachaInfo()" title="Guide des compagnons">?</button></h3><p>Recrutez des compagnons !</p></div>
-    <div style="text-align:right;"><small>Garantie Épique+ dans ${20 - (S.compData.pityTracker||0)}</small></div>
-  </div>`;
+  const pityLeft = Math.max(0, 20 - (S.compData.pityTracker || 0));
   
-  html += `<div class="gacha-machine">
-    <div class="gacha-reel-container">
-      <div class="gacha-reel" id="gachaReel"></div>
-      <div style="position:absolute; top:0; bottom:0; left:50%; width:4px; background:rgba(255,0,0,0.5); transform:translateX(-50%); z-index:2;"></div>
+  let html = `
+    <div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="display:flex; align-items:center; gap:10px; margin:0;">
+          🎰 Machine à sous
+          <button style="background:#3498db; border:none; border-radius:50%; width:24px; height:24px; color:white; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.4);" onclick="showGachaInfo()" title="Guide des compagnons">?</button>
+        </h3>
+        <p style="margin:4px 0 0; color:#a4b0be; font-size:13px;">Tirez et recrutez des compagnons légendaires !</p>
+      </div>
+      <div style="text-align:right;">
+        <span style="background:rgba(235, 77, 75, 0.2); border:1px solid #eb4d4b; color:#ff7979; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">
+          🛡️ Garantie Épique+ dans : <b>${pityLeft}</b> tirage${pityLeft > 1 ? 's' : ''}
+        </span>
+      </div>
     </div>
-    <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost() ? 'disabled' : ''}>Tirer ( ${fmt(gachaCost())} 🍪 )</button>
-    <div style="margin-top:10px; font-size:11px; color:#888;">Probas: `;
+  `;
   
-  for(let k in RARITIES) {
-    html += `<span style="color:${RARITIES[k].color}">${RARITIES[k].name}:${RARITIES[k].prob}%</span> `;
-  }
-  html += `</div></div>`;
+  // Machine à sous
+  html += `
+    <div class="gacha-machine">
+      <div class="gacha-reel-container">
+        <div class="gacha-pointer-center"></div>
+        <div class="gacha-reel" id="gachaReel">
+          <div style="padding:0 20px; color:#747d8c; font-style:italic; font-size:14px; display:flex; align-items:center; height:100%;">
+            Prêt pour le tirage ! Cliquez ci-dessous pour lancer la machine...
+          </div>
+        </div>
+      </div>
+      <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost() ? 'disabled' : ''} style="min-width:240px; font-size:16px;">
+        ${isGachaSpinning ? 'Tirage en cours...' : `🎰 Tirer ( ${fmt(gachaCost())} 🍪 )`}
+      </button>
+      <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <b style="color:#a4b0be;">Taux :</b>
+        <span style="color:#bdc3c7;">Commun (50%)</span> ·
+        <span style="color:#2ecc71;">Peu commun (25%)</span> ·
+        <span style="color:#3498db;">Rare (15%)</span> ·
+        <span style="color:#9b59b6;">Épique (7%)</span> ·
+        <span style="color:#f1c40f;">Légendaire (2.5%)</span> ·
+        <span style="color:#ff4757; font-weight:bold;">Mythique (0.5%)</span>
+      </div>
+    </div>
+  `;
   
-  html += `<h3>Votre Collection (${S.compData.unlocked.length} / ${COMPANIONS.length})</h3>
-    <p class="small">Sélectionnez jusqu'à 2 compagnons actifs.</p>
-    <div class="collection-grid">`;
-    
-  for(let c of COMPANIONS) {
+  // Duo Actif (Panneau de sélection 2 slots Gauche et Droite)
+  const slot0Id = S.compData.equipped[0] || null;
+  const slot1Id = S.compData.equipped[1] || null;
+  const c0 = slot0Id ? COMPANIONS.find(x => x.id === slot0Id) : null;
+  const c1 = slot1Id ? COMPANIONS.find(x => x.id === slot1Id) : null;
+  
+  html += `
+    <div class="active-duo-section">
+      <div class="active-duo-title">
+        <span>⚔️ Vos 2 Compagnons Actifs (Duo Équipé)</span>
+        <small style="color:#a4b0be; font-size:12px; font-weight:normal;">Les bonus se cumulent !</small>
+      </div>
+      <div class="active-duo-grid">
+        <!-- Emplacement 1 (Gauche) -->
+        <div class="duo-slot-box ${c0 ? 'filled rarity-' + c0.rarity : ''}">
+          ${c0 ? `
+            <div class="duo-slot-avatar">
+              ${renderCompanionVisual(c0, 48)}
+            </div>
+            <div class="duo-slot-info">
+              <div class="duo-slot-header">
+                <span class="duo-slot-name">${c0.name}</span>
+                <span style="font-size:11px; font-weight:bold; color:${RARITIES[c0.rarity].color};">Lvl ${S.compData.levels[c0.id] || 1}</span>
+              </div>
+              <div class="duo-slot-desc">⚡ ${c0.desc.replace('{val}', Math.round(companionVal(c0.id)*100))}</div>
+            </div>
+            <button class="btn-unequip-slot" onclick="unequipCompanionSlot(0)" title="Retirer">✕</button>
+          ` : `
+            <div style="font-size:24px; color:#57606f; margin-left:6px;">🛡️</div>
+            <div class="duo-slot-empty-text">
+              <b>Emplacement 1 (Gauche)</b><br>
+              <span style="font-size:11px; color:#747d8c;">Cliquez sur [🛡️ Slot G] sur un compagnon ci-dessous.</span>
+            </div>
+          `}
+        </div>
+
+        <!-- Emplacement 2 (Droite) -->
+        <div class="duo-slot-box ${c1 ? 'filled rarity-' + c1.rarity : ''}">
+          ${c1 ? `
+            <div class="duo-slot-avatar">
+              ${renderCompanionVisual(c1, 48)}
+            </div>
+            <div class="duo-slot-info">
+              <div class="duo-slot-header">
+                <span class="duo-slot-name">${c1.name}</span>
+                <span style="font-size:11px; font-weight:bold; color:${RARITIES[c1.rarity].color};">Lvl ${S.compData.levels[c1.id] || 1}</span>
+              </div>
+              <div class="duo-slot-desc">⚡ ${c1.desc.replace('{val}', Math.round(companionVal(c1.id)*100))}</div>
+            </div>
+            <button class="btn-unequip-slot" onclick="unequipCompanionSlot(1)" title="Retirer">✕</button>
+          ` : `
+            <div style="font-size:24px; color:#57606f; margin-left:6px;">⚔️</div>
+            <div class="duo-slot-empty-text">
+              <b>Emplacement 2 (Droite)</b><br>
+              <span style="font-size:11px; color:#747d8c;">Cliquez sur [⚔️ Slot D] sur un compagnon ci-dessous.</span>
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Section Collection
+  const unlockedCount = S.compData.unlocked.length;
+  html += `
+    <div class="collection-section-header">
+      <h3 style="margin:0;">Collection de Compagnons (${unlockedCount} / ${COMPANIONS.length})</h3>
+      <div class="rarity-filter-bar">
+        <button class="rarity-filter-btn ${currentRarityFilter === 'all' ? 'active' : ''}" onclick="filterGachaRarity('all')">Tous</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'commun' ? 'active' : ''}" onclick="filterGachaRarity('commun')">Communs</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'peu_commun' ? 'active' : ''}" onclick="filterGachaRarity('peu_commun')">Peu communs</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'rare' ? 'active' : ''}" onclick="filterGachaRarity('rare')">Rares</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'epique' ? 'active' : ''}" onclick="filterGachaRarity('epique')">Épiques</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'legendaire' ? 'active' : ''}" onclick="filterGachaRarity('legendaire')">Légendaires</button>
+        <button class="rarity-filter-btn ${currentRarityFilter === 'mythique' ? 'active' : ''}" onclick="filterGachaRarity('mythique')">Mythiques</button>
+      </div>
+    </div>
+    <div class="companion-grid">
+  `;
+  
+  const filteredCompanions = COMPANIONS.filter(c => currentRarityFilter === 'all' || c.rarity === currentRarityFilter);
+  
+  for (let c of filteredCompanions) {
     const unl = S.compData.unlocked.includes(c.id);
     const lvl = S.compData.levels[c.id] || 1;
-    const eq = S.compData.equipped.includes(c.id);
+    const isEq0 = S.compData.equipped[0] === c.id;
+    const isEq1 = S.compData.equipped[1] === c.id;
     const shards = S.compData.shards[c.id] || 0;
+    const upgradeCost = lvl;
+    const canUpgrade = shards >= upgradeCost;
     
     if (unl) {
-      html += `<div class="coll-item rarity-${c.rarity}" onclick="equipCompanion('${c.id}')" title="${c.name}\n${c.desc.replace('{val}', Math.round(companionVal(c.id)*100))}">
-        <img src="${c.img}" alt="${c.name}">
-        <div class="lvl-badge">Lvl ${lvl}</div>
-        ${eq ? '<div class="equipped-badge">ÉQUIPÉ</div>' : ''}
-      </div>`;
-      
-      // Upgrade btn logic could be added in a modal, but for simplicity let's just make clicking it equip/unequip, and add upgrade via double click or a separate panel. Let's do a simple prompt if they want to upgrade.
+      html += `
+        <div class="companion-card rarity-${c.rarity}">
+          <div class="comp-card-top">
+            <div class="comp-card-visual">
+              ${renderCompanionVisual(c, 44)}
+            </div>
+            <div class="comp-card-details">
+              <div class="comp-card-name" title="${c.name}">${c.name}</div>
+              <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name} · Lvl ${lvl}</div>
+            </div>
+          </div>
+          <div class="comp-card-power">⚡ ${c.desc.replace('{val}', Math.round(companionVal(c.id)*100))}</div>
+          <div class="comp-shards-bar">💎 Éclats : <b>${shards} / ${upgradeCost}</b></div>
+          <div class="comp-card-actions">
+            <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" onclick="equipCompanionSlot('${c.id}', 0)" title="Équiper ou retirer du Slot Gauche">
+              ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
+            </button>
+            <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" onclick="equipCompanionSlot('${c.id}', 1)" title="Équiper ou retirer du Slot Droite">
+              ${isEq1 ? '✓ Slot D' : '⚔️ Slot D'}
+            </button>
+          </div>
+          ${canUpgrade ? `
+            <button class="btn-comp-upgrade" onclick="upgradeCompanion('${c.id}')">
+              ⬆️ Améliorer (Niv. ${lvl + 1})
+            </button>
+          ` : ''}
+        </div>
+      `;
     } else {
-      html += `<div class="coll-item locked" title="??? (${RARITIES[c.rarity].name})"><img src="${c.img}"></div>`;
+      html += `
+        <div class="companion-card locked">
+          <div class="comp-card-top">
+            <div class="comp-card-visual" style="background:#111; font-size:20px;">
+              🔒
+            </div>
+            <div class="comp-card-details">
+              <div class="comp-card-name">???</div>
+              <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name}</div>
+            </div>
+          </div>
+          <div class="comp-card-power" style="color:#747d8c;">Débloquez ce compagnon à la Machine à sous.</div>
+        </div>
+      `;
     }
   }
-  html += `</div>`;
   
+  html += `</div>`;
   pane.innerHTML = html;
   
   const btn = document.getElementById('btnSpinGacha');
   if (btn) btn.addEventListener('click', spinGacha);
 }
 
-// Intercept companion clicks for upgrades
-document.addEventListener('contextmenu', (e) => {
-  const item = e.target.closest('.coll-item');
-  if (item && item.onclick) {
-    e.preventDefault();
-    const id = item.getAttribute('onclick').match(/'([^']+)'/)[1];
-    const shards = S.compData.shards[id] || 0;
-    const cost = S.compData.levels[id] || 1;
-    if (shards >= cost) {
-      if(confirm('Améliorer ce compagnon pour ' + cost + ' éclat(s) ? (Vous en avez ' + shards + ')')) {
-        upgradeCompanion(id);
-      }
-    } else {
-      toast('ℹ️', 'Éclats insuffisants', 'Il vous faut ' + cost + ' éclat(s). Vous en avez ' + shards + '.');
-    }
-  }
-});
+window.filterGachaRarity = function(r) {
+  currentRarityFilter = r;
+  renderGachaPane();
+};
 
-// Update freshState to include compData
+window.showGachaInfo = function() {
+  current = { ended: true, api: { frac: 0 } };
+  mInfo.textContent = '';
+  mBody.innerHTML = `
+    <div style="padding:20px; text-align:left;">
+      <h2 style="color:#f1c40f; margin-bottom:15px; text-align:center;">🎰 Guide de la Machine à Sous & Compagnons</h2>
+      <p>Bienvenue dans la Machine à Sous ! Utilisez vos cookies pour débloquer des <b>Compagnons</b> uniques qui boosteront votre progression.</p>
+      
+      <h4 style="margin-top:15px; color:#3498db; border-bottom:1px solid #444; padding-bottom:5px;">📊 Les 6 Niveaux de Rareté</h4>
+      <p style="font-size:13px; line-height:1.5;">
+        <span style="color:#bdc3c7; font-weight:bold;">Commun</span> (50%)<br>
+        <span style="color:#2ecc71; font-weight:bold;">Peu commun</span> (25%)<br>
+        <span style="color:#3498db; font-weight:bold;">Rare</span> (15%)<br>
+        <span style="color:#9b59b6; font-weight:bold;">Épique</span> (7%)<br>
+        <span style="color:#f1c40f; font-weight:bold;">Légendaire</span> (2.5%) — Contour doré éclatant ✨<br>
+        <span style="color:#ff4757; font-weight:bold;">Mythique</span> (0.5%) — Contour RGB arc-en-ciel animé 🌈
+      </p>
+      
+      <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Sélection & Équipement Duo (2 Slots)</h4>
+      <p style="font-size:13px; line-height:1.5;">
+        Vous disposez de <b>2 emplacements actifs</b> : <b>Slot Gauche</b> et <b>Slot Droite</b>.<br>
+        Cliquez sur <b>[🛡️ Slot G]</b> ou <b>[⚔️ Slot D]</b> sur n'importe quel compagnon débloqué pour l'équiper instantanément. Vos compagnons actifs apparaissent sous votre gros Cookie !
+      </p>
+      
+      <h4 style="margin-top:15px; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px;">✨ Doublons et Montée en Niveau</h4>
+      <p style="font-size:13px; line-height:1.5;">
+        Obtenir un doublon vous donne un <b>Éclat 💎</b> de ce compagnon. Utilisez ces éclats pour faire monter son niveau et augmenter sa puissance !
+      </p>
+      
+      <h4 style="margin-top:15px; color:#eb4d4b; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Garantie (Pity Tracker)</h4>
+      <p style="font-size:13px; line-height:1.5;">
+        Tous les <b>20 tirages</b>, vous êtes garanti d'obtenir un compagnon <b>Épique, Légendaire ou Mythique</b>.
+      </p>
+      
+      <div style="text-align:center; margin-top:25px;">
+        <button class="big-btn" onclick="closeModal()" style="width:200px;">J'ai compris !</button>
+      </div>
+    </div>
+  `;
+  modal.classList.add('on');
+};
+
 function injectCompData(s) {
   if (!s.compData) s.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   return s;
 }
-
-// Hook into existing app.js logic
