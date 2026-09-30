@@ -408,37 +408,161 @@ function activateSecretCode() {
 }
 $('#secretActivate').addEventListener('click', activateSecretCode);
 $('#secretCode').addEventListener('keydown', (event) => { if (event.key === 'Enter') activateSecretCode(); });
+
+let casinoWheelRaf = 0;
+
 function renderCasinoPane() {
   const box = $('#casinoPane');
   if (!box) return;
   casinoBuilt = true;
   resetCasinoWindow();
+  
+  if (!S.casino.tab) S.casino.tab = 'roulette';
+  
   if (S.baked < 1e6 && !casinoUnlimited()) {
     const progress = Math.min(100, S.baked / 1e6 * 100);
     box.innerHTML = '<div class="casino-page casino-locked-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>La table ouvre ses portes après votre premier million de cookies cuits.</p></div><div class="casino-lock-icon">🎰</div></div><div class="casino-unlock-bar"><div><span>Casino à débloquer</span><strong>Encore ' + fmt(Math.max(0, 1e6 - S.baked)) + ' cookies cuits</strong></div><div class="casino-progress"><i style="width:' + progress + '%"></i></div><small>' + fmt(S.baked) + ' / 1 million cookies cuits</small></div><div class="casino-preview"><div class="roulette-wheel-live"><span style="--angle:0deg">0</span><span style="--angle:120deg">4</span><span style="--angle:240deg">8</span><b>🔒</b></div><p>Les mises en millions, la roulette animée et les récompenses seront disponibles ici.</p></div></div>';
     return;
   }
-  const result = S.casino.lastResult;
-  const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 15 minutes.';
-  const resultMarkup = result
-    ? '<span class="casino-result-color ' + result.color + '">' + result.color.toUpperCase() + '</span><small>' + (result.won ? 'GAGNÉ +' + fmt(result.payout) + ' cookies' : 'PERDU · mise de ' + fmt(result.stake)) + '</small>'
-    : 'Choisissez votre mise et votre pari.';
-  const numberButtons = '';
-  const wheelNumbers = Array.from({ length: 10 }, (_, n) => '<span style="--angle:' + (n * (360 / 10)) + 'deg"></span>').join('');
-  const minBet = casinoUnlimited() ? 1 : 1000000;
-  box.innerHTML = '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>Une table indépendante de la fête foraine. ' + casinoRule + '</p></div><div class="casino-bankroll"><span>Solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div></div>' +
-    '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"> cookies</label><div class="casino-presets"><button data-casino-stake="10">10%</button><button data-casino-stake="25">25%</button><button data-casino-stake="50">50%</button><button data-casino-stake="75">75%</button><button data-casino-stake="100">100%</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="rouge">🔴 Rouge</button><button data-casino-color="noir">⚫ Noir</button></div><p class="casino-result" id="casinoResult">' + resultMarkup + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
-  updateCasinoLimit();
-  box.querySelectorAll('[data-casino-stake]').forEach((button) => button.addEventListener('click', () => { 
-    const pct = parseInt(button.dataset.casinoStake, 10) / 100;
-    $('#casinoStake').value = Math.max(minBet, Math.floor(S.cookies * pct));
-  }));
-  box.querySelectorAll('[data-casino-color]').forEach((button) => button.addEventListener('click', () => {
-    casinoSelectedBet = { type: 'color', value: button.dataset.casinoColor };
-    box.querySelectorAll('[data-casino-color]').forEach((item) => item.classList.toggle('selected', item === button));
-  }));
-  $('#casinoSpin').addEventListener('click', spinCasino);
+  
+  const tabsHtml = '<div class="casino-tabs" style="display:flex;gap:10px;margin-bottom:15px;justify-content:center;">' + 
+    '<button class="big-btn ' + (S.casino.tab === 'roulette' ? 'active' : '') + '" onclick="S.casino.tab=\'roulette\';renderCasinoPane();" style="' + (S.casino.tab !== 'roulette' ? 'background:#8a4c1c;opacity:0.7;' : '') + '">🎰 Roulette</button>' +
+    '<button class="big-btn ' + (S.casino.tab === 'wheel' ? 'active' : '') + '" onclick="S.casino.tab=\'wheel\';renderCasinoPane();" style="' + (S.casino.tab !== 'wheel' ? 'background:#8a4c1c;opacity:0.7;' : '') + '">🎡 Roue de la Fortune</button>' +
+  '</div>';
+
+  if (S.casino.tab === 'roulette') {
+    const result = S.casino.lastResult;
+    const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 15 minutes.';
+    
+    let comboHtml = '';
+    if (result && result.comboCount > 1) {
+      comboHtml = '<div style="margin-top:10px; font-weight:bold; color:#f39c12; text-shadow: 0 0 5px #f39c12; font-size:1.2em;">🔥 Combo x' + result.comboCount + ' ! Multiplicateur bonus: x' + result.comboMult.toFixed(2) + '</div>';
+    }
+    const resultMarkup = result
+      ? '<span class="casino-result-color ' + result.color + '">' + result.color.toUpperCase() + '</span><small>' + (result.won ? 'GAGNÉ +' + fmt(result.payout * (result.comboMult || 1)) + ' cookies' : 'PERDU · mise de ' + fmt(result.stake)) + '</small>' + comboHtml
+      : 'Choisissez votre mise et votre pari.';
+    const wheelNumbers = Array.from({ length: 10 }, (_, n) => '<span style="--angle:' + (n * (360 / 10)) + 'deg"></span>').join('');
+    const minBet = casinoUnlimited() ? 1 : 1000000;
+    
+    box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>La grande roulette</h3><p>Une table indépendante de la fête foraine. ' + casinoRule + '</p></div><div class="casino-bankroll"><span>Solde</span><strong>' + fmt(S.cookies) + ' 🍪</strong></div></div>' +
+      '<div class="roulette-layout"><div class="roulette-stage"><div class="roulette-wheel-live" id="rouletteWheel">' + wheelNumbers + '<i class="roulette-ball" id="rouletteBall"></i><b>🍪</b></div><div class="roulette-pointer">▼</div></div><div class="casino-bet-panel"><div class="casino-limit" id="casinoLimit"></div><label class="casino-big-stake">Mise <input id="casinoStake" type="number" min="' + minBet + '" step="' + minBet + '" value="' + minBet + '"> cookies</label><div class="casino-presets"><button data-casino-stake="10">10%</button><button data-casino-stake="25">25%</button><button data-casino-stake="50">50%</button><button data-casino-stake="75">75%</button><button data-casino-stake="100">100%</button></div><div class="casino-section-title">Couleur · ×2</div><div class="casino-bets"><button data-casino-color="rouge">🔴 Rouge</button><button data-casino-color="noir">⚫ Noir</button></div><p class="casino-result" id="casinoResult">' + resultMarkup + '</p><button class="big-btn casino-spin" id="casinoSpin">Lancer la roulette</button></div></div></div>';
+    
+    updateCasinoLimit();
+    box.querySelectorAll('[data-casino-stake]').forEach((button) => button.addEventListener('click', () => { 
+      const pct = parseInt(button.dataset.casinoStake, 10) / 100;
+      $('#casinoStake').value = Math.max(minBet, Math.floor(S.cookies * pct));
+    }));
+    box.querySelectorAll('[data-casino-color]').forEach((button) => button.addEventListener('click', () => {
+      casinoSelectedBet = { type: 'color', value: button.dataset.casinoColor };
+      box.querySelectorAll('[data-casino-color]').forEach((item) => item.classList.toggle('selected', item === button));
+    }));
+    $('#casinoSpin').addEventListener('click', spinCasino);
+  } else {
+    // WHEEL TAB
+    const max = gameMax();
+    const SEG = [{ f: 0.2 }, { f: 0.6 }, { death: true }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { life: true }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }];
+    const COLORS = ['#c2702e', '#8a4c1c', '#000000', '#d9954a', '#ffb347', '#a5602a', '#ff00ff', '#e0a458', '#ffd166', '#7a3e1d'];
+    const now = Date.now();
+    if (!S.casino.wheelNext) S.casino.wheelNext = 0;
+    const isReady = now >= S.casino.wheelNext || casinoUnlimited();
+    
+    box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 15 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
+      '<div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
+      '<p class="casino-result" id="wheelResult">' + (isReady ? 'La roue est prête à tourner !' : 'Revenez plus tard...') + '</p>' +
+      '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>Tourner la roue !</button></div></div>';
+      
+    const cv = box.querySelector('canvas'), g = cv.getContext('2d');
+    const btn = box.querySelector('.w-btn');
+    const res = box.querySelector('#wheelResult');
+    const n = SEG.length, arc = Math.PI * 2 / n;
+    
+    function draw(rot) {
+      g.clearRect(0, 0, 320, 320);
+      g.save();
+      g.translate(160, 160);
+      g.rotate(rot);
+      for (let i = 0; i < n; i++) {
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.arc(0, 0, 152, i * arc, (i + 1) * arc);
+        g.closePath();
+        if (SEG[i].life) {
+          const grad = g.createLinearGradient(0, -152, 0, 152);
+          grad.addColorStop(0, 'red'); grad.addColorStop(0.5, 'lime'); grad.addColorStop(1, 'blue');
+          g.fillStyle = grad;
+        } else {
+          g.fillStyle = COLORS[i];
+        }
+        g.fill();
+        g.strokeStyle = '#2a170c';
+        g.lineWidth = 3;
+        g.stroke();
+        g.save();
+        g.rotate(i * arc + arc / 2);
+        g.textAlign = 'right';
+        g.textBaseline = 'middle';
+        g.fillStyle = '#1b0f09';
+        g.font = 'bold 14px Fredoka, sans-serif';
+        const s = SEG[i];
+        g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.fz ? '⚡ Frénésie' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * (s.f || 0)), 140, 0);
+        g.restore();
+      }
+      g.beginPath();
+      g.arc(0, 0, 28, 0, Math.PI * 2);
+      g.fillStyle = '#2a170c';
+      g.fill();
+      g.restore();
+      g.font = '28px serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('🍪', 160, 162);
+    }
+    
+    draw(0);
+    
+    btn.addEventListener('click', () => {
+      if (!isReady) return;
+      btn.disabled = true;
+      S.casino.wheelNext = Date.now() + 15 * 60 * 1000;
+      save();
+      
+      const target = Math.floor(Math.random() * n), s = SEG[target];
+      const final = 6 * Math.PI * 2 - Math.PI / 2 - (target * arc + arc / 2) + rand(-arc * 0.35, arc * 0.35);
+      const t0 = performance.now(), D = 4500;
+      
+      function frame(t) {
+        const k = Math.min(1, (t - t0) / D);
+        draw(final * (1 - Math.pow(1 - k, 4)));
+        if (k < 1) { casinoWheelRaf = requestAnimationFrame(frame); return; }
+        
+        // resolve
+        if (s.fz && Date.now() >= S.fz.until) startFrenzy();
+        if (s.death) {
+          for (const b of BUILDINGS) {
+            if (S.owned[b.id] > 0) {
+              S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
+            }
+          }
+          recalc();
+        }
+        if (s.life) {
+          const ownedBlds = BUILDINGS.filter(b => S.owned[b.id] > 0);
+          const lastTwo = ownedBlds.slice(-2);
+          for (const b of lastTwo) {
+            S.owned[b.id] *= 2;
+          }
+          recalc();
+        }
+        if (s.f) gain(Math.round(max * s.f));
+        
+        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée !' : s.jackpot ? '💰 JACKPOT ! +' + fmt(Math.round(max * s.f)) : 'Gagné : +' + fmt(Math.round(max * (s.f||0)));
+        setTimeout(() => renderCasinoPane(), 3000);
+      }
+      casinoWheelRaf = requestAnimationFrame(frame);
+    });
+  }
 }
+
 function spinCasino() {
   if ((!casinoUnlimited() && S.baked < 1e6) || (!casinoUnlimited() && casinoRemaining() <= 0) || !casinoSelectedBet) return;
   const stake = Math.floor(Number($('#casinoStake').value) || 0);
@@ -464,9 +588,10 @@ function spinCasino() {
     } else {
       S.casino.combo = 0;
     }
+    // Combo multiplier: scales with combo count AND bet size
     let comboMult = 1;
     if (won && S.casino.combo > 1) {
-      comboMult = 1 + (S.casino.combo - 1) * 0.1 * (betType === 'number' ? 10 : 2);
+      comboMult = 1 + (S.casino.combo - 1) * 0.1 * 2;
       gain(Math.floor(payout * (comboMult - 1)));
     }
     S.casino.lastResult = { number, color, won, payout, stake, comboMult, comboCount: S.casino.combo };
@@ -475,7 +600,9 @@ function spinCasino() {
     renderCasinoPane();
   }, 1400);
 }
+
 function renderPerformance() {
+
   const rows = $('#performanceRows');
   if (!rows) return;
   const ongoing = worlds.filter((w) => w.mode === 'speedrun').map(w => ({
@@ -1147,15 +1274,27 @@ function spawnGoldenRain() {
     el.style.fontSize = '40px';
     el.style.animation = 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     
+    
     if (type === 'gold') {
       el.innerHTML = '<div class="golden-rays"></div><div class="golden-cookie-img">🍪</div>';
       el.style.filter = 'drop-shadow(0 0 10px gold)';
+      // RGB animation
+      el.style.animation = 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), rgbHues 2s linear infinite';
+      if(!document.getElementById('rgbHuesDef')) {
+         const style = document.createElement('style');
+         style.id = 'rgbHuesDef';
+         style.innerHTML = '@keyframes rgbHues { 0% { filter: drop-shadow(0 0 15px red) hue-rotate(0deg); } 33% { filter: drop-shadow(0 0 15px lime) hue-rotate(120deg); } 66% { filter: drop-shadow(0 0 15px blue) hue-rotate(240deg); } 100% { filter: drop-shadow(0 0 15px red) hue-rotate(360deg); } }';
+         document.head.appendChild(style);
+      }
     } else if (type === 'silver') {
       el.innerHTML = '🍪';
       el.style.filter = 'grayscale(100%) brightness(1.5) drop-shadow(0 0 10px silver)';
-    } else {
+    } else if (type === 'bronze') {
       el.innerHTML = '🍪';
       el.style.filter = 'sepia(100%) hue-rotate(330deg) saturate(300%) drop-shadow(0 0 10px #cd7f32)';
+    } else if (type === 'black') {
+      el.innerHTML = '🍪';
+      el.style.filter = 'brightness(0) drop-shadow(0 0 15px black)';
     }
     
     el.addEventListener('click', (e) => {
@@ -1167,13 +1306,23 @@ function spawnGoldenRain() {
         const bonus = S.cookies;
         gain(bonus);
         floatText(e.clientX, e.clientY, 'x2 !');
-        toast('🌟', 'Cookie d\\'Or', 'Jackpot ! Vos cookies en banque ont doublé !');
+        toast('🌟', 'Cookie d\'Or', 'Jackpot ! Vos cookies en banque ont doublé !');
       } else if (type === 'silver') {
         S.cookies = Math.floor(S.cookies / 2);
         toast('🥈', 'Cookie d\'argent', 'Aïe ! Vous perdez la moitié de vos cookies.');
       } else if (type === 'bronze') {
         S.cookies = 0;
         toast('🥉', 'Cookie de bronze', 'CATASTROPHE ! Vous avez perdu tous vos cookies.');
+      } else if (type === 'black') {
+        const ownedBlds = BUILDINGS.filter(b => S.owned[b.id] > 0);
+        if(ownedBlds.length > 0) {
+           const best = ownedBlds[ownedBlds.length - 1];
+           S.owned[best.id] = 0;
+           recalc();
+           toast('☠️', 'Cookie Noir', 'DÉVASTATION ! Vous avez perdu tous vos ' + best.name + ' !');
+        } else {
+           toast('☠️', 'Cookie Noir', 'Rien à détruire...');
+        }
       }
     });
     
@@ -1182,8 +1331,9 @@ function spawnGoldenRain() {
   };
   
   spawn('gold');
-  for(let i=0; i<5; i++) spawn('silver');
-  for(let i=0; i<10; i++) spawn('bronze');
+  spawn('black');
+  for(let i=0; i<8; i++) spawn('silver');
+  for(let i=0; i<15; i++) spawn('bronze');
 }
 
 /* =====================================================================
@@ -1308,7 +1458,7 @@ const GAMES = [
   { id: 'memory',   req: 500000000,  icon: '🃏', name: 'Memory gourmand',   cd: 15, start: gameMemory,   desc: 'Retrouvez les 8 paires de pâtisseries en 60 secondes.', weight: 2 },
   { id: 'sort',     req: 750000000,  icon: '🛍️', name: 'Le Tri Gourmand',   cd: 14, start: gameSort,     desc: 'Triez rapidement les ingrédients dans le bon sac.', weight: 1.5 },
   { id: 'cook',     req: 950000000,  icon: '👨‍🍳',name: 'Le Chef',           cd: 18, start: gameCook,     desc: 'Pétrissez, cuisez et décorez votre cookie à la perfection.', weight: 2 },
-  { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true, weight: 1 },
+  
 ];
 const CELESTIAL_GAMES = [
   { id: 'celestial_flappy', icon: '🌌', name: 'Flappy Céleste', cd: 240, start: gameCelestialFlappy, desc: 'Dirigez votre cookie volant au travers de piliers divins.', weight: 5 },
