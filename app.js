@@ -66,9 +66,9 @@ const TIERS = [
   { need: 200, costX: 5e9,  name: 'Transcendance' },
 ];
 const UPGRADES = [
-  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', price: 1e12, icon: '⏳', req: () => (S.temple && (S.temple.includes('celestial_flappy') || S.temple.includes('celestial_target') || S.temple.includes('celestial_simon'))) || window.__adminMode },
-  { id: 'celestial_cd2', name: 'Sablier Céleste II', desc: 'Réduit le temps de recharge des jeux célestes de 50%.', price: 1e15, icon: '⏳', req: () => S.ups.includes('celestial_cd1') },
-  { id: 'celestial_cd3', name: 'Sablier Céleste III', desc: 'Réduit le temps de recharge des jeux célestes de 75%.', price: 1e18, icon: '⏳', req: () => S.ups.includes('celestial_cd2') },];
+  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', cost: 1e12, icon: '⏳', unlocked: () => (S.temple && (S.temple.includes('celestial_flappy') || S.temple.includes('celestial_target') || S.temple.includes('celestial_simon'))) || window.__adminMode },
+  { id: 'celestial_cd2', name: 'Sablier Céleste II', desc: 'Réduit le temps de recharge des jeux célestes de 50%.', cost: 1e15, icon: '⏳', unlocked: () => S.ups.includes('celestial_cd1') },
+  { id: 'celestial_cd3', name: 'Sablier Céleste III', desc: 'Réduit le temps de recharge des jeux célestes de 75%.', cost: 1e18, icon: '⏳', unlocked: () => S.ups.includes('celestial_cd2') },];
 for (const b of BUILDINGS) {
   TIERS.forEach((t, i) => UPGRADES.push({
     id: b.id + i, icon: b.icon, tier: ROMAN[i], cost: b.base * t.costX,
@@ -1258,6 +1258,18 @@ const GAMES = [
   { id: 'cook',     req: 950000000,  icon: '👨‍🍳',name: 'Le Chef',           cd: 18, start: gameCook,     desc: 'Pétrissez, cuisez et décorez votre cookie à la perfection.', weight: 2 },
   { id: 'wheel',    req: 1000000000, icon: '🎡', name: 'Roue de la fortune', cd: 20, start: gameWheel,   desc: 'Un tour de roue, un lot garanti. Jackpot possible !', over: true, weight: 1 },
 ];
+const CELESTIAL_GAMES = [
+  { id: 'celestial_flappy', icon: '🌌', name: 'Flappy Céleste', cd: 240, start: gameCelestialFlappy, desc: 'Dirigez votre cookie volant au travers de piliers divins.', weight: 5 },
+  { id: 'celestial_target', icon: '🎯', name: 'Tir de Précision', cd: 240, start: gameCelestialTarget, desc: 'Arrêtez le curseur parfaitement au centre 5 fois de suite.', weight: 5 },
+  { id: 'celestial_simon',  icon: '🧠', name: 'Simon Céleste', cd: 240, start: gameCelestialSimon, desc: 'Mémorisez une séquence divine allant jusqu\'à 8 couleurs.', weight: 5 }
+];
+const celestialCooldown = (g) => { 
+  let mult = 1; 
+  if (S.ups.includes('celestial_cd1')) mult -= 0.25; 
+  if (S.ups.includes('celestial_cd2')) mult -= 0.25; 
+  if (S.ups.includes('celestial_cd3')) mult -= 0.25; 
+  return g.cd * 60 * mult * 1000; 
+};
 const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
 const gameReady = (g) => window.__adminMode || Date.now() >= (S.games[g.id] || 0);
 /* Gain maximum = 5 minutes de production (avec un minimum en début de partie) */
