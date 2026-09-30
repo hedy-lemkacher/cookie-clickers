@@ -163,7 +163,7 @@ const COMPANIONS = [
   { id: 'c_nebuleuse', name: 'Cookie nébuleuse stellaire', rarity: 'epique', powerType: 'cps', powerBase: 0.35, powerStep: 0.08, desc: 'Production globale +{val}%', style: { c: ['#301b5c', '#5e2a84', '#a445b2'], chip: '#f78fb3', edge: '#e056fd', isNebula: true } },
 
   // Légendaires (Amis avec photo OU thématiques)
-  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'legendaire', powerType: 'luck_mult', powerBase: 0.25, powerStep: 0.05, desc: '{val}% de chances de doubler n\'importe quel gain' },
+  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût de tous les achats de {val}%' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
@@ -171,13 +171,12 @@ const COMPANIONS = [
   { id: 'c_empereur', name: 'Cookie Empereur Stellaire', rarity: 'legendaire', powerType: 'all_buildings', powerBase: 0.45, powerStep: 0.10, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#2c3e50', '#8e44ad', '#f1c40f'], chip: '#f39c12', edge: '#f1c40f', isEmperor: true } },
   { id: 'c_titan', name: 'Cookie Titan Colossal', rarity: 'legendaire', powerType: 'click_master', powerBase: 0.80, powerStep: 0.20, desc: 'Puissance des clics +{val}% (Impact écrasant)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#d63031', edge: '#e17055', isTitan: true } },
 
-  // Mythiques (Amis avec photo OU Divinités suprêmes)
+  // Mythiques (Amis avec photo OU Singularité)
+  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'mythique', powerType: 'luck_mult', powerBase: 0.75, powerStep: 0.25, desc: '{val}% de chances de doubler n\'importe quel gain' },
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'speed', powerBase: 2.00, powerStep: 0.50, desc: 'Vitesse de production +{val}%' },
-  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'double_edged', powerBase: 3.50, powerStep: 1.00, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
-  { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } },
-  { id: 'c_divin', name: 'Cookie Dieu des Pâtissiers', rarity: 'mythique', powerType: 'divine_omni', powerBase: 1.80, powerStep: 0.50, desc: 'Production, Clics et Bâtiments +{val}% (Bénédiction Absolue)', style: { c: ['#ffffff', '#fff9e6', '#f6e58d'], chip: '#f9ca24', edge: '#f1c40f', isDivine: true } }
+  { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } }
 ];
 
 /* --- Succès (on ajoute toujours les nouveaux À LA FIN : la sauvegarde retient leur position) --- */
