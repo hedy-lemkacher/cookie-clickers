@@ -242,6 +242,7 @@ function load() {
       }
       S.custom = Object.assign({}, DEFAULT_CUSTOM, S.custom);
       S.fz = Object.assign(freshState().fz, S.fz);
+      if (S.chips > 100) S.chips = 50;
       S.casino = Object.assign(freshState().casino, S.casino);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
@@ -1320,7 +1321,7 @@ function updateFrenzy(now) {
    COOKIE DORÉ
    ===================================================================== */
 const golden = $('#golden');
-const goldenDelay = () => rand(60, 150) * Math.pow(0.8, countUps('gold')) * 1000;
+const goldenDelay = () => rand(150, 400) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) * 1000;
 let goldenNext = Date.now() + rand(30, 90) * 1000, goldenEnd = 0;
 let activeGoldenCookies = [];
 
@@ -1339,7 +1340,7 @@ function updateGolden(now) {
       goldenNext = now + 5000;
       return;
     }
-    goldenEnd = now + 3000;
+    goldenEnd = now + 1500;
     goldenNext = now + goldenDelay();
     spawnGoldenRain();
   }
@@ -1374,7 +1375,7 @@ function spawnGoldenRain() {
     
     
     if (type === 'gold') {
-      el.innerHTML = '<div class="golden-rays"></div><div class="golden-cookie-img">🍪</div>';
+      el.innerHTML = '<div class="golden-rays"></div><div class="golden-cookie-img" style="font-size:20px;">🍪</div>';
       el.style.filter = 'drop-shadow(0 0 10px gold)';
       // RGB animation
       el.style.animation = 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), rgbHues 2s linear infinite';
@@ -1401,10 +1402,10 @@ function spawnGoldenRain() {
       checkAchievements();
       
       if (type === 'gold') {
-        const bonus = S.cookies;
+        const bonus = Math.floor(S.cookies * 0.25);
         gain(bonus);
-        floatText(e.clientX, e.clientY, 'x2 !');
-        toast('🌟', 'Cookie d\'Or', 'Jackpot ! Vos cookies en banque ont doublé !');
+        floatText(e.clientX, e.clientY, 'x1.25 !');
+        toast('🌟', 'Cookie d\'Or', 'Jackpot ! +25% de vos cookies en banque !');
       } else if (type === 'silver') {
         S.cookies = Math.floor(S.cookies / 2);
         toast('🥈', 'Cookie d\'argent', 'Aïe ! Vous perdez la moitié de vos cookies.');
@@ -1568,7 +1569,8 @@ const celestialCooldown = (g) => {
   if (S.ups.includes('celestial_cd1')) mult -= 0.25; 
   if (S.ups.includes('celestial_cd2')) mult -= 0.25; 
   if (S.ups.includes('celestial_cd3')) mult -= 0.25; 
-  return g.cd * 60 * mult * 1000; 
+  if (S.temple && S.temple.includes('chrono')) mult *= 0.5;
+  return Math.max(60000, g.cd * 60 * mult * 1000); 
 };
 const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
 const gameReady = (g) => window.__adminMode || Date.now() >= (S.games[g.id] || 0);
@@ -1628,7 +1630,7 @@ function updatePlayPane() {
     btn.disabled = !ready;
     btn.textContent = ready ? 'Jouer' : 'Recharge · ' + fmtTime((S.games[g.id] - now) / 1000);
     const best = S.gameBest[g.id];
-    document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Gain max : <b>' + fmt(gameMax() * (g.over ? 1.5 : 1)) + '</b>' +
+    document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Gain max : <b>' + fmt(gameMax() * (g.weight || 1) * (g.over ? 1.5 : 1)) + '</b>' +
       (best !== undefined ? ' · record ' + Math.round(best * 100) + ' %' : '');
   }
   const grid = document.getElementById('playGrid');
@@ -2484,7 +2486,7 @@ function gameCook(api) {
 /* =====================================================================
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
-const chipsPotential = () => Math.floor(Math.cbrt(S.bakedAll / 1e12));
+const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / 1e12) * 0.5));
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -3221,6 +3223,10 @@ const TEMPLE_UPGRADES = [
   { id: 'click+',     name: '👆 Prestige des Clics',   cost: 30,  desc: '+5% de puissance de clic permanente',                 apply: () => { recalc(); } },
   { id: 'prod+',      name: '🏭 Arsenal Cosmique',     cost: 50,  desc: '+10% de production globale permanente',               apply: () => { recalc(); } },
   { id: 'legend',     name: '👑 Légende Absolue',      cost: 100, desc: 'Toutes les améliorations ci-dessus sont doublées',    apply: () => { recalc(); } },
+  { id: 'universal',  name: '🌌 Savoir Universel',     cost: 150, desc: '+15% de production globale permanente',               apply: () => { recalc(); } },
+  { id: 'divine_clk', name: '✨ Clic Divin II',        cost: 150, desc: '+10% de puissance de clic permanente',                apply: () => { recalc(); } },
+  { id: 'chrono',     name: '⏳ Chronomaître',         cost: 200, desc: 'Temps de recharge des jeux célestes divisé par 2',   apply: () => {} },
+  { id: 'gold_luck',  name: '🍀 Chance Dorée',         cost: 250, desc: 'La pluie de cookies arrive beaucoup plus vite',              apply: () => {} },
 ];
 
 // Temple bonuses applied in production calc
@@ -3228,12 +3234,14 @@ function templeClickBonus() {
   let mult = 1;
   if (S.temple && S.temple.includes('click+')) mult *= 1.05;
   if (S.temple && S.temple.includes('legend')) mult *= 1.05;
+  if (S.temple && S.temple.includes('divine_clk')) mult *= 1.10;
   return mult;
 }
 function templeProdBonus() {
   let mult = 1;
   if (S.temple && S.temple.includes('prod+')) mult *= 1.10;
   if (S.temple && S.temple.includes('legend')) mult *= 1.10;
+  if (S.temple && S.temple.includes('universal')) mult *= 1.15;
   return mult;
 }
 function templeEnterDuration() {
@@ -3325,6 +3333,7 @@ function gameCelestialBowling(api, g) {
   
   api.body.innerHTML = `<div class="game-bowling">
     <p class="game-hint">Arrêtez la flèche quand elle pointe <b>tout droit</b> (au centre) pour faire un Strike !</p>
+    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain d'un Strike : ${fmt(gameMax() * g.weight)} 🍪</div>
     <div style="position:relative;width:200px;height:100px;margin:20px auto;border-bottom:4px solid #fff;overflow:hidden;">
       <div id="cBowlingPinArea" style="position:absolute;top:10px;left:0;width:100%;height:30px;display:flex;justify-content:center;gap:5px;">
         <span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span>
@@ -3401,6 +3410,7 @@ function gameCelestialBasketball(api, g) {
   
   api.body.innerHTML = `<div class="game-basketball">
     <p class="game-hint">Tirez quand le panier est aligné avec le cookie. <span id="cBaskTries">${tries}</span> essais.</p>
+    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain du Panier : ${fmt(gameMax() * g.weight)} 🍪</div>
     <div style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
       <div id="cHoop" style="position:absolute;top:10px;left:0;width:50px;height:15px;border:3px solid #e74c3c;border-radius:50%;box-shadow:0 10px 0 rgba(231,76,60,0.3);"></div>
       <div id="cBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
@@ -3479,6 +3489,7 @@ function gameCelestialFootball(api, g) {
   
   api.body.innerHTML = `<div class="game-football">
     <p class="game-hint">Marquez un but en évitant le gardien. <span id="cFoTries">${tries}</span> essais.</p>
+    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain du But : ${fmt(gameMax() * g.weight)} 🍪</div>
     <div style="position:relative;width:100%;height:150px;background:#27ae60;border:2px solid #fff;border-radius:5px;margin-bottom:10px;overflow:hidden;" id="cFoArea">
       <!-- Goal -->
       <div style="position:absolute;top:0;left:50%;width:100px;margin-left:-50px;height:40px;border:3px solid #fff;border-top:none;"></div>
