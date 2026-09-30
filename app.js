@@ -248,7 +248,7 @@ function load() {
       }
       if (S.chips > 100) S.chips = 50;
       ['celestial_bowling', 'celestial_basketball', 'celestial_football', 'flappy'].forEach(g => {
-         if (S.games[g] && S.games[g] > Date.now()) S.games[g] = 0;
+         if (S.games[g]) { if (Array.isArray(S.games[g])) S.games[g] = []; else if (S.games[g] > Date.now()) S.games[g] = 0; }
       });
       S.casino = Object.assign(freshState().casino, S.casino);
     }
@@ -656,7 +656,8 @@ function renderCasinoPane() {
 }
 
 function spinCasino() {
-  if ((!casinoUnlimited() && S.baked < 1e6) || (!casinoUnlimited() && casinoRemaining() <= 0) || !casinoSelectedBet) return;
+  if ((!casinoUnlimited() && S.baked < 1e6) || (!casinoUnlimited() && casinoRemaining() <= 0)) return;
+  if (!casinoSelectedBet) { $('#casinoResult').textContent = 'Veuillez sélectionner une couleur !'; return; }
   const stake = Math.floor(Number($('#casinoStake').value) || 0);
   const minBet = casinoUnlimited() ? 1 : 1e6;
   if (stake < minBet || stake > S.cookies) { $('#casinoResult').textContent = stake < minBet ? 'La mise minimum est de ' + fmt(minBet) + ' cookies.' : 'Solde insuffisant pour cette mise.'; return; }
@@ -3409,7 +3410,7 @@ function gameCelestialBowling(api, g) {
         const gain = gameMax() * g.weight; // Huge gain
         S.cookies += gain;
         toast('🎳', 'Strike Céleste !', '+' + fmt(gain) + ' cookies');
-        setTimeout(() => api.close(), 2000);
+        setTimeout(() => api.end(0, "Jeu terminé"), 2000);
       } else {
         pinArea.innerHTML = `<span style="font-size:20px;color:#fff;">${pins} quilles renversées</span>`;
         if (pins > 0) {
@@ -3421,7 +3422,7 @@ function gameCelestialBowling(api, g) {
         }
         btn.textContent = 'Terminé';
         btn.disabled = true;
-        setTimeout(() => api.close(), 2000);
+        setTimeout(() => api.end(0, "Jeu terminé"), 2000);
       }
     }
   });
@@ -3488,20 +3489,15 @@ function gameCelestialBasketball(api, g) {
         if (Math.abs(ballCenter - hoopCenter) < 40) { // much more forgiving!
           playing = false;
           ball.innerHTML = '✨';
-          const gain = gameMax() * g.weight;
-          S.cookies += gain;
-          toast('🏀', 'Panier Céleste !', '+' + fmt(gain) + ' cookies');
-          setTimeout(() => api.close(), 1500);
+          
+          setTimeout(() => { if(typeof api.end === 'function') api.end(1, 'Bien joué !'); else if(typeof api.close === 'function') api.end(0, "Jeu terminé"); }, 1500);
           return;
         } else if (cookieY > 150) { // missed
           tries--;
           triesTxt.textContent = tries;
           if (tries <= 0) {
             playing = false;
-            toast('🏀', 'Raté', 'Plus d\'essais...');
-            btn.textContent = 'Terminé';
-            btn.disabled = true;
-            setTimeout(() => api.close(), 1500);
+            setTimeout(() => api.end(0, "Plus d'essais..."), 1500);
           } else {
             shooting = false;
             ball.style.bottom = '10px';
@@ -3578,10 +3574,7 @@ function gameCelestialFootball(api, g) {
           triesTxt.textContent = tries;
           if (tries <= 0) {
             playing = false;
-            toast('⚽', 'Arrêt du gardien', 'Le lait a bloqué votre cookie.');
-            btn.textContent = 'Terminé';
-            btn.disabled = true;
-            setTimeout(() => api.close(), 1500);
+            setTimeout(() => api.end(0, "Arrêt du gardien !"), 1500);
           } else {
             shooting = false;
             ball.style.bottom = '10px';
@@ -3591,10 +3584,8 @@ function gameCelestialFootball(api, g) {
       } else if (cookieY > 120) { // scored!
           playing = false;
           ball.innerHTML = '✨';
-          const gain = gameMax() * g.weight;
-          S.cookies += gain;
-          toast('⚽', 'Buuut !', '+' + fmt(gain) + ' cookies');
-          setTimeout(() => api.close(), 1500);
+          
+          setTimeout(() => { if(typeof api.end === 'function') api.end(1, 'Bien joué !'); else if(typeof api.close === 'function') api.end(0, "Jeu terminé"); }, 1500);
           return;
       }
       shootRaf = requestAnimationFrame(animateShoot);
