@@ -2869,7 +2869,29 @@ function refreshAll() {
   refreshStore();
   refreshShowcase();
   checkAchievements();
+  renderEquippedCompanions();
 }
+
+function renderEquippedCompanions() {
+  const container = $('#companions-container');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!S.compData || !S.compData.equipped) return;
+  S.compData.equipped.forEach(id => {
+    const comp = COMPANIONS.find(c => c.id === id);
+    if (!comp) return;
+    const div = document.createElement('div');
+    // Apply rarity class (0=common … 5=mythic) for colored border
+    const rarityClass = 'rarity-' + comp.rarity;
+    div.className = `active-comp ${rarityClass}`;
+    const img = document.createElement('img');
+    img.src = comp.img;
+    img.alt = comp.name;
+    div.appendChild(img);
+    container.appendChild(div);
+  });
+}
+
 const msLevel = () => S.baked >= 1000 ? Math.floor(Math.log10(S.baked) / 3) : 0;
 function renderNumbers(now) {
   $('#count').textContent = S.cheat ? '∞' : fmt(S.cookies);
@@ -3773,8 +3795,20 @@ function spinGacha() {
 
 function equipCompanion(id) {
   if (S.compData.equipped.includes(id)) {
+    // desequip
     S.compData.equipped = S.compData.equipped.filter(x => x !== id);
   } else {
+    // limit to 2 equipped
+    if (S.compData.equipped.length >= 2) {
+      // remove first equipped
+      S.compData.equipped.shift();
+    }
+    S.compData.equipped.push(id);
+  }
+  renderEquippedCompanions();
+  renderGachaPane(); // re-render collection to update equip state
+
+} else {
     if (S.compData.equipped.length >= 2) {
       S.compData.equipped.shift();
     }
