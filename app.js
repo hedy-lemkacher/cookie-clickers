@@ -1164,22 +1164,10 @@ function spawnGoldenRain() {
       checkAchievements();
       
       if (type === 'gold') {
-        const now = Date.now(), r = Math.random();
-        if (r < 0.4) {
-          const bonus = Math.min(S.cookies * 0.15, steadyCps() * 900) + 13;
-          gain(bonus);
-          floatText(e.clientX, e.clientY, '+' + fmt(bonus));
-          toast('🍀', 'Cookie doré', 'Chanceux ! +' + fmt(bonus) + ' cookies');
-        } else if (r < 0.7) {
-          clickFrenzyMult = rollFrenzyPower();
-          clickFrenzyUntil = now + 10000 * (1 + 0.25 * countUps('fzdur'));
-          toast('👆', 'Cookie doré', 'Clic frénétique ! Clics ×' + clickFrenzyMult + ' pendant 10 s');
-        } else if (now < S.fz.until) {
-          S.fz.until += 10000; S.fz.dur += 10; S.fz.start = S.fz.until; S.fz.next += 10000;
-          toast('⚡', 'Cookie doré', 'Frénésie prolongée de 10 s !');
-        } else {
-          startFrenzy();
-        }
+        const bonus = S.cookies;
+        gain(bonus);
+        floatText(e.clientX, e.clientY, 'x2 !');
+        toast('🌟', 'Cookie d\\'Or', 'Jackpot ! Vos cookies en banque ont doublé !');
       } else if (type === 'silver') {
         S.cookies = Math.floor(S.cookies / 2);
         toast('🥈', 'Cookie d\'argent', 'Aïe ! Vous perdez la moitié de vos cookies.');
