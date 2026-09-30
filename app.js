@@ -3629,12 +3629,12 @@ function gameCelestialFootball(api, g) {
    ===================================================================== */
 
 const RARITIES = {
-  commun: { name: 'Commun', prob: 50, color: '#bdc3c7' },
-  peu_commun: { name: 'Peu commun', prob: 25, color: '#2ecc71' },
-  rare: { name: 'Rare', prob: 15, color: '#3498db' },
-  epique: { name: 'Épique', prob: 7, color: '#9b59b6' },
-  legendaire: { name: 'Légendaire', prob: 2.5, color: '#f1c40f' },
-  mythique: { name: 'Mythique', prob: 0.5, color: '#ff4757' }
+  commun: { name: 'Commun', prob: 52, color: '#bdc3c7' },
+  peu_commun: { name: 'Peu commun', prob: 26, color: '#2ecc71' },
+  rare: { name: 'Rare', prob: 14, color: '#3498db' },
+  epique: { name: 'Épique', prob: 6.2, color: '#9b59b6' },
+  legendaire: { name: 'Légendaire', prob: 1.7, color: '#f1c40f' },
+  mythique: { name: 'Mythique', prob: 0.1, color: '#ff4757' }
 };
 
 const COMPANIONS = [
@@ -3972,8 +3972,8 @@ function spinGacha() {
     S.compData.pityTracker = 0;
     pityActive = true;
     const highRoll = Math.random() * 10;
-    if (highRoll < 7) rarity = 'epique';
-    else if (highRoll < 9.5) rarity = 'legendaire';
+    if (highRoll < 8.0) rarity = 'epique';
+    else if (highRoll < 9.8) rarity = 'legendaire';
     else rarity = 'mythique';
   } else {
     let acc = 0;
@@ -4161,12 +4161,21 @@ function renderGachaPane() {
       </button>
       <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <b style="color:#a4b0be;">Taux :</b>
-        <span style="color:#bdc3c7;">Commun (50%)</span> ·
-        <span style="color:#2ecc71;">Peu commun (25%)</span> ·
-        <span style="color:#3498db;">Rare (15%)</span> ·
-        <span style="color:#9b59b6;">Épique (7%)</span> ·
-        <span style="color:#f1c40f;">Légendaire (2.5%)</span> ·
-        <span style="color:#ff4757; font-weight:bold;">Mythique (0.5%)</span>
+        <span style="color:#bdc3c7;">Commun (52%)</span> ·
+        <span style="color:#2ecc71;">Peu commun (26%)</span> ·
+        <span style="color:#3498db;">Rare (14%)</span> ·
+        <span style="color:#9b59b6;">Épique (6.2%)</span> ·
+        <span style="color:#f1c40f;">Légendaire (1.7%)</span> ·
+        <span style="color:#ff4757; font-weight:bold;">Mythique (0.1% 🌟)</span>
+      </div>
+    </div>
+    
+    <!-- Ligne d'explication des Éclats -->
+    <div style="background: rgba(112, 161, 255, 0.1); border: 1px solid rgba(112, 161, 255, 0.35); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px; font-size: 13px; color: #dfe4ea; text-align: left; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <div style="font-size: 26px; flex-shrink: 0;">💎</div>
+      <div>
+        <b style="color: #70a1ff; font-size: 13.5px;">C'est quoi les Éclats ?</b><br>
+        Lorsque vous obtenez un compagnon que vous possédez déjà (<span style="color:#ffa502;">doublon</span>), vous recevez <b>+1 Éclat</b> de ce compagnon. Les Éclats servent à <b>augmenter son Niveau</b> pour multiplier encore plus la puissance de ses bonus !
       </div>
     </div>
   `;
