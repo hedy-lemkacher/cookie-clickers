@@ -460,13 +460,21 @@ function renderCasinoPane() {
   } else {
     // WHEEL TAB
     const max = gameMax();
-    const SEG = [{ f: 0.2 }, { f: 0.6 }, { death: true }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { life: true }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }];
-    const COLORS = ['#c2702e', '#8a4c1c', '#000000', '#d9954a', '#ffb347', '#a5602a', '#ff00ff', '#e0a458', '#ffd166', '#7a3e1d'];
+    const SEG = [
+  { death: true },
+  { life: true },
+  { halfBank: true },
+  { clickFz: true },
+  { bank15: true },
+  { cps1h: true },
+  { cpsNeg: true }
+];
+    const COLORS = ['#000000', '#ff00ff', '#8a4c1c', '#ffd166', '#d9954a', '#a5602a', '#7a3e1d'];
     const now = Date.now();
     if (!S.casino.wheelNext) S.casino.wheelNext = 0;
     const isReady = now >= S.casino.wheelNext || casinoUnlimited();
     
-    box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 15 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
+    box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 30 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
       '<div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
       '<p class="casino-result" id="wheelResult">' + (isReady ? 'La roue est prête à tourner !' : 'Revenez plus tard...') + '</p>' +
       '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>Tourner la roue !</button></div></div>';
@@ -504,7 +512,7 @@ function renderCasinoPane() {
         g.fillStyle = '#1b0f09';
         g.font = 'bold 14px Fredoka, sans-serif';
         const s = SEG[i];
-        g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.fz ? '⚡ Frénésie' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * (s.f || 0)), 140, 0);
+        g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.halfBank ? '📉 /2' : s.clickFz ? '👆 x500' : s.bank15 ? '💰 x1.5' : s.cps1h ? '🍀 +1h' : s.cpsNeg ? '💸 -30m' : '', 140, 0);
         g.restore();
       }
       g.beginPath();
@@ -523,7 +531,7 @@ function renderCasinoPane() {
     btn.addEventListener('click', () => {
       if (!isReady) return;
       btn.disabled = true;
-      S.casino.wheelNext = Date.now() + 15 * 60 * 1000;
+      S.casino.wheelNext = Date.now() + 30 * 60 * 1000;
       save();
       
       const target = Math.floor(Math.random() * n), s = SEG[target];
@@ -536,7 +544,6 @@ function renderCasinoPane() {
         if (k < 1) { casinoWheelRaf = requestAnimationFrame(frame); return; }
         
         // resolve
-        if (s.fz && Date.now() >= S.fz.until) startFrenzy();
         if (s.death) {
           for (const b of BUILDINGS) {
             if (S.owned[b.id] > 0) {
@@ -553,9 +560,24 @@ function renderCasinoPane() {
           }
           recalc();
         }
-        if (s.f) gain(Math.round(max * s.f));
+        if (s.halfBank) {
+          S.cookies = Math.floor(S.cookies / 2);
+        }
+        if (s.clickFz) {
+          clickFrenzyMult = 500;
+          clickFrenzyUntil = Date.now() + 5000;
+        }
+        if (s.bank15) {
+          gain(Math.floor(S.cookies * 0.5));
+        }
+        if (s.cps1h) {
+          gain(steadyCps() * 3600);
+        }
+        if (s.cpsNeg) {
+          S.cookies = Math.max(0, S.cookies - steadyCps() * 1800);
+        }
         
-        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée !' : s.jackpot ? '💰 JACKPOT ! +' + fmt(Math.round(max * s.f)) : 'Gagné : +' + fmt(Math.round(max * (s.f||0)));
+        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE (Banque divisée par 2)' : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT (Banque x1.5)' : s.cps1h ? '🍀 CHANCE (+1h de production)' : s.cpsNeg ? '💸 PERTE (-30m de production)' : '';
         setTimeout(() => renderCasinoPane(), 3000);
       }
       casinoWheelRaf = requestAnimationFrame(frame);
@@ -1488,7 +1510,8 @@ function buildPlayPane() {
   gift.innerHTML = '<div class="gi">🎁</div><h4>Cadeau du jour</h4><p>Un cadeau gratuit à récupérer une fois par jour : 10 minutes de production !</p>' +
     '<div class="meta" data-meta="daily"></div><button class="play-btn" data-play="daily">Ouvrir</button>';
   grid.appendChild(gift);
-  for (const g of GAMES) {
+  const ALL_GAMES = [...GAMES, ...CELESTIAL_GAMES];
+  for (const g of ALL_GAMES) {
     const card = document.createElement('div');
     card.className = 'game-card';
     card.innerHTML = '<div class="gi">' + g.icon + '</div><h4>' + g.name + '</h4><p>' + g.desc + '</p>' +
@@ -1499,7 +1522,7 @@ function buildPlayPane() {
     const b = e.target.closest('[data-play]');
     if (!b || b.disabled) return;
     if (b.dataset.play === 'daily') claimDaily();
-    else openGame(GAMES.find((g) => g.id === b.dataset.play));
+    else openGame([...GAMES, ...CELESTIAL_GAMES].find((g) => g.id === b.dataset.play));
   });
 }
 function updatePlayPane() {
@@ -1508,7 +1531,8 @@ function updatePlayPane() {
   dBtn.disabled = !window.__adminMode && now < S.daily;
   dBtn.textContent = now < S.daily ? 'Revenez dans ' + fmtTime((S.daily - now) / 1000) : 'Ouvrir le cadeau';
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
-  for (const g of GAMES) {
+  const ALL_GAMES = [...GAMES, ...CELESTIAL_GAMES];
+  for (const g of ALL_GAMES) {
     const btn = document.querySelector('[data-play="' + g.id + '"]');
     const unlocked = !g.req || S.baked >= g.req;
     if (!unlocked) {
