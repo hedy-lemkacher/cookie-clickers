@@ -3356,8 +3356,7 @@ if (tabTempleUps && tabTempleAsc) {
     tabTempleAsc.style.filter = 'brightness(1.2)';
     document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
   });
-  return () => cancelAnimationFrame(raf);
-}
+  }
 
 // CELESTIAL GAMES LOGIC
 
