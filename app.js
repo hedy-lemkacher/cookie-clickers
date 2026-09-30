@@ -3796,6 +3796,39 @@ function upgradeCompanion(id) {
   }
 }
 
+
+window.showGachaInfo = function() {
+  current = { ended: true, api: { frac: 0 } }; // fake state to allow closeModal
+  mInfo.textContent = '';
+  mBody.innerHTML = `<div style="padding:20px; text-align:left;">
+      <h2 style="color:#f1c40f; margin-bottom:15px; text-align:center;">🎰 Guide de la Machine à Sous</h2>
+      <p>Bienvenue dans la Machine à Sous ! Utilisez vos cookies pour débloquer des <b>Compagnons</b> uniques qui boosteront votre progression.</p>
+      
+      <h4 style="margin-top:15px; color:#3498db; border-bottom:1px solid #444; padding-bottom:5px;">📊 Les Raretés</h4>
+      <p style="font-size:13px; line-height:1.5;">Il existe 6 niveaux de rareté :<br>
+      <span style="color:#bdc3c7">Commun</span> (50%), 
+      <span style="color:#2ecc71">Peu commun</span> (25%), 
+      <span style="color:#3498db">Rare</span> (15%), 
+      <span style="color:#9b59b6">Épique</span> (7%), 
+      <span style="color:#f1c40f; text-shadow:0 0 5px #f1c40f;">Légendaire</span> (2.5%), et 
+      <span style="color:#e74c3c; font-weight:bold; text-shadow:0 0 10px #e74c3c;">Mythique</span> (0.5%).</p>
+      
+      <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">💡 Équipement & Stratégie</h4>
+      <p style="font-size:13px; line-height:1.5;">Vous pouvez équiper jusqu'à <b>2 compagnons actifs</b> simultanément en cliquant dessus dans votre collection. Ils s'afficheront sous votre Cookie principal. Modifiez votre duo à volonté pour créer des "Builds" (orienté clics, production, événements, etc.).</p>
+      
+      <h4 style="margin-top:15px; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px;">✨ Doublons et Niveaux</h4>
+      <p style="font-size:13px; line-height:1.5;">Obtenir un compagnon que vous possédez déjà vous octroie un <b>Éclat</b> de ce compagnon. Utilisez ces éclats pour le faire monter de niveau et augmenter son pouvoir !<br><br><b>Pour améliorer :</b> Faites un clic-droit (ou un appui long sur mobile) sur un compagnon de votre collection.</p>
+      
+      <h4 style="margin-top:15px; color:#e74c3c; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Garantie (Pity)</h4>
+      <p style="font-size:13px; line-height:1.5;">Le jeu vous garantit une rareté minimale <b>Épique (ou mieux)</b> tous les 20 tirages.</p>
+      
+      <div style="text-align:center; margin-top:25px;">
+        <button class="big-btn" onclick="closeModal()" style="width:200px;">J'ai compris !</button>
+      </div>
+    </div>`;
+  modal.classList.add('on');
+};
+
 function renderGachaPane() {
   const pane = document.getElementById('gachaPane');
   if (!pane) return;
@@ -3810,7 +3843,7 @@ function renderGachaPane() {
   }
   
   let html = `<div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <div><h3>Machine à sous</h3><p>Recrutez des compagnons !</p></div>
+    <div><h3 style="display:flex; align-items:center; gap:10px;">Machine à sous <button style="background:#3498db; border:none; border-radius:50%; width:24px; height:24px; color:white; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.5);" onclick="showGachaInfo()" title="Guide des compagnons">?</button></h3><p>Recrutez des compagnons !</p></div>
     <div style="text-align:right;"><small>Garantie Épique+ dans ${20 - (S.compData.pityTracker||0)}</small></div>
   </div>`;
   
