@@ -232,6 +232,14 @@ function load() {
         S = legacyState;
       }
   if (!S.custom.flappyResetV4) { S.games['flappy'] = []; S.custom.flappyResetV4 = true; }
+      if (S.temple) {
+        const migrations = {
+          'celestial_flappy': 'celestial_bowling',
+          'celestial_target': 'celestial_basketball',
+          'celestial_simon': 'celestial_football'
+        };
+        S.temple = S.temple.map(id => migrations[id] || id);
+      }
       S.custom = Object.assign({}, DEFAULT_CUSTOM, S.custom);
       S.fz = Object.assign(freshState().fz, S.fz);
       S.casino = Object.assign(freshState().casino, S.casino);
@@ -3204,9 +3212,9 @@ initFlappy();
    TEMPLE DES LÉGENDES
    ===================================================================== */
 const TEMPLE_UPGRADES = [
-  { id: 'celestial_flappy', name: '🌌 Flappy Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste Flappy Cookie', apply: () => {} },
-  { id: 'celestial_target', name: '🌌 Tir de Précision', cost: 5, desc: 'Débloque le mini-jeu céleste de précision', apply: () => {} },
-  { id: 'celestial_simon', name: '🌌 Simon Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste Simon (8 étapes)', apply: () => {} },
+  { id: 'celestial_bowling', name: '🎳 Bowling Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Bowling', apply: () => {} },
+  { id: 'celestial_basketball', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', apply: () => {} },
+  { id: 'celestial_football', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', apply: () => {} },
   { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
   { id: 'power+',     name: '⏱️ Pouvoir Prolongé',     cost: 10,  desc: 'Le buff Touche Entrée dure 90s au lieu de 60s',       apply: () => {} },
   { id: 'frenzy+',    name: '🔥 Grande Frénésie',      cost: 20,  desc: 'Le bonus de la touche Entrée dure 45s au lieu de 30s',            apply: () => {} },
