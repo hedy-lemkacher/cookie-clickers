@@ -397,26 +397,7 @@ function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const codeValue = input.value.trim().toUpperCase();
   
-  if (codeValue === 'GAY') {
-      if (S.custom && S.custom.usedGayCode) {
-          status.textContent = 'Ce code promo a déjà été utilisé !';
-          status.classList.remove('on');
-          input.value = '';
-          return;
-      }
-      if (!S.custom) S.custom = {};
-      S.custom.usedGayCode = true;
-      S.chips += 70;
-      save();
-      status.textContent = '🌈 Promo activée : +70 Pépites Célestes !';
-      status.classList.add('on');
-      input.value = '';
-      toast('🌈', 'Code Promo', 'Vous avez reçu 70 pépites célestes !');
-      // refresh UI
-      if (typeof renderAchPane === 'function') renderAchPane();
-      if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes possédées : ' + S.chips;
-      return;
-  }
+
   
   if (codeValue !== 'LMK') {
     status.textContent = 'Code incorrect.';
