@@ -560,8 +560,6 @@ function renderCasinoPane() {
     
     draw(0);
     
-    return () => cancelAnimationFrame(raf);
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
   btn.addEventListener('click', () => {
       const isFrenzyActive = Date.now() < S.fz.until || Date.now() < clickFrenzyUntil;
       if (!isReady || isFrenzyActive) return;
@@ -3357,6 +3355,7 @@ if (tabTempleUps && tabTempleAsc) {
     tabTempleAsc.style.filter = 'brightness(1.2)';
     document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
   });
+  return () => cancelAnimationFrame(raf);
 }
 
 // CELESTIAL GAMES LOGIC
@@ -3474,7 +3473,6 @@ function gameCelestialBasketball(api, g) {
   playing = true;
   runHoop();
   
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0) return;
     shooting = true;
@@ -3515,6 +3513,7 @@ function gameCelestialBasketball(api, g) {
     }
     shootRaf = requestAnimationFrame(animateShoot);
   });
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
 
 function gameCelestialFootball(api, g) {
@@ -3562,7 +3561,6 @@ function gameCelestialFootball(api, g) {
   playing = true;
   runGK();
   
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0) return;
     shooting = true;
@@ -3603,4 +3601,5 @@ function gameCelestialFootball(api, g) {
     }
     shootRaf = requestAnimationFrame(animateShoot);
   });
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
