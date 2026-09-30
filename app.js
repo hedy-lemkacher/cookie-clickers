@@ -68,7 +68,7 @@ const TIERS = [
   { need: 200, costX: 5e9,  name: 'Transcendance' },
 ];
 const UPGRADES = [
-  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', cost: 1e12, icon: '⏳', unlocked: () => (S.temple && (S.temple.includes('celestial_flappy') || S.temple.includes('celestial_target') || S.temple.includes('celestial_simon'))) || window.__adminMode },
+  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', cost: 1e12, icon: '⏳', unlocked: () => (S.temple && (S.temple.includes('celestial_bowling') || S.temple.includes('celestial_basketball') || S.temple.includes('celestial_football'))) || window.__adminMode },
   { id: 'celestial_cd2', name: 'Sablier Céleste II', desc: 'Réduit le temps de recharge des jeux célestes de 50%.', cost: 1e15, icon: '⏳', unlocked: () => S.ups.includes('celestial_cd1') },
   { id: 'celestial_cd3', name: 'Sablier Céleste III', desc: 'Réduit le temps de recharge des jeux célestes de 75%.', cost: 1e18, icon: '⏳', unlocked: () => S.ups.includes('celestial_cd2') },];
 for (const b of BUILDINGS) {
@@ -1551,9 +1551,9 @@ const GAMES = [
   
 ];
 const CELESTIAL_GAMES = [
-  { id: 'celestial_flappy', icon: '🌌', name: 'Flappy Céleste', cd: 240, start: gameCelestialFlappy, desc: 'Dirigez votre cookie volant au travers de piliers divins.', weight: 5 },
-  { id: 'celestial_target', icon: '🎯', name: 'Tir de Précision', cd: 240, start: gameCelestialTarget, desc: 'Arrêtez le curseur parfaitement au centre 5 fois de suite.', weight: 5 },
-  { id: 'celestial_simon',  icon: '🧠', name: 'Simon Céleste', cd: 240, start: gameCelestialSimon, desc: 'Mémorisez une séquence divine allant jusqu\'à 8 couleurs.', weight: 5 }
+  { id: 'celestial_bowling', icon: '🎳', name: 'Bowling Céleste', cd: 240, start: gameCelestialBowling, desc: 'Faites tomber les quilles avec un lancer parfaitement droit.', weight: 20 },
+  { id: 'celestial_basketball', icon: '🏀', name: 'Panier Céleste', cd: 240, start: gameCelestialBasketball, desc: 'Marquez un panier en mouvement. 3 essais.', weight: 20 },
+  { id: 'celestial_football',  icon: '⚽', name: 'Tir au But', cd: 240, start: gameCelestialFootball, desc: 'Trompez le gardien et marquez le penalty. 3 essais.', weight: 20 }
 ];
 const celestialCooldown = (g) => { 
   let mult = 1; 
@@ -3310,496 +3310,240 @@ initTemple();
 
 // CELESTIAL GAMES LOGIC
 
-function gameCelestialFlappy(api, g) {
-  let raf, playing = false, vy = 0, y = 200, passed = 0, pipes = [];
-  const maxPipes = 10;
+
+function gameCelestialBowling(api, g) {
+  let playing = false, angle = -90, dir = 1, speed = 4;
+  let raf;
   
-  api.body.innerHTML = `<div class="game-flappy">
-    <p class="game-hint">Appuyez ou cliquez pour faire sauter le cookie. Traversez ${maxPipes} piliers divins !</p>
-    <div style="position:relative;width:100%;height:300px;background:#000;border:2px solid #9b59b6;overflow:hidden;border-radius:10px;">
-      <canvas id="cFlappyCv" width="400" height="300" style="width:100%;height:100%;cursor:pointer;"></canvas>
-      <div id="cFlappyOver" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000a;">
-        <button id="cFlappyBtn" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad);">Démarrer</button>
+  api.body.innerHTML = `<div class="game-bowling">
+    <p class="game-hint">Arrêtez la flèche quand elle pointe <b>tout droit</b> (au centre) pour faire un Strike !</p>
+    <div style="position:relative;width:200px;height:100px;margin:20px auto;border-bottom:4px solid #fff;overflow:hidden;">
+      <div id="cBowlingPinArea" style="position:absolute;top:10px;left:0;width:100%;height:30px;display:flex;justify-content:center;gap:5px;">
+        <span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span>
+      </div>
+      <div style="position:absolute;bottom:0;left:50%;width:4px;height:50px;background:#f1c40f;transform-origin:bottom center;transform:translateX(-50%) rotate(-90deg);" id="cBowlingArrow">
+        <div style="position:absolute;top:-5px;left:-6px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:12px solid #f1c40f;"></div>
       </div>
     </div>
-  </div>`;
-  
-  const cv = api.body.querySelector('#cFlappyCv');
-  const ctx = cv.getContext('2d');
-  const overlay = api.body.querySelector('#cFlappyOver');
-  const btn = api.body.querySelector('#cFlappyBtn');
-  
-  const jump = () => { if (playing) vy = -6; };
-  cv.addEventListener('mousedown', jump);
-  cv.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
-  
-  btn.addEventListener('click', () => {
-    playing = true; y = 150; vy = 0; passed = 0; pipes = [];
-    overlay.style.display = 'none';
-    runFlappy();
-  });
-  
-  function die() {
-    playing = false;
-    overlay.style.display = 'flex';
-    btn.textContent = 'Échec... Réessayer';
-    btn.style.background = '#e74c3c';
-  }
-  
-  function win() {
-    playing = false;
-    const gain = gameMax() * g.weight;
-    S.cookies += gain;
-    toast('🌌', 'Victoire divine !', '+' + fmt(gain) + ' cookies');
-    api.close();
-  }
-  
-  function runFlappy() {
-    if (!playing) return;
-    ctx.clearRect(0, 0, 400, 300);
-    
-    // Background
-    ctx.fillStyle = '#1a0a2e';
-    ctx.fillRect(0, 0, 400, 300);
-    
-    vy += 0.4;
-    y += vy;
-    
-    if (pipes.length === 0 || pipes[pipes.length - 1].x < 250) {
-      if (passed + pipes.length < maxPipes) {
-        const gap = 90;
-        const h = Math.random() * 120 + 40;
-        pipes.push({ x: 400, h: h, gap: gap, scored: false });
-      }
-    }
-    
-    ctx.fillStyle = '#9b59b6';
-    for (let i = pipes.length - 1; i >= 0; i--) {
-      let p = pipes[i];
-      p.x -= 3;
-      ctx.fillRect(p.x, 0, 40, p.h);
-      ctx.fillRect(p.x, p.h + p.gap, 40, 300);
-      
-      // Collision
-      if (80 < p.x + 40 && 110 > p.x) {
-        if (y - 12 < p.h || y + 12 > p.h + p.gap) { die(); return; }
-      }
-      
-      if (!p.scored && p.x < 80) { p.scored = true; passed++; }
-      if (p.x < -40) pipes.splice(i, 1);
-    }
-    
-    if (y > 300 || y < 0) { die(); return; }
-    
-    // Draw cookie
-    ctx.beginPath(); ctx.arc(95, y, 12, 0, Math.PI*2);
-    ctx.fillStyle = '#f6cd86'; ctx.fill();
-    ctx.strokeStyle = '#a5602a'; ctx.lineWidth = 2; ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
-    ctx.fillText(passed + ' / ' + maxPipes, 10, 30);
-    
-    if (passed >= maxPipes) { win(); return; }
-    raf = requestAnimationFrame(runFlappy);
-  }
-}
-
-function gameCelestialTarget(api, g) {
-  let playing = false, x = 0, dir = 1, speed = 6, score = 0;
-  const maxScore = 5;
-  
-  api.body.innerHTML = `<div class="game-target">
-    <p class="game-hint">Cliquez au moment précis où le curseur passe au centre. Réussissez ${maxScore} fois !</p>
-    <div style="position:relative;width:100%;height:100px;background:#222;border:2px solid #9b59b6;border-radius:10px;margin-bottom:10px;overflow:hidden;">
-      <div style="position:absolute;left:50%;top:0;bottom:0;width:40px;margin-left:-20px;background:rgba(46,204,113,0.4);border-left:2px solid #2ecc71;border-right:2px solid #2ecc71;"></div>
-      <div id="cTargetCursor" style="position:absolute;left:0;top:10px;bottom:10px;width:10px;background:#ffb347;border-radius:5px;box-shadow:0 0 10px #ffb347;"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div id="cTargetScore" style="font-weight:bold;color:#ffeb3b;font-size:18px;">0 / ${maxScore}</div>
-      <button id="cTargetBtn" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad); width:150px;">Démarrer</button>
+    <div style="text-align:center;">
+      <button id="cBowlingBtn" class="big-btn" style="background:linear-gradient(135deg, #e74c3c, #c0392b); width:150px;">Lancer</button>
     </div>
   </div>`;
   
-  const cursor = api.body.querySelector('#cTargetCursor');
-  const scoreTxt = api.body.querySelector('#cTargetScore');
-  const btn = api.body.querySelector('#cTargetBtn');
-  let raf;
+  const arrow = api.body.querySelector('#cBowlingArrow');
+  const btn = api.body.querySelector('#cBowlingBtn');
+  const pinArea = api.body.querySelector('#cBowlingPinArea');
   
   btn.addEventListener('click', () => {
     if (!playing) {
-      playing = true; score = 0; speed = 6; x = 0; dir = 1;
+      playing = true;
       btn.textContent = 'STOP';
-      scoreTxt.textContent = score + ' / ' + maxScore;
-      runTarget();
+      runBowling();
     } else {
-      // STOP pressed
       playing = false;
-      const center = cursor.parentElement.clientWidth / 2;
-      const cPos = x + 5; // center of cursor
-      if (Math.abs(cPos - center) < 20) {
-        score++;
-        scoreTxt.textContent = score + ' / ' + maxScore;
-        if (score >= maxScore) {
-          const gain = gameMax() * g.weight;
-          S.cookies += gain;
-          toast('🎯', 'Précision divine !', '+' + fmt(gain) + ' cookies');
-          api.close();
-        } else {
-          speed += 2;
-          btn.textContent = 'SUIVANT';
-          setTimeout(() => { if (api.body) { playing = true; btn.textContent = 'STOP'; runTarget(); } }, 1000);
-        }
+      cancelAnimationFrame(raf);
+      
+      // Calculate score based on angle. Perfect is 0.
+      const diff = Math.abs(angle);
+      let pins = 0;
+      if (diff < 5) pins = 10; // Strike
+      else if (diff < 15) pins = 7;
+      else if (diff < 30) pins = 4;
+      else if (diff < 50) pins = 1;
+      else pins = 0; // Gutter
+      
+      if (pins === 10) {
+        pinArea.innerHTML = '<span style="font-size:24px;color:#f1c40f;font-weight:bold;">STRIKE ! 🥛💥</span>';
+        const gain = gameMax() * g.weight; // Huge gain
+        S.cookies += gain;
+        toast('🎳', 'Strike Céleste !', '+' + fmt(gain) + ' cookies');
+        setTimeout(() => api.close(), 2000);
       } else {
-        btn.textContent = 'Échec... Réessayer';
-        btn.style.background = '#e74c3c';
-        playing = false;
+        pinArea.innerHTML = `<span style="font-size:20px;color:#fff;">${pins} quilles renversées</span>`;
+        if (pins > 0) {
+           const partialGain = Math.floor((gameMax() * g.weight) * (pins/10));
+           S.cookies += partialGain;
+           toast('🎳', 'Bien joué', '+' + fmt(partialGain) + ' cookies');
+        } else {
+           toast('🎳', 'Gouttière', 'Vous n\'avez touché aucune quille...');
+        }
+        btn.textContent = 'Terminé';
+        btn.disabled = true;
+        setTimeout(() => api.close(), 2000);
       }
     }
   });
   
-  function runTarget() {
+  function runBowling() {
     if (!playing) return;
-    const w = cursor.parentElement.clientWidth - 10;
-    x += speed * dir;
-    if (x >= w) { x = w; dir = -1; }
-    if (x <= 0) { x = 0; dir = 1; }
-    cursor.style.left = x + 'px';
-    raf = requestAnimationFrame(runTarget);
+    angle += speed * dir;
+    if (angle >= 90) { angle = 90; dir = -1; }
+    if (angle <= -90) { angle = -90; dir = 1; }
+    arrow.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    raf = requestAnimationFrame(runBowling);
   }
 }
 
-function gameCelestialSimon(api, g) {
-  let seq = [], step = 0, playing = false, showing = false;
-  const maxSteps = 8;
-  const colors = [
-    { id: 'R', c: '#e74c3c', hl: '#ff7675' },
-    { id: 'G', c: '#2ecc71', hl: '#55efc4' },
-    { id: 'B', c: '#3498db', hl: '#74b9ff' },
-    { id: 'Y', c: '#f1c40f', hl: '#ffeaa7' }
-  ];
+function gameCelestialBasketball(api, g) {
+  let playing = false, hoopX = 0, hoopDir = 1, hoopSpeed = 5;
+  let cookieY = 0;
+  let raf, shootRaf;
+  let tries = 3;
+  let shooting = false;
   
-  api.body.innerHTML = `<div class="game-simon">
-    <p class="game-hint">Répétez la séquence lumineuse sans vous tromper. Étape : <span id="cSimonStep">1</span> / ${maxSteps}</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:200px;margin:20px auto;">
-      ${colors.map(c => `<div id="btn${c.id}" data-cid="${c.id}" style="width:100%;padding-top:100%;background:${c.c};border-radius:10px;cursor:pointer;transition:all 0.1s;"></div>`).join('')}
+  api.body.innerHTML = `<div class="game-basketball">
+    <p class="game-hint">Tirez quand le panier est aligné avec le cookie. <span id="cBaskTries">${tries}</span> essais.</p>
+    <div style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
+      <div id="cHoop" style="position:absolute;top:10px;left:0;width:50px;height:15px;border:3px solid #e74c3c;border-radius:50%;box-shadow:0 10px 0 rgba(231,76,60,0.3);"></div>
+      <div id="cBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
     <div style="text-align:center;">
-      <button id="cSimonStart" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad);">Commencer</button>
+      <button id="cBaskBtn" class="big-btn" style="background:linear-gradient(135deg, #e67e22, #d35400); width:150px;">Tirer</button>
     </div>
   </div>`;
   
-  const stepTxt = api.body.querySelector('#cSimonStep');
-  const btnStart = api.body.querySelector('#cSimonStart');
+  const hoop = api.body.querySelector('#cHoop');
+  const ball = api.body.querySelector('#cBall');
+  const btn = api.body.querySelector('#cBaskBtn');
+  const triesTxt = api.body.querySelector('#cBaskTries');
+  const areaW = api.body.querySelector('#cBaskArea').clientWidth;
   
-  const lightUp = (id, duration) => {
-    const b = api.body.querySelector('#btn' + id);
-    const col = colors.find(c => c.id === id);
-    b.style.background = col.hl;
-    b.style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      if (!api.body) return;
-      b.style.background = col.c;
-      b.style.transform = 'scale(1)';
-    }, duration);
-  };
-  
-  const playSeq = async () => {
-    showing = true;
-    for (let id of seq) {
-      if (!api.body) return;
-      lightUp(id, 400);
-      await new Promise(r => setTimeout(r, 600));
-    }
-    showing = false;
-  };
-  
-  const nextLevel = () => {
-    seq.push(colors[Math.floor(Math.random() * colors.length)].id);
-    stepTxt.textContent = seq.length;
-    step = 0;
-    setTimeout(playSeq, 1000);
-  };
-  
-  btnStart.addEventListener('click', () => {
-    btnStart.style.display = 'none';
-    playing = true;
-    seq = [];
-    nextLevel();
-  });
-  
-  api.body.querySelectorAll('[data-cid]').forEach(b => {
-    b.addEventListener('mousedown', () => {
-      if (!playing || showing) return;
-      const id = b.dataset.cid;
-      lightUp(id, 200);
-      if (id !== seq[step]) {
-        btnStart.style.display = 'inline-block';
-        btnStart.textContent = 'Échec... Réessayer';
-        btnStart.style.background = '#e74c3c';
-        playing = false;
-      } else {
-        step++;
-        if (step === seq.length) {
-          if (seq.length >= maxSteps) {
-            const gain = gameMax() * g.weight;
-            S.cookies += gain;
-            toast('🧠', 'Mémoire divine !', '+' + fmt(gain) + ' cookies');
-            api.close();
-          } else {
-            showing = true;
-            nextLevel();
-          }
-        }
-      }
-    });
-  });
-}
-
-// CELESTIAL GAMES LOGIC
-
-function gameCelestialFlappy(api, g) {
-  let raf, playing = false, vy = 0, y = 200, passed = 0, pipes = [];
-  const maxPipes = 10;
-  
-  api.body.innerHTML = `<div class="game-flappy">
-    <p class="game-hint">Appuyez ou cliquez pour faire sauter le cookie. Traversez ${maxPipes} piliers divins !</p>
-    <div style="position:relative;width:100%;height:300px;background:#000;border:2px solid #9b59b6;overflow:hidden;border-radius:10px;">
-      <canvas id="cFlappyCv" width="400" height="300" style="width:100%;height:100%;cursor:pointer;"></canvas>
-      <div id="cFlappyOver" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000a;">
-        <button id="cFlappyBtn" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad);">Démarrer</button>
-      </div>
-    </div>
-  </div>`;
-  
-  const cv = api.body.querySelector('#cFlappyCv');
-  const ctx = cv.getContext('2d');
-  const overlay = api.body.querySelector('#cFlappyOver');
-  const btn = api.body.querySelector('#cFlappyBtn');
-  
-  const jump = () => { if (playing) vy = -6; };
-  cv.addEventListener('mousedown', jump);
-  cv.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
-  
-  btn.addEventListener('click', () => {
-    playing = true; y = 150; vy = 0; passed = 0; pipes = [];
-    overlay.style.display = 'none';
-    runFlappy();
-  });
-  
-  function die() {
-    playing = false;
-    overlay.style.display = 'flex';
-    btn.textContent = 'Échec... Réessayer';
-    btn.style.background = '#e74c3c';
-  }
-  
-  function win() {
-    playing = false;
-    const gain = gameMax() * g.weight;
-    S.cookies += gain;
-    toast('🌌', 'Victoire divine !', '+' + fmt(gain) + ' cookies');
-    api.close();
-  }
-  
-  function runFlappy() {
+  function runHoop() {
     if (!playing) return;
-    ctx.clearRect(0, 0, 400, 300);
-    
-    // Background
-    ctx.fillStyle = '#1a0a2e';
-    ctx.fillRect(0, 0, 400, 300);
-    
-    vy += 0.4;
-    y += vy;
-    
-    if (pipes.length === 0 || pipes[pipes.length - 1].x < 250) {
-      if (passed + pipes.length < maxPipes) {
-        const gap = 90;
-        const h = Math.random() * 120 + 40;
-        pipes.push({ x: 400, h: h, gap: gap, scored: false });
-      }
-    }
-    
-    ctx.fillStyle = '#9b59b6';
-    for (let i = pipes.length - 1; i >= 0; i--) {
-      let p = pipes[i];
-      p.x -= 3;
-      ctx.fillRect(p.x, 0, 40, p.h);
-      ctx.fillRect(p.x, p.h + p.gap, 40, 300);
-      
-      // Collision
-      if (80 < p.x + 40 && 110 > p.x) {
-        if (y - 12 < p.h || y + 12 > p.h + p.gap) { die(); return; }
-      }
-      
-      if (!p.scored && p.x < 80) { p.scored = true; passed++; }
-      if (p.x < -40) pipes.splice(i, 1);
-    }
-    
-    if (y > 300 || y < 0) { die(); return; }
-    
-    // Draw cookie
-    ctx.beginPath(); ctx.arc(95, y, 12, 0, Math.PI*2);
-    ctx.fillStyle = '#f6cd86'; ctx.fill();
-    ctx.strokeStyle = '#a5602a'; ctx.lineWidth = 2; ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
-    ctx.fillText(passed + ' / ' + maxPipes, 10, 30);
-    
-    if (passed >= maxPipes) { win(); return; }
-    raf = requestAnimationFrame(runFlappy);
+    hoopX += hoopSpeed * hoopDir;
+    if (hoopX >= areaW - 56) { hoopX = areaW - 56; hoopDir = -1; }
+    if (hoopX <= 0) { hoopX = 0; hoopDir = 1; }
+    hoop.style.left = hoopX + 'px';
+    raf = requestAnimationFrame(runHoop);
   }
-}
-
-function gameCelestialTarget(api, g) {
-  let playing = false, x = 0, dir = 1, speed = 6, score = 0;
-  const maxScore = 5;
   
-  api.body.innerHTML = `<div class="game-target">
-    <p class="game-hint">Cliquez au moment précis où le curseur passe au centre. Réussissez ${maxScore} fois !</p>
-    <div style="position:relative;width:100%;height:100px;background:#222;border:2px solid #9b59b6;border-radius:10px;margin-bottom:10px;overflow:hidden;">
-      <div style="position:absolute;left:50%;top:0;bottom:0;width:40px;margin-left:-20px;background:rgba(46,204,113,0.4);border-left:2px solid #2ecc71;border-right:2px solid #2ecc71;"></div>
-      <div id="cTargetCursor" style="position:absolute;left:0;top:10px;bottom:10px;width:10px;background:#ffb347;border-radius:5px;box-shadow:0 0 10px #ffb347;"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div id="cTargetScore" style="font-weight:bold;color:#ffeb3b;font-size:18px;">0 / ${maxScore}</div>
-      <button id="cTargetBtn" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad); width:150px;">Démarrer</button>
-    </div>
-  </div>`;
-  
-  const cursor = api.body.querySelector('#cTargetCursor');
-  const scoreTxt = api.body.querySelector('#cTargetScore');
-  const btn = api.body.querySelector('#cTargetBtn');
-  let raf;
+  playing = true;
+  runHoop();
   
   btn.addEventListener('click', () => {
-    if (!playing) {
-      playing = true; score = 0; speed = 6; x = 0; dir = 1;
-      btn.textContent = 'STOP';
-      scoreTxt.textContent = score + ' / ' + maxScore;
-      runTarget();
-    } else {
-      // STOP pressed
-      playing = false;
-      const center = cursor.parentElement.clientWidth / 2;
-      const cPos = x + 5; // center of cursor
-      if (Math.abs(cPos - center) < 20) {
-        score++;
-        scoreTxt.textContent = score + ' / ' + maxScore;
-        if (score >= maxScore) {
+    if (!playing || shooting || tries <= 0) return;
+    shooting = true;
+    cookieY = 0;
+    
+    function animateShoot() {
+      cookieY += 8;
+      ball.style.bottom = (10 + cookieY) + 'px';
+      
+      if (cookieY > 110) { // reached hoop level
+        const ballCenter = (areaW / 2);
+        const hoopCenter = hoopX + 28;
+        if (Math.abs(ballCenter - hoopCenter) < 25) { // scored!
+          playing = false;
+          ball.innerHTML = '✨';
           const gain = gameMax() * g.weight;
           S.cookies += gain;
-          toast('🎯', 'Précision divine !', '+' + fmt(gain) + ' cookies');
-          api.close();
-        } else {
-          speed += 2;
-          btn.textContent = 'SUIVANT';
-          setTimeout(() => { if (api.body) { playing = true; btn.textContent = 'STOP'; runTarget(); } }, 1000);
+          toast('🏀', 'Panier Céleste !', '+' + fmt(gain) + ' cookies');
+          setTimeout(() => api.close(), 1500);
+          return;
+        } else if (cookieY > 150) { // missed
+          tries--;
+          triesTxt.textContent = tries;
+          if (tries <= 0) {
+            playing = false;
+            toast('🏀', 'Raté', 'Plus d\'essais...');
+            btn.textContent = 'Terminé';
+            btn.disabled = true;
+            setTimeout(() => api.close(), 1500);
+          } else {
+            shooting = false;
+            ball.style.bottom = '10px';
+          }
+          return;
         }
-      } else {
-        btn.textContent = 'Échec... Réessayer';
-        btn.style.background = '#e74c3c';
-        playing = false;
       }
+      shootRaf = requestAnimationFrame(animateShoot);
     }
+    shootRaf = requestAnimationFrame(animateShoot);
   });
-  
-  function runTarget() {
-    if (!playing) return;
-    const w = cursor.parentElement.clientWidth - 10;
-    x += speed * dir;
-    if (x >= w) { x = w; dir = -1; }
-    if (x <= 0) { x = 0; dir = 1; }
-    cursor.style.left = x + 'px';
-    raf = requestAnimationFrame(runTarget);
-  }
 }
 
-function gameCelestialSimon(api, g) {
-  let seq = [], step = 0, playing = false, showing = false;
-  const maxSteps = 8;
-  const colors = [
-    { id: 'R', c: '#e74c3c', hl: '#ff7675' },
-    { id: 'G', c: '#2ecc71', hl: '#55efc4' },
-    { id: 'B', c: '#3498db', hl: '#74b9ff' },
-    { id: 'Y', c: '#f1c40f', hl: '#ffeaa7' }
-  ];
+function gameCelestialFootball(api, g) {
+  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 6;
+  let cookieY = 0;
+  let raf, shootRaf;
+  let tries = 3;
+  let shooting = false;
   
-  api.body.innerHTML = `<div class="game-simon">
-    <p class="game-hint">Répétez la séquence lumineuse sans vous tromper. Étape : <span id="cSimonStep">1</span> / ${maxSteps}</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:200px;margin:20px auto;">
-      ${colors.map(c => `<div id="btn${c.id}" data-cid="${c.id}" style="width:100%;padding-top:100%;background:${c.c};border-radius:10px;cursor:pointer;transition:all 0.1s;"></div>`).join('')}
+  api.body.innerHTML = `<div class="game-football">
+    <p class="game-hint">Marquez un but en évitant le gardien. <span id="cFoTries">${tries}</span> essais.</p>
+    <div style="position:relative;width:100%;height:150px;background:#27ae60;border:2px solid #fff;border-radius:5px;margin-bottom:10px;overflow:hidden;" id="cFoArea">
+      <!-- Goal -->
+      <div style="position:absolute;top:0;left:50%;width:100px;margin-left:-50px;height:40px;border:3px solid #fff;border-top:none;"></div>
+      <!-- Goalkeeper -->
+      <div id="cGK" style="position:absolute;top:20px;left:50%;margin-left:-15px;width:30px;height:40px;font-size:24px;line-height:40px;text-align:center;">🥛</div>
+      <!-- Ball -->
+      <div id="cFoBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
     <div style="text-align:center;">
-      <button id="cSimonStart" class="big-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad);">Commencer</button>
+      <button id="cFoBtn" class="big-btn" style="background:linear-gradient(135deg, #2980b9, #2c3e50); width:150px;">Tirer</button>
     </div>
   </div>`;
   
-  const stepTxt = api.body.querySelector('#cSimonStep');
-  const btnStart = api.body.querySelector('#cSimonStart');
+  const gk = api.body.querySelector('#cGK');
+  const ball = api.body.querySelector('#cFoBall');
+  const btn = api.body.querySelector('#cFoBtn');
+  const triesTxt = api.body.querySelector('#cFoTries');
+  const areaW = api.body.querySelector('#cFoArea').clientWidth;
+  // GK moves within the 100px goal area
+  const gkMin = (areaW / 2) - 50;
+  const gkMax = (areaW / 2) + 50 - 30; // 30 is width of GK
+  gkX = gkMin;
   
-  const lightUp = (id, duration) => {
-    const b = api.body.querySelector('#btn' + id);
-    const col = colors.find(c => c.id === id);
-    b.style.background = col.hl;
-    b.style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      if (!api.body) return;
-      b.style.background = col.c;
-      b.style.transform = 'scale(1)';
-    }, duration);
-  };
+  function runGK() {
+    if (!playing) return;
+    gkX += gkSpeed * gkDir;
+    if (gkX >= gkMax) { gkX = gkMax; gkDir = -1; }
+    if (gkX <= gkMin) { gkX = gkMin; gkDir = 1; }
+    gk.style.left = gkX + 'px';
+    raf = requestAnimationFrame(runGK);
+  }
   
-  const playSeq = async () => {
-    showing = true;
-    for (let id of seq) {
-      if (!api.body) return;
-      lightUp(id, 400);
-      await new Promise(r => setTimeout(r, 600));
-    }
-    showing = false;
-  };
+  playing = true;
+  runGK();
   
-  const nextLevel = () => {
-    seq.push(colors[Math.floor(Math.random() * colors.length)].id);
-    stepTxt.textContent = seq.length;
-    step = 0;
-    setTimeout(playSeq, 1000);
-  };
-  
-  btnStart.addEventListener('click', () => {
-    btnStart.style.display = 'none';
-    playing = true;
-    seq = [];
-    nextLevel();
-  });
-  
-  api.body.querySelectorAll('[data-cid]').forEach(b => {
-    b.addEventListener('mousedown', () => {
-      if (!playing || showing) return;
-      const id = b.dataset.cid;
-      lightUp(id, 200);
-      if (id !== seq[step]) {
-        btnStart.style.display = 'inline-block';
-        btnStart.textContent = 'Échec... Réessayer';
-        btnStart.style.background = '#e74c3c';
-        playing = false;
-      } else {
-        step++;
-        if (step === seq.length) {
-          if (seq.length >= maxSteps) {
-            const gain = gameMax() * g.weight;
-            S.cookies += gain;
-            toast('🧠', 'Mémoire divine !', '+' + fmt(gain) + ' cookies');
-            api.close();
+  btn.addEventListener('click', () => {
+    if (!playing || shooting || tries <= 0) return;
+    shooting = true;
+    cookieY = 0;
+    
+    function animateShoot() {
+      cookieY += 8;
+      ball.style.bottom = (10 + cookieY) + 'px';
+      
+      if (cookieY > 80 && cookieY < 120) { // ball reaching GK level
+        const ballCenter = areaW / 2;
+        const gkCenter = gkX + 15;
+        if (Math.abs(ballCenter - gkCenter) < 25) { // Saved!
+          tries--;
+          triesTxt.textContent = tries;
+          if (tries <= 0) {
+            playing = false;
+            toast('⚽', 'Arrêt du gardien', 'Le lait a bloqué votre cookie.');
+            btn.textContent = 'Terminé';
+            btn.disabled = true;
+            setTimeout(() => api.close(), 1500);
           } else {
-            showing = true;
-            nextLevel();
+            shooting = false;
+            ball.style.bottom = '10px';
           }
+          return;
         }
+      } else if (cookieY > 120) { // scored!
+          playing = false;
+          ball.innerHTML = '✨';
+          const gain = gameMax() * g.weight;
+          S.cookies += gain;
+          toast('⚽', 'Buuut !', '+' + fmt(gain) + ' cookies');
+          setTimeout(() => api.close(), 1500);
+          return;
       }
-    });
+      shootRaf = requestAnimationFrame(animateShoot);
+    }
+    shootRaf = requestAnimationFrame(animateShoot);
   });
 }
