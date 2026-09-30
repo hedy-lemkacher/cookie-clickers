@@ -1144,8 +1144,9 @@ function buyBuilding(b) {
   refreshTip();
 }
 function buyUpgrade(u) {
-  if (S.cookies < u.cost || hasUp(u.id)) return;
-  S.cookies -= cost;
+  const finalCost = Math.floor(u.cost * Math.max(0.1, 1 - compHas('discount') - compHas('upgrade_discount')));
+  if (S.cookies < finalCost || hasUp(u.id)) return;
+  S.cookies -= finalCost;
   S.ups.push(u.id);
   recalc();
   hideTip();
