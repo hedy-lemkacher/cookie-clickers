@@ -247,6 +247,9 @@ function load() {
           S.chips = 70; // Emergency compensation
       }
       if (S.chips > 100) S.chips = 50;
+      ['celestial_bowling', 'celestial_basketball', 'celestial_football', 'flappy'].forEach(g => {
+         if (S.games[g] && S.games[g] > Date.now()) S.games[g] = 0;
+      });
       S.casino = Object.assign(freshState().casino, S.casino);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
@@ -557,7 +560,9 @@ function renderCasinoPane() {
     
     draw(0);
     
-    btn.addEventListener('click', () => {
+    return () => cancelAnimationFrame(raf);
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
+  btn.addEventListener('click', () => {
       const isFrenzyActive = Date.now() < S.fz.until || Date.now() < clickFrenzyUntil;
       if (!isReady || isFrenzyActive) return;
       btn.disabled = true;
@@ -1699,7 +1704,7 @@ function openGame(g) {
     end: (frac, detail) => finishGame(state, frac, detail),
   };
   current = state;
-  state.cleanup = g.start(state.api);
+  state.cleanup = g.start(state.api, g);
 }
 function finishGame(state, frac, detail) {
   if (state.ended) return;
@@ -3107,7 +3112,7 @@ function initFlappy() {
   let stars = Array.from({length: 60}, () => ({ x: Math.random()*400, y: Math.random()*400, r: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2 }));
 
   function runGame() {
-    if (!playing || !document.body.contains(api.body)) return;
+    if (!playing) return;
     const elapsed = (Date.now() - startTime) / 1000;
     const difficulty = Math.min(1, elapsed / currentTargetTime); 
     
@@ -3389,6 +3394,7 @@ function gameCelestialBowling(api, g) {
     } else {
       playing = false;
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf);
       
       // Calculate score based on angle. Perfect is 0.
       const diff = Math.abs(angle);
@@ -3422,7 +3428,7 @@ function gameCelestialBowling(api, g) {
   });
   
   function runBowling() {
-    if (!playing || !document.body.contains(api.body)) return;
+    if (!playing) return;
     angle += speed * dir;
     if (angle >= 90) { angle = 90; dir = -1; }
     if (angle <= -90) { angle = -90; dir = 1; }
@@ -3457,7 +3463,7 @@ function gameCelestialBasketball(api, g) {
   const areaW = api.body.querySelector('#cBaskArea').clientWidth;
   
   function runHoop() {
-    if (!playing || !document.body.contains(api.body)) return;
+    if (!playing) return;
     hoopX += hoopSpeed * hoopDir;
     if (hoopX >= areaW - 56) { hoopX = areaW - 56; hoopDir = -1; }
     if (hoopX <= 0) { hoopX = 0; hoopDir = 1; }
@@ -3468,6 +3474,7 @@ function gameCelestialBasketball(api, g) {
   playing = true;
   runHoop();
   
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0) return;
     shooting = true;
@@ -3544,7 +3551,7 @@ function gameCelestialFootball(api, g) {
   gkX = gkMin;
   
   function runGK() {
-    if (!playing || !document.body.contains(api.body)) return;
+    if (!playing) return;
     gkX += gkSpeed * gkDir;
     if (gkX >= gkMax) { gkX = gkMax; gkDir = -1; }
     if (gkX <= gkMin) { gkX = gkMin; gkDir = 1; }
@@ -3555,6 +3562,7 @@ function gameCelestialFootball(api, g) {
   playing = true;
   runGK();
   
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0) return;
     shooting = true;
