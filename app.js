@@ -1380,8 +1380,8 @@ function spawnGoldenRain() {
       el.innerHTML = '🍪';
       el.style.filter = 'sepia(100%) hue-rotate(330deg) saturate(300%) drop-shadow(0 0 10px #cd7f32)';
     } else if (type === 'black') {
-      el.innerHTML = '🍪';
-      el.style.filter = 'brightness(0) drop-shadow(0 0 15px black)';
+      el.innerHTML = '☠️';
+      el.style.filter = 'drop-shadow(0 0 15px black)';
     }
     
     el.addEventListener('click', (e) => {
