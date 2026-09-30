@@ -66,9 +66,9 @@ const TIERS = [
   { need: 200, costX: 5e9,  name: 'Transcendance' },
 ];
 const UPGRADES = [
-  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', price: 1e12, icon: '⏳', req: () => S.upgrades.includes('celestial_flappy') || S.upgrades.includes('celestial_target') || S.upgrades.includes('celestial_simon') || window.__adminMode },
-  { id: 'celestial_cd2', name: 'Sablier Céleste II', desc: 'Réduit le temps de recharge des jeux célestes de 50%.', price: 1e15, icon: '⏳', req: () => S.upgrades.includes('celestial_cd1') },
-  { id: 'celestial_cd3', name: 'Sablier Céleste III', desc: 'Réduit le temps de recharge des jeux célestes de 75%.', price: 1e18, icon: '⏳', req: () => S.upgrades.includes('celestial_cd2') },];
+  { id: 'celestial_cd1', name: 'Sablier Céleste I', desc: 'Réduit le temps de recharge des jeux célestes de 25%.', price: 1e12, icon: '⏳', req: () => (S.temple && (S.temple.includes('celestial_flappy') || S.temple.includes('celestial_target') || S.temple.includes('celestial_simon'))) || window.__adminMode },
+  { id: 'celestial_cd2', name: 'Sablier Céleste II', desc: 'Réduit le temps de recharge des jeux célestes de 50%.', price: 1e15, icon: '⏳', req: () => S.ups.includes('celestial_cd1') },
+  { id: 'celestial_cd3', name: 'Sablier Céleste III', desc: 'Réduit le temps de recharge des jeux célestes de 75%.', price: 1e18, icon: '⏳', req: () => S.ups.includes('celestial_cd2') },];
 for (const b of BUILDINGS) {
   TIERS.forEach((t, i) => UPGRADES.push({
     id: b.id + i, icon: b.icon, tier: ROMAN[i], cost: b.base * t.costX,
