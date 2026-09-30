@@ -242,6 +242,10 @@ function load() {
       }
       S.custom = Object.assign({}, DEFAULT_CUSTOM, S.custom);
       S.fz = Object.assign(freshState().fz, S.fz);
+      
+      if (S.ascensions > 0 && S.chips === 0 && S.bakedAll > 1e12) {
+          S.chips = 70; // Emergency compensation
+      }
       if (S.chips > 100) S.chips = 50;
       S.casino = Object.assign(freshState().casino, S.casino);
     }
@@ -2516,17 +2520,17 @@ function renderAchPane() {
   if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
 }
 $('#ascBtn').addEventListener('click', () => {
-  const g = chipsPotential() - S.chips;
+  const g = chipsPotential();
   if (g < 1) return;
   if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations repartent de zéro, mais vous gagnez ' + g +
     ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
   if (activeEvent) endEvent();
   const keep = {};
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
-   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple'].forEach((k) => { keep[k] = S[k]; });
+   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
+  keep.chips = (keep.chips || 0) + g;
   S = Object.assign(freshState(), keep);
-  S.chips = chipsPotential();
   S.milestone = 0;
   recalc();
   refreshAll();
