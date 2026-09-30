@@ -1324,6 +1324,10 @@ function updateGolden(now) {
     clearGoldenRain();
   }
   if (activeGoldenCookies.length === 0 && now > goldenNext) {
+    if (current) {
+      goldenNext = now + 5000;
+      return;
+    }
     goldenEnd = now + 3000;
     goldenNext = now + goldenDelay();
     spawnGoldenRain();
@@ -1336,8 +1340,21 @@ function spawnGoldenRain() {
     el.className = 'golden-cookie-rain';
     el.style.position = 'fixed';
     el.style.zIndex = '999999';
-    el.style.left = rand(5, 85) + 'vw';
-    el.style.top = rand(10, 75) + 'vh';
+    let left, top;
+    const cRect = document.getElementById('cookie').getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    for (let attempts = 0; attempts < 50; attempts++) {
+      left = rand(5, 85);
+      top = rand(10, 75);
+      const pxLeft = (left * vw) / 100;
+      const pxTop = (top * vh) / 100;
+      // If outside the cookie's rect (with 30px margin), we're good.
+      if (pxLeft + 40 < cRect.left - 30 || pxLeft > cRect.right + 30 || pxTop + 40 < cRect.top - 30 || pxTop > cRect.bottom + 30) {
+        break;
+      }
+    }
+    el.style.left = left + 'vw';
+    el.style.top = top + 'vh';
     el.style.background = 'none';
     el.style.border = 'none';
     el.style.cursor = 'pointer';
