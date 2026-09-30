@@ -25,6 +25,7 @@
     <button data-menu-tab="ach" type="button">🏆 <span>Succès</span></button>
     <button data-menu-tab="leaderboard" type="button">📊 <span>Performances / statistiques</span></button>
     <button data-menu-tab="secret" type="button">🔐 <span>Code secret</span></button>
+    <button data-menu-tab="info" type="button">ℹ️ <span>Dernières modifications</span></button>
   </nav>
 </aside>
 
@@ -259,7 +260,21 @@
       </div>
     </div>
 
-    <div class="pane" id="secret">
+    <div class="pane" id="info">
+        <div class="pane-head">
+          <h2>Dernières modifications</h2>
+          <p>Voici le résumé des dernières nouveautés ajoutées au jeu.</p>
+        </div>
+        <div class="section">
+          <ul style="line-height: 1.6; font-size: 15px;">
+            <li style="margin-bottom: 10px;"><b>Difficulté accrue</b> : Tous les mini-jeux ont été ajustés pour offrir plus de challenge (pièges dans le labyrinthe, temps réduits). De plus, les mini-jeux s'arrêtent automatiquement dès que vous avez gagné !</li>
+            <li style="margin-bottom: 10px;"><b>Combo Casino</b> : Enchaînez les victoires au Casino pour obtenir des multiplicateurs de récompense ! Plus vous misez gros et enchaînez, plus le multiplicateur explose.</li>
+            <li style="margin-bottom: 10px;"><b>Arcade Céleste</b> : 3 nouveaux jeux exclusifs ultra-rentables ajoutés via le Temple.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="pane" id="secret">
       <div class="pane-intro"><h3>Mode développeur</h3><p>Entrez le code secret pour tester rapidement toutes les fonctionnalités du jeu.</p></div>
       <div class="card secret-card">
         <div class="secret-icon">🔐</div>

@@ -457,7 +457,18 @@ function spinCasino() {
   wheel.classList.add('roulette-spinning');
   setTimeout(() => {
     if (payout) gain(payout);
-    S.casino.lastResult = { number, color, won, payout, stake };
+    if (won) {
+      if (!S.casino.combo) S.casino.combo = 0;
+      S.casino.combo++;
+    } else {
+      S.casino.combo = 0;
+    }
+    let comboMult = 1;
+    if (won && S.casino.combo > 1) {
+      comboMult = 1 + (S.casino.combo - 1) * 0.1 * (betType === 'number' ? 10 : 2);
+      gain(Math.floor(payout * (comboMult - 1)));
+    }
+    S.casino.lastResult = { number, color, won, payout, stake, comboMult, comboCount: S.casino.combo };
     casinoSelectedBet = null;
     save();
     renderCasinoPane();
@@ -1445,6 +1456,16 @@ function gameReaction(api) {
   }
   maze[1][1] = 'S';
   maze[height - 2][width - 2] = 'E';
+  for(let i=0; i<8; i++) {
+    let tx = Math.floor(Math.random() * (width - 2)) + 1;
+    let ty = Math.floor(Math.random() * (height - 2)) + 1;
+    if (maze[ty][tx] === ' ' && !(tx===1 && ty===1) && !(tx===width-2 && ty===height-2)) maze[ty][tx] = 'T';
+  }
+  for(let i=0; i<8; i++) {
+    let tx = Math.floor(Math.random() * (width - 2)) + 1;
+    let ty = Math.floor(Math.random() * (height - 2)) + 1;
+    if (maze[ty][tx] === ' ' && !(tx===1 && ty===1) && !(tx===width-2 && ty===height-2)) maze[ty][tx] = 'T';
+  }
   api.body.innerHTML = '<p class="game-hint">Échappez-vous en moins de 18 secondes. Utilisez les flèches, ZQSD ou les boutons tactiles.</p>' +
     '<div class="maze-arena"><div class="maze-grid"></div><div class="maze-controls"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div></div>';
   const grid = api.body.querySelector('.maze-grid');
@@ -1455,9 +1476,9 @@ function gameReaction(api) {
     grid.style.gridTemplateColumns = 'repeat(' + width + ', 1fr)';
     maze.forEach((row, y) => row.forEach((cell, x) => {
       const tile = document.createElement('span');
-      tile.className = 'maze-cell ' + (cell === '#' ? 'wall' : cell === 'E' ? 'exit' : 'path');
+      tile.className = 'maze-cell ' + (cell === '#' ? 'wall' : cell === 'E' ? 'exit' : cell === 'T' ? 'trap' : 'path');
       if (player.x === x && player.y === y) tile.className += ' player';
-      tile.textContent = player.x === x && player.y === y ? '🍪' : cell === 'E' ? '🚪' : '';
+      tile.textContent = player.x === x && player.y === y ? '🍪' : cell === 'E' ? '🚪' : cell === 'T' ? '☠️' : '';
       grid.appendChild(tile);
     }));
   };
@@ -1467,6 +1488,7 @@ function gameReaction(api) {
     const [dx, dy] = deltas[direction];
     const nx = player.x + dx, ny = player.y + dy;
     if (nx < 0 || nx >= width || ny < 0 || ny >= height || !maze[ny] || maze[ny][nx] === '#') return;
+    if (maze[ny][nx] === 'T') { timeLeft = Math.max(0, timeLeft - 3); maze[ny][nx] = ' '; api.info('Piège ! -3s'); }
     player.x = nx; player.y = ny;
     render();
     api.frac = Math.max(0, timeLeft / duration);
@@ -1503,9 +1525,9 @@ function gameSimon(api) {
       if (i >= seq.length) { clearInterval(interval); state = 'play'; api.info('À vous de jouer ! (' + seq.length + ' étapes)'); return; }
       const b = btns[seq[i]];
       b.style.opacity = '1'; b.style.transform = 'scale(1.1)';
-      setTimeout(() => { if(alive) { b.style.opacity = '0.5'; b.style.transform = 'none'; } }, 300);
+      setTimeout(() => { if(alive) { b.style.opacity = '0.5'; b.style.transform = 'none'; } }, 200);
       i++;
-    }, 600);
+    }, 450);
   };
   btns.forEach((b, i) => b.addEventListener('mousedown', () => {
     if (state !== 'play' || !alive) return;
@@ -1515,7 +1537,7 @@ function gameSimon(api) {
       api.frac = Math.min(1, seq.length / 5);
       if (step === seq.length) {
         if (seq.length >= 5) return api.end(1, 'Séquence parfaite (5 étapes)');
-        setTimeout(playSeq, 800);
+        setTimeout(playSeq, 600);
       }
     } else {
       api.end(Math.min(1, (seq.length-1)/8), 'Erreur après ' + (seq.length-1) + ' étapes');
@@ -1528,7 +1550,7 @@ function gameSimon(api) {
 
 
 function gameFind(api) {
-  let time = 10, timer = 0, alive = true;
+  let time = 7, timer = 0, alive = true;
   const count = 40;
   let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps.</p><div style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
   const goldenIdx = Math.floor(Math.random() * count);
@@ -1555,11 +1577,11 @@ function gameFind(api) {
 }
 
 function gameRush(api) {
-  const goal = 50;
+  const goal = 80;
   let score = 0, time = 8, timer = 0, alive = true;
   api.body.innerHTML = '<p class="game-hint">Touchez le cookie aussi vite que possible. Objectif : ' + goal + ' clics en huit secondes.</p><div class="rush"><button class="rush-cookie">🍪</button><strong class="rush-score">0</strong></div>';
   const button = api.body.querySelector('.rush-cookie'), counter = api.body.querySelector('.rush-score');
-  button.addEventListener('pointerdown', (e) => { e.preventDefault(); if (!alive) return; score++; counter.textContent = score; api.frac = Math.min(1, score / goal); });
+  button.addEventListener('pointerdown', (e) => { e.preventDefault(); if (!alive) return; score++; counter.textContent = score; api.frac = Math.min(1, score / goal); if(score >= goal) api.end(1, score + ' clics réalisés'); if(score >= goal) api.end(1, score + ' clics réalisés'); });
   timer = setInterval(() => { time--; api.info(score + ' clics · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' clics réalisés'); }, 1000);
   api.info('0 clic · 8 s');
   return () => { alive = false; clearInterval(timer); };
@@ -2744,8 +2766,8 @@ function initFlappy() {
     const elapsed = (Date.now() - startTime) / 1000;
     const difficulty = Math.min(1, elapsed / currentTargetTime); 
     
-    const spawnChance = 0.010 + difficulty * 0.020;
-    const laserWidth = Math.max(12, 35 - difficulty * 20);
+    const spawnChance = 0.015 + difficulty * 0.030;
+    const laserWidth = Math.max(16, 45 - difficulty * 25);
     const warnTime = Math.max(40, 80 - difficulty * 25);
     if (Math.random() < spawnChance) {
       lasers.push({ axis: Math.random() > 0.5 ? 'x' : 'y', pos: Math.random() * 380 + 10, state: 'warn', timer: warnTime, width: laserWidth });
