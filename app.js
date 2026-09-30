@@ -344,7 +344,7 @@ function updateCasinoLimit() {
   if (remaining === 0) {
     const cost = Math.max(1, Math.floor(steadyCps() * 300));
     limit.innerHTML = '<div class="casino-limit-box locked"><div class="cl-icon">⏳</div><div class="cl-info"><div class="cl-title">Accro au jeu</div><div class="cl-subtitle">Prochaine série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
-    const bHead = box.querySelector('.casino-bankroll');
+    const bHead = document.querySelector('#casinoPane .casino-bankroll');
     if (bHead && !document.getElementById('buyExtraSpin')) {
       const btn = document.createElement('button');
       btn.id = 'buyExtraSpin';
