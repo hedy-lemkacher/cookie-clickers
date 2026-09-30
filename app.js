@@ -426,8 +426,8 @@ function renderCasinoPane() {
   }
   
   const tabsHtml = '<div class="casino-tabs" style="display:flex;gap:10px;margin-bottom:15px;justify-content:center;">' + 
-    '<button class="big-btn ' + (S.casino.tab === 'roulette' ? 'active' : '') + '" onclick="S.casino.tab=\'roulette\';renderCasinoPane();" style="' + (S.casino.tab !== 'roulette' ? 'background:#8a4c1c;opacity:0.7;' : '') + '">🎰 Roulette</button>' +
-    '<button class="big-btn ' + (S.casino.tab === 'wheel' ? 'active' : '') + '" onclick="S.casino.tab=\'wheel\';renderCasinoPane();" style="' + (S.casino.tab !== 'wheel' ? 'background:#8a4c1c;opacity:0.7;' : '') + '">🎡 Roue de la Fortune</button>' +
+    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'roulette' ? 'active' : '') + '" data-tab="roulette" style="' + (S.casino.tab !== 'roulette' ? 'background:#8a4c1c;filter:brightness(0.7);' : '') + '">🎰 Roulette</button>' +
+    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'wheel' ? 'active' : '') + '" data-tab="wheel" style="' + (S.casino.tab !== 'wheel' ? 'background:#8a4c1c;filter:brightness(0.7);' : '') + '">🎡 Roue de la Fortune</button>' +
   '</div>';
 
   if (S.casino.tab === 'roulette') {
@@ -457,6 +457,10 @@ function renderCasinoPane() {
       box.querySelectorAll('[data-casino-color]').forEach((item) => item.classList.toggle('selected', item === button));
     }));
     $('#casinoSpin').addEventListener('click', spinCasino);
+    box.querySelectorAll('.casino-tab-btn').forEach(btn => btn.addEventListener('click', (e) => {
+      S.casino.tab = e.target.dataset.tab;
+      renderCasinoPane();
+    }));
   } else {
     // WHEEL TAB
     const max = gameMax();
@@ -582,6 +586,11 @@ function renderCasinoPane() {
       }
       casinoWheelRaf = requestAnimationFrame(frame);
     });
+    
+    box.querySelectorAll('.casino-tab-btn').forEach(btn => btn.addEventListener('click', (e) => {
+      S.casino.tab = e.target.dataset.tab;
+      renderCasinoPane();
+    }));
   }
 }
 
