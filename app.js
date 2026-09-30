@@ -611,7 +611,7 @@ addEventListener('keydown', (e) => {
         const prevFrenzyMult = clickFrenzyMult;
         if (inFrenzy) {
           clickFrenzyUntil = Date.now() + 200;
-          clickFrenzyMult = 200;
+          clickFrenzyMult = (typeof enterFrenzyCurrentMult !== 'undefined' ? enterFrenzyCurrentMult : 200);
         }
         const oldBlocked = clickBlockedUntil;
         clickBlockedUntil = 0;
@@ -2559,7 +2559,7 @@ function loop() {
     
     if (now < enterFrenzyUntil) {
       const frenzyLeft = enterFrenzyUntil - now;
-      document.getElementById('enterPowerTime').innerHTML = Math.ceil(left / 1000) + 's <span style="color:#ffb347; font-weight:bold; font-size:1.4em; text-shadow: 0 0 10px #ffb347;">(' + Math.ceil(frenzyLeft / 1000) + 's x200)</span>';
+      document.getElementById('enterPowerTime').innerHTML = Math.ceil(left / 1000) + 's <span style="color:#ffb347; font-weight:bold; font-size:1.4em; text-shadow: 0 0 10px #ffb347;">(' + Math.ceil(frenzyLeft / 1000) + 's x' + (typeof enterFrenzyCurrentMult !== 'undefined' ? enterFrenzyCurrentMult : 200) + ')</span>';
       if (cookieEl) cookieEl.style.filter = 'hue-rotate(' + ((now / 10) % 360) + 'deg) drop-shadow(0 0 30px rgba(255, 255, 255, 0.8))';
     } else {
       document.getElementById('enterPowerTime').textContent = Math.ceil(left / 1000) + 's';
@@ -2608,17 +2608,25 @@ addEventListener('beforeunload', save);
 addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 requestAnimationFrame(loop);
 
+let enterFrenzyCurrentMult = 200; // Global variable for dynamic multiplier
+
 function initFlappy() {
   const cv = document.getElementById('flappyCanvas');
   const ctx = cv.getContext('2d');
-  const btn = document.getElementById('flappyStart');
   const overlay = document.getElementById('flappyOverlay');
   const status = document.getElementById('flappyStatus');
+  const btnE = document.getElementById('flappyStartE');
+  const btnM = document.getElementById('flappyStartM');
+  const btnH = document.getElementById('flappyStartH');
+  const disabledMsg = document.getElementById('flappyDisabledMsg');
+  const flappyMenu = document.getElementById('flappyMenu');
   
   let raf;
   let playing = false, startTime = 0;
   let mouseX = 200, mouseY = 200;
-  let lasers = []; // { axis: 'x'|'y', pos: number, state: 'warn'|'fire', timer: number, width: number }
+  let lasers = []; 
+  let currentTargetTime = 10;
+  let currentTargetMult = 50;
   
   if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
   let buyBtn = document.getElementById('flappyBuyBtn');
@@ -2647,9 +2655,14 @@ function initFlappy() {
     const attempts = S.games['flappy'].length;
     const cost = Math.max(1, cps() * 3 * 300);
     if (attempts >= maxAttempts && !window.__adminMode) {
-      btn.disabled = true;
+      if (btnE) btnE.disabled = true;
+      if (btnM) btnM.disabled = true;
+      if (btnH) btnH.disabled = true;
       const oldest = S.games['flappy'][0];
-      btn.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
+      if (disabledMsg) {
+        disabledMsg.style.display = 'block';
+        disabledMsg.textContent = 'Recharge : ' + Math.ceil((oldest + 3600000 - now) / 60000) + ' min';
+      }
       if (buyBtn) {
         buyBtn.style.display = 'inline-block';
         buyBtn.textContent = '⚡ Recharger 1 essai (' + fmt(cost) + ' cookies)';
@@ -2657,8 +2670,13 @@ function initFlappy() {
         buyBtn.style.opacity = S.cookies < cost ? '0.5' : '1';
       }
     } else {
-      btn.disabled = false;
-      btn.textContent = `Jouer (${maxAttempts - attempts} essai(s) restant(s))`;
+      if (btnE) btnE.disabled = false;
+      if (btnM) btnM.disabled = false;
+      if (btnH) btnH.disabled = false;
+      if (disabledMsg) {
+        disabledMsg.style.display = 'block';
+        disabledMsg.textContent = `Essai(s) restant(s) : ${maxAttempts - attempts}`;
+      }
       if (buyBtn) buyBtn.style.display = 'none';
     }
   };
@@ -2678,7 +2696,9 @@ function initFlappy() {
   cv.addEventListener('mousemove', move);
   cv.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, {passive:false});
   
-  btn.addEventListener('click', () => {
+  const startGame = (time, mult) => {
+    currentTargetTime = time;
+    currentTargetMult = mult;
     playing = true;
     lasers = [];
     mouseX = 200; mouseY = 200;
@@ -2688,11 +2708,16 @@ function initFlappy() {
     save();
     
     updateBtn();
-    overlay.style.display = 'none'; if (buyBtn) buyBtn.style.display = 'none';
-    status.textContent = 'Survivez 10 secondes !';
+    overlay.style.display = 'none'; 
+    if (buyBtn) buyBtn.style.display = 'none';
+    status.textContent = `Survivez ${time} secondes !`;
     status.style.color = '#fff';
     runGame();
-  });
+  };
+
+  if (btnE) btnE.addEventListener('click', () => startGame(10, 50));
+  if (btnM) btnM.addEventListener('click', () => startGame(30, 150));
+  if (btnH) btnH.addEventListener('click', () => startGame(60, 300));
   
   let trail = [];
   let stars = Array.from({length: 60}, () => ({ x: Math.random()*400, y: Math.random()*400, r: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2 }));
@@ -2700,9 +2725,8 @@ function initFlappy() {
   function runGame() {
     if (!playing) return;
     const elapsed = (Date.now() - startTime) / 1000;
-    const difficulty = Math.min(1, elapsed / 10); // ramps from 0→1 over first 12s
+    const difficulty = Math.min(1, elapsed / currentTargetTime); 
     
-    // Spawn lasers — more frequent and narrower as time goes on
     const spawnChance = 0.010 + difficulty * 0.020;
     const laserWidth = Math.max(12, 35 - difficulty * 20);
     const warnTime = Math.max(40, 80 - difficulty * 25);
@@ -2710,7 +2734,6 @@ function initFlappy() {
       lasers.push({ axis: Math.random() > 0.5 ? 'x' : 'y', pos: Math.random() * 380 + 10, state: 'warn', timer: warnTime, width: laserWidth });
     }
     
-    // Draw starry background
     ctx.fillStyle = '#0a0a1a';
     ctx.fillRect(0, 0, 400, 400);
     stars.forEach(s => {
@@ -2722,7 +2745,6 @@ function initFlappy() {
       ctx.fill();
     });
     
-    // Trail
     trail.push({x: mouseX, y: mouseY});
     if (trail.length > 12) trail.shift();
     trail.forEach((p, i) => {
@@ -2733,7 +2755,6 @@ function initFlappy() {
       ctx.fill();
     });
     
-    // Update and draw lasers
     for (let i = lasers.length - 1; i >= 0; i--) {
       let l = lasers[i];
       l.timer--;
@@ -2757,7 +2778,6 @@ function initFlappy() {
       ctx.restore();
     }
     
-    // Draw cookie with glow
     ctx.save();
     ctx.shadowColor = '#ffb347';
     ctx.shadowBlur = 18;
@@ -2770,18 +2790,17 @@ function initFlappy() {
     ctx.stroke();
     ctx.restore();
     
-    // Timer bar at bottom
-    const progress = elapsed / 10;
+    const progress = Math.min(1, elapsed / currentTargetTime);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(10, 385, 380, 10);
-    const barColor = progress < 0.5 ? `hsl(${120 - progress*240},90%,55%)` : `hsl(${120 - progress*240},90%,55%)`;
+    const barColor = `hsl(${120 - progress*120},90%,55%)`;
     ctx.fillStyle = barColor;
     ctx.fillRect(10, 385, 380 * progress, 10);
     
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / 10 s';
+    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / ' + currentTargetTime + ' s';
     
-    if (elapsed >= 10) {
-      winGame();
+    if (elapsed >= currentTargetTime) {
+      winGame(currentTargetMult);
     } else {
       raf = requestAnimationFrame(runGame);
     }
@@ -2795,22 +2814,22 @@ function initFlappy() {
     status.style.color = '#ff4d4d';
   }
   
-  function winGame() {
+  function winGame(mult) {
     playing = false;
     overlay.style.display = 'flex';
     status.textContent = 'VICTOIRE ! POUVOIR DE LA TOUCHE ENTRÉE DÉBLOQUÉ !';
     status.style.color = '#ffeb3b';
-    // Lock remaining attempts for this hour (can't retry after a win)
     const now = Date.now();
     const maxAttempts = 3 + templeExtraAttempts();
     while (S.games['flappy'].length < maxAttempts) S.games['flappy'].push(now);
     save();
     updateBtn();
-    // Activate buff: frenzy + auto-clicks
+    
+    enterFrenzyCurrentMult = mult;
     enterPowerUntil = now + templeEnterDuration();
     enterFrenzyUntil = now + templeFrenzyDuration();
     celebrate();
-    toast('⌨️', 'POUVOIR ACTIVÉ', 'Maintenez ENTRÉE ! Frénésie ×200 pendant 30s !');
+    toast('⌨️', 'POUVOIR ACTIVÉ', `Maintenez ENTRÉE ! Frénésie ×${mult} pendant 30s !`);
   }
 }
 initFlappy();
