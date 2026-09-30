@@ -24,6 +24,7 @@ const BUILDINGS = [
   { id: 'chancery',    name: 'Chancellerie',     plural: 'Chancelleries',     icon: '🏰', base: 2e15,   cps: 3e9,    desc: 'Dicte les lois de la consommation de cookies.' },
   { id: 'fractal',     name: 'Moteur Fractal',   plural: 'Moteurs Fractals',  icon: '🌌', base: 3e16,   cps: 2e10,   desc: 'Génère des cookies à partir de sous-cookies infinis.' },
   { id: 'javascript',  name: 'TOURELLE MAX',       plural: 'TOURELLES MAX',       icon: '🔫', base: 4e17,   cps: 1.5e11, desc: 'Code des cookies directement dans la matrice.' },
+  { id: 'lmk',         name: 'LMK le boss',      plural: 'LMK les boss',        icon: '<img src="lmk.png" style="width: 1em; height: 1em; object-fit: cover; border-radius: 50%; vertical-align: bottom;">', base: 5e18, cps: 1.2e12, desc: 'Dirige les opérations d\'une main de fer.' },
 ];
 
 /* --- Événements : 3 par bâtiment, débloqués à 5, 25 et 75 exemplaires --- */
@@ -44,6 +45,7 @@ const EVENT_NAMES = {
   chancery:    ['Décret royal', 'Loi martiale sucrée', 'Constitution du Cookie'],
   fractal:     ['Mise en abyme', 'Récursivité infinie', 'Équation parfaite'],
   javascript:  ['Console.log(cookie)', 'Boucle infinie', 'Hack de la matrice'],
+  lmk:         ['Réunion de direction', 'Restructuration', 'OPA Hostile'],
 };
 const EV_NEED = [5, 25, 75];      // exemplaires nécessaires
 const EV_COUNT = [8, 12, 16];     // bâtiments qui défilent
