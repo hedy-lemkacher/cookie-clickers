@@ -4046,12 +4046,17 @@ function showGachaWinModal(result, isNew) {
   celebrate();
 }
 
-function gachaCost() {
+function gachaCost(count = 1) {
   const pulls = (S.compData && S.compData.pulls) || 0;
-  return Math.max(1e6, cps() * 1800) * Math.pow(1.08, pulls);
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    total += Math.max(1e5, cps() * 400) * Math.pow(1.025, pulls + i);
+  }
+  if (count >= 10) total *= 0.9;
+  return Math.ceil(total);
 }
 
-/* Machine à sous / Roulette ultra-fluide et sans bug */
+/* Machine à sous / Roulette ultra-fluide avec Tirage x1 et Tirage x10 */
 let isGachaSpinning = false;
 
 function buildInitialReelHtml() {
@@ -4063,124 +4068,211 @@ function buildInitialReelHtml() {
   return h;
 }
 
-function spinGacha() {
+function showGachaMultiWinModal(results) {
+  current = { ended: true, api: { frac: 0 } };
+  mInfo.textContent = '';
+  
+  const newCount = results.filter(r => r.isNew).length;
+  const shardCount = results.length - newCount;
+  const hasMythicOrLegendary = results.some(r => r.comp.rarity === 'mythique' || r.comp.rarity === 'legendaire');
+  
+  let gridHtml = '<div class="gacha-multi-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; max-height:420px; overflow-y:auto; padding:10px 4px; margin:14px 0;">';
+  
+  for (let r of results) {
+    const c = r.comp;
+    const val = Math.round(companionVal(c.id) * 100);
+    const friendClass = (c.isFriend && c.img) ? 'is-friend' : '';
+    const rarityInfo = RARITIES[c.rarity] || { name: c.rarity, color: '#bdc3c7' };
+    
+    gridHtml += `
+      <div class="gacha-multi-card rarity-${c.rarity} ${friendClass}" style="background:rgba(20,20,30,0.85); border:2px solid ${rarityInfo.color}; border-radius:12px; padding:10px 6px; text-align:center; position:relative; box-shadow:0 4px 10px rgba(0,0,0,0.4); display:flex; flex-direction:column; align-items:center; justify-content:space-between;">
+        ${r.isNew ? '<span style="position:absolute; top:-7px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.5); z-index:2; white-space:nowrap;">NOUVEAU</span>' : '<span style="position:absolute; top:-7px; left:50%; transform:translateX(-50%); background:#3498db; color:white; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.5); z-index:2; white-space:nowrap;">+1 ÉCLAT</span>'}
+        <div style="width:52px; height:52px; margin:6px auto 4px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+          ${renderCompanionVisual(c, 52)}
+        </div>
+        <div style="font-weight:bold; font-size:11px; color:#fff; margin:2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${c.name}">${c.name}</div>
+        <div style="font-size:10px; color:${rarityInfo.color}; font-weight:bold;">${rarityInfo.name}</div>
+        <div style="font-size:9.5px; color:#a4b0be; margin-top:3px; line-height:1.2;">+${val}%</div>
+      </div>
+    `;
+  }
+  gridHtml += '</div>';
+  
+  mBody.innerHTML = `
+    <div style="padding:10px 12px; text-align:center;">
+      <h2 style="margin:0 0 5px; font-size:22px; color:#f1c40f;">🎰 Tirage x10 - Résultats !</h2>
+      <p style="font-size:13px; color:#dfe4ea; margin:0 0 10px;">
+        🎉 <b>${newCount}</b> nouveau(x) compagnon(s) · 💎 <b>${shardCount}</b> éclat(s) de doublon(s)
+      </p>
+      
+      ${gridHtml}
+      
+      <div style="display:flex; justify-content:center; gap:12px; margin-top:15px; flex-wrap:wrap;">
+        <button class="big-btn" onclick="closeModal()" style="min-width:140px; font-size:14px; padding:10px 18px;">
+          ✓ Super !
+        </button>
+        <button class="big-btn" id="btnMultiSpinAgain" ${S.cookies < gachaCost(10) ? 'disabled' : ''} onclick="closeModal(); spinGacha(10);" style="min-width:180px; font-size:14px; padding:10px 18px; background:linear-gradient(135deg, #e67e22, #f39c12);">
+          ✨ Retirer x10 ( ${fmt(gachaCost(10))} 🍪 )
+        </button>
+      </div>
+    </div>
+  `;
+  
+  modal.classList.add('on');
+  if (hasMythicOrLegendary || newCount > 0) celebrate();
+}
+
+function spinGacha(count = 1) {
   if (isGachaSpinning) return;
-  const cost = gachaCost();
+  count = count === 10 ? 10 : 1;
+  const cost = gachaCost(count);
   if (S.cookies < cost) {
-    toast('❌', 'Fonds insuffisants', 'Il vous faut ' + fmt(cost) + ' cookies pour un tirage.');
+    toast('❌', 'Fonds insuffisants', 'Il vous faut ' + fmt(cost) + ' cookies pour ' + (count > 1 ? count + ' tirages.' : 'un tirage.'));
     return;
   }
   
   const reel = document.getElementById('gachaReel');
   const container = document.querySelector('.gacha-reel-container');
-  const btn = document.getElementById('btnSpinGacha');
+  const btn1 = document.getElementById('btnSpinGacha');
+  const btn10 = document.getElementById('btnSpinGacha10');
   
   if (!reel || !container) return;
   
   S.cookies -= cost;
   if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
-  S.compData.pulls = (S.compData.pulls || 0) + 1;
-  S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
   
   isGachaSpinning = true;
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = '🎰 Tirage en cours...';
-  }
+  if (btn1) { btn1.disabled = true; btn1.textContent = '🎰 Tirage...'; }
+  if (btn10) { btn10.disabled = true; btn10.textContent = '✨ Tirage...'; }
   
-  // Calcul du résultat avec probabilités & pity
-  let rVal = Math.random() * 100;
-  let rarity = 'commun';
-  
-  if (S.compData.pityTracker >= 20) {
-    S.compData.pityTracker = 0;
-    const highRoll = Math.random() * 10;
-    if (highRoll < 8.0) rarity = 'epique';
-    else if (highRoll < 9.8) rarity = 'legendaire';
-    else rarity = 'mythique';
-  } else {
-    let acc = 0;
-    for (let k in RARITIES) {
-      acc += RARITIES[k].prob;
-      if (rVal <= acc) { rarity = k; break; }
-    }
-  }
-  
-  const possible = COMPANIONS.filter(c => c.rarity === rarity);
-  const result = possible[Math.floor(Math.random() * possible.length)] || COMPANIONS[0];
-  
-  // Construction des 50 éléments de la roulette
-  const totalItems = 50;
-  const targetIndex = 38; // Le gagnant est placé au 38ème slot
-  let reelHtml = '';
-  
-  for (let i = 0; i < totalItems; i++) {
-    const itemComp = (i === targetIndex) ? result : COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
-    reelHtml += `
-      <div class="gacha-item rarity-${itemComp.rarity}" data-idx="${i}">
-        ${renderCompanionVisual(itemComp, 70)}
-      </div>
-    `;
-  }
-  reel.innerHTML = reelHtml;
-  
-  // Mesures et calcul du centrage exact sous la flèche
-  const itemStep = 92; // 80px + 12px margins
-  const containerWidth = container.clientWidth || 500;
-  const targetOffset = (targetIndex * itemStep) + (itemStep / 2) - (containerWidth / 2);
-  
-  // Réinitialisation instantanée à 0
-  reel.style.transition = 'none';
-  reel.style.transform = 'translateX(0px)';
-  void reel.offsetWidth; // Forcer le reflow du navigateur
-  
-  // Démarrage fluide du défilement
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      reel.style.transition = 'transform 4.5s cubic-bezier(0.08, 0.82, 0.17, 1)';
-      reel.style.transform = `translateX(-${targetOffset}px)`;
-    }, 30);
-  });
-  
-  // Fin de la rotation
-  setTimeout(() => {
-    isGachaSpinning = false;
-    let isNew = false;
+  function rollOneCompanion() {
+    S.compData.pulls = (S.compData.pulls || 0) + 1;
+    S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
     
-    // Allumer la carte gagnante
-    const winnerEl = reel.querySelector(`[data-idx="${targetIndex}"]`);
-    if (winnerEl) winnerEl.classList.add('is-winner');
+    let rVal = Math.random() * 100;
+    let rarity = 'commun';
     
-    if (!S.compData.unlocked.includes(result.id)) {
-      isNew = true;
-      S.compData.unlocked.push(result.id);
-      S.compData.levels[result.id] = 1;
-      toast('🎉', 'Nouveau Compagnon !', `${result.name} (${RARITIES[result.rarity].name}) a rejoint votre équipe !`);
+    if (S.compData.pityTracker >= 20) {
+      S.compData.pityTracker = 0;
+      const highRoll = Math.random() * 10;
+      if (highRoll < 8.0) rarity = 'epique';
+      else if (highRoll < 9.8) rarity = 'legendaire';
+      else rarity = 'mythique';
     } else {
-      S.compData.shards[result.id] = (S.compData.shards[result.id] || 0) + 1;
-      toast('✨', 'Doublon obtenu !', `+1 Éclat pour ${result.name}`);
+      let acc = 0;
+      for (let k in RARITIES) {
+        acc += RARITIES[k].prob;
+        if (rVal <= acc) { rarity = k; break; }
+      }
     }
     
-    save();
-    recalc();
-    renderCompanions();
+    const possible = COMPANIONS.filter(c => c.rarity === rarity);
+    const chosen = possible[Math.floor(Math.random() * possible.length)] || COMPANIONS[0];
     
-    // Mettre à jour les informations du bouton et pity sans détruire la roulette
-    if (btn) {
-      btn.disabled = S.cookies < gachaCost();
-      btn.innerHTML = `🎰 Tirer ( ${fmt(gachaCost())} 🍪 )`;
+    let isNew = false;
+    if (!S.compData.unlocked.includes(chosen.id)) {
+      isNew = true;
+      S.compData.unlocked.push(chosen.id);
+      S.compData.levels[chosen.id] = 1;
+    } else {
+      S.compData.shards[chosen.id] = (S.compData.shards[chosen.id] || 0) + 1;
     }
-    const pityBadge = document.getElementById('gachaPityBadge');
-    if (pityBadge) {
-      const pityLeft = Math.max(0, 20 - (S.compData.pityTracker || 0));
-      pityBadge.innerHTML = `🛡️ Garantie Épique+ dans : <b>${pityLeft}</b> tirage${pityLeft > 1 ? 's' : ''}`;
-    }
+    return { comp: chosen, isNew };
+  }
+  
+  if (count === 1) {
+    const res = rollOneCompanion();
+    const result = res.comp;
+    const isNew = res.isNew;
     
-    // Ouvrir le grand pop-up modal
+    // Construction des 50 éléments de la roulette
+    const totalItems = 50;
+    const targetIndex = 38;
+    let reelHtml = '';
+    
+    for (let i = 0; i < totalItems; i++) {
+      const itemComp = (i === targetIndex) ? result : COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+      reelHtml += `
+        <div class="gacha-item rarity-${itemComp.rarity}" data-idx="${i}">
+          ${renderCompanionVisual(itemComp, 70)}
+        </div>
+      `;
+    }
+    reel.innerHTML = reelHtml;
+    
+    const itemStep = 92;
+    const containerWidth = container.clientWidth || 500;
+    const targetOffset = (targetIndex * itemStep) + (itemStep / 2) - (containerWidth / 2);
+    
+    reel.style.transition = 'none';
+    reel.style.transform = 'translateX(0px)';
+    void reel.offsetWidth;
+    
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        reel.style.transition = 'transform 4.5s cubic-bezier(0.08, 0.82, 0.17, 1)';
+        reel.style.transform = `translateX(-${targetOffset}px)`;
+      }, 30);
+    });
+    
     setTimeout(() => {
-      showGachaWinModal(result, isNew);
-    }, 200);
-  }, 4600);
+      isGachaSpinning = false;
+      const winnerEl = reel.querySelector(`[data-idx="${targetIndex}"]`);
+      if (winnerEl) winnerEl.classList.add('is-winner');
+      
+      if (isNew) {
+        toast('🎉', 'Nouveau Compagnon !', `${result.name} (${RARITIES[result.rarity].name}) a rejoint votre équipe !`);
+      } else {
+        toast('✨', 'Doublon obtenu !', `+1 Éclat pour ${result.name}`);
+      }
+      
+      save();
+      recalc();
+      renderCompanions();
+      renderGachaPane();
+      
+      setTimeout(() => {
+        showGachaWinModal(result, isNew);
+      }, 200);
+    }, 4600);
+  } else {
+    // Tirage x10
+    const results = [];
+    for (let i = 0; i < 10; i++) {
+      results.push(rollOneCompanion());
+    }
+    
+    const totalItems = 40;
+    let reelHtml = '';
+    for (let i = 0; i < totalItems; i++) {
+      const itemComp = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+      reelHtml += `
+        <div class="gacha-item rarity-${itemComp.rarity}">
+          ${renderCompanionVisual(itemComp, 70)}
+        </div>
+      `;
+    }
+    reel.innerHTML = reelHtml;
+    reel.style.transition = 'none';
+    reel.style.transform = 'translateX(0px)';
+    void reel.offsetWidth;
+    
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        reel.style.transition = 'transform 2.2s cubic-bezier(0.12, 0.8, 0.25, 1)';
+        reel.style.transform = `translateX(-${totalItems * 60}px)`;
+      }, 30);
+    });
+    
+    setTimeout(() => {
+      isGachaSpinning = false;
+      save();
+      recalc();
+      renderCompanions();
+      renderGachaPane();
+      showGachaMultiWinModal(results);
+    }, 2300);
+  }
 }
 window.spinGacha = spinGacha;
 
@@ -4305,9 +4397,14 @@ function renderGachaPane() {
           ${buildInitialReelHtml()}
         </div>
       </div>
-      <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost() ? 'disabled' : ''} style="min-width:240px; font-size:16px;">
-        ${isGachaSpinning ? 'Tirage en cours...' : `🎰 Tirer ( ${fmt(gachaCost())} 🍪 )`}
-      </button>
+      <div class="gacha-actions-row" style="display:flex; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap;">
+        <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost(1) ? 'disabled' : ''} style="min-width:180px; font-size:15px; padding:12px 18px;">
+          ${isGachaSpinning ? 'Tirage en cours...' : `🎰 Tirer x1 ( ${fmt(gachaCost(1))} 🍪 )`}
+        </button>
+        <button class="big-btn" id="btnSpinGacha10" ${isGachaSpinning || S.cookies < gachaCost(10) ? 'disabled' : ''} style="min-width:210px; font-size:15px; padding:12px 18px; background:linear-gradient(135deg, #e67e22, #f39c12); box-shadow:0 4px 15px rgba(243,156,18,0.4);">
+          ${isGachaSpinning ? 'Tirage en cours...' : `✨ Tirer x10 ( ${fmt(gachaCost(10))} 🍪 )`}
+        </button>
+      </div>
       <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <b style="color:#a4b0be;">Taux :</b>
         <span style="color:#bdc3c7;">Commun (52%)</span> ·
@@ -4470,8 +4567,10 @@ function renderGachaPane() {
   html += `</div>`;
   pane.innerHTML = html;
   
-  const btn = document.getElementById('btnSpinGacha');
-  if (btn) btn.addEventListener('click', spinGacha);
+  const btn1 = document.getElementById('btnSpinGacha');
+  if (btn1) btn1.addEventListener('click', () => spinGacha(1));
+  const btn10 = document.getElementById('btnSpinGacha10');
+  if (btn10) btn10.addEventListener('click', () => spinGacha(10));
 }
 
 window.filterGachaRarity = function(r) {
