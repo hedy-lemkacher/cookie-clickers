@@ -2850,6 +2850,7 @@ function refreshPane() {
   if (currentTab === 'play') updatePlayPane();
   if (currentTab === 'casino') { if (!casinoBuilt) renderCasinoPane(); else updateCasinoLimit(); }
   if (currentTab === 'ach') renderAchPane();
+  if (currentTab === 'gacha') renderGachaPane();
   if (currentTab === 'showcase') refreshShowcase();
 }
 function updateDots() {
