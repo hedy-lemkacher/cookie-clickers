@@ -4045,46 +4045,55 @@ function spinGacha() {
 
 /* Système d'équipement 2 slots intuitif */
 function equipCompanionSlot(id, slotIndex) {
-  if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {} };
-  if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [];
+  slotIndex = parseInt(slotIndex, 10);
+  if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [null, null];
   
-  // Si déjà équipé dans ce slot -> on le retire
+  while (S.compData.equipped.length < 2) S.compData.equipped.push(null);
+  
+  const otherSlot = (slotIndex === 0) ? 1 : 0;
+  
   if (S.compData.equipped[slotIndex] === id) {
+    // Si déjà équipé sur ce slot -> déséquiper
     S.compData.equipped[slotIndex] = null;
+    toast('🛡️', 'Compagnon retiré', 'Emplacement libéré.');
   } else {
-    // Si déjà dans l'autre slot, on le déplace
-    const otherSlot = slotIndex === 0 ? 1 : 0;
+    // Si le compagnon était dans l'autre slot, le déplacer
     if (S.compData.equipped[otherSlot] === id) {
       S.compData.equipped[otherSlot] = null;
     }
     S.compData.equipped[slotIndex] = id;
+    const c = COMPANIONS.find(x => x.id === id);
+    const name = c ? c.name : id;
+    const slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : 'Slot Droite (2)';
+    toast('🛡️', 'Compagnon équipé !', `${name} placé au ${slotTxt}.`);
   }
   
-  // Garder les 2 slots
-  const s0 = S.compData.equipped[0] || null;
-  const s1 = S.compData.equipped[1] || null;
-  S.compData.equipped = [s0, s1];
-  
-  renderEquippedCompanions();
-  renderCompanions();
-  renderGachaPane();
   save();
   recalc();
+  renderCompanions();
+  renderGachaPane();
 }
+window.equipCompanionSlot = equipCompanionSlot;
 
 function unequipCompanionSlot(slotIndex) {
+  slotIndex = parseInt(slotIndex, 10);
   if (!S.compData || !S.compData.equipped) return;
-  S.compData.equipped[slotIndex] = null;
-  renderEquippedCompanions();
-  renderCompanions();
-  renderGachaPane();
+  if (Array.isArray(S.compData.equipped) && S.compData.equipped.length > slotIndex) {
+    S.compData.equipped[slotIndex] = null;
+  }
+  toast('🛡️', 'Compagnon retiré', 'Emplacement libéré.');
   save();
   recalc();
+  renderCompanions();
+  renderGachaPane();
 }
+window.unequipCompanionSlot = unequipCompanionSlot;
 
 function renderEquippedCompanions() {
   renderCompanions();
 }
+window.renderEquippedCompanions = renderEquippedCompanions;
 
 function upgradeCompanion(id) {
   if (!S.compData) return;
@@ -4099,13 +4108,14 @@ function upgradeCompanion(id) {
     toast('⚡', 'Niveau Supérieur !', `${c.name} passe au niveau ${S.compData.levels[id]} !`);
     celebrate();
     save();
-    renderGachaPane();
-    renderCompanions();
     recalc();
+    renderCompanions();
+    renderGachaPane();
   } else {
     toast('ℹ️', 'Éclats insuffisants', `Il vous faut ${cost} éclat(s) pour améliorer ce compagnon.`);
   }
 }
+window.upgradeCompanion = upgradeCompanion;
 
 let currentRarityFilter = 'all';
 

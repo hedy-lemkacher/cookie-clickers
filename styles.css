@@ -1437,14 +1437,16 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   gap: 28px;
   margin-top: 10px;
   margin-bottom: 15px;
-  z-index: 10;
+  z-index: 100;
   position: relative;
+  pointer-events: auto !important;
 }
 .active-comp-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
+  cursor: pointer !important;
+  pointer-events: auto !important;
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .active-comp-wrapper:hover {
