@@ -1321,7 +1321,7 @@ function updateFrenzy(now) {
    COOKIE DORÉ
    ===================================================================== */
 const golden = $('#golden');
-const goldenDelay = () => rand(150, 400) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) * 1000;
+const goldenDelay = () => rand(300, 900) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) * 1000;
 let goldenNext = Date.now() + rand(30, 90) * 1000, goldenEnd = 0;
 let activeGoldenCookies = [];
 
@@ -2513,6 +2513,7 @@ function renderAchPane() {
       ? '<p>Une ascension maintenant vous rapporterait <b>' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g * 2 + ' %).</p>'
       : '<p>Prochaine pépite quand vous aurez cuit <b>' + fmt(Math.pow(pot + 1, 3) * 1e12) + '</b> cookies au total.</p>');
   $('#ascBtn').disabled = g < 1;
+  if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
 }
 $('#ascBtn').addEventListener('click', () => {
   const g = chipsPotential() - S.chips;
@@ -3323,6 +3324,28 @@ function initTemple() {
   }, 5000);
 }
 initTemple();
+
+// Temple Tabs logic
+const tabTempleUps = document.getElementById('tabTempleUps');
+const tabTempleAsc = document.getElementById('tabTempleAsc');
+const templeTabUps = document.getElementById('templeTabUps');
+const templeTabAsc = document.getElementById('templeTabAsc');
+
+if (tabTempleUps && tabTempleAsc) {
+  tabTempleUps.addEventListener('click', () => {
+    templeTabUps.style.display = 'block';
+    templeTabAsc.style.display = 'none';
+    tabTempleUps.style.filter = 'brightness(1.2)';
+    tabTempleAsc.style.filter = 'brightness(0.8)';
+  });
+  tabTempleAsc.addEventListener('click', () => {
+    templeTabUps.style.display = 'none';
+    templeTabAsc.style.display = 'block';
+    tabTempleUps.style.filter = 'brightness(0.8)';
+    tabTempleAsc.style.filter = 'brightness(1.2)';
+    document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
+  });
+}
 
 // CELESTIAL GAMES LOGIC
 
