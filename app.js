@@ -1602,6 +1602,13 @@ function updatePlayPane() {
   const ALL_GAMES = [...GAMES, ...CELESTIAL_GAMES];
   for (const g of ALL_GAMES) {
     const btn = document.querySelector('[data-play="' + g.id + '"]');
+    const isCelestial = g.id.startsWith('celestial');
+    const hasBought = isCelestial ? (S.temple && S.temple.includes(g.id)) || window.__adminMode : true;
+    const card = btn ? btn.closest('.game-card') : null;
+    if (isCelestial && card) {
+      card.style.display = hasBought ? 'block' : 'none';
+      if (!hasBought) continue;
+    }
     const unlocked = !g.req || S.baked >= g.req;
     if (!unlocked) {
       btn.disabled = true;
