@@ -3938,8 +3938,17 @@ function gachaCost() {
   return Math.max(1e6, cps() * 1800) * Math.pow(1.08, pulls);
 }
 
-/* Machine à sous / Roulette sans bug de défilement */
+/* Machine à sous / Roulette ultra-fluide et sans bug */
 let isGachaSpinning = false;
+
+function buildInitialReelHtml() {
+  let h = '';
+  for (let i = 0; i < 20; i++) {
+    const c = COMPANIONS[i % COMPANIONS.length];
+    h += `<div class="gacha-item rarity-${c.rarity}">${renderCompanionVisual(c, 70)}</div>`;
+  }
+  return h;
+}
 
 function spinGacha() {
   if (isGachaSpinning) return;
@@ -3949,29 +3958,29 @@ function spinGacha() {
     return;
   }
   
+  const reel = document.getElementById('gachaReel');
+  const container = document.querySelector('.gacha-reel-container');
+  const btn = document.getElementById('btnSpinGacha');
+  
+  if (!reel || !container) return;
+  
   S.cookies -= cost;
   if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   S.compData.pulls = (S.compData.pulls || 0) + 1;
   S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
   
   isGachaSpinning = true;
-  renderGachaPane();
-  
-  const reel = document.getElementById('gachaReel');
-  const container = document.querySelector('.gacha-reel-container');
-  if (!reel || !container) {
-    isGachaSpinning = false;
-    return;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '🎰 Tirage en cours...';
   }
   
-  // Calcul du résultat
+  // Calcul du résultat avec probabilités & pity
   let rVal = Math.random() * 100;
   let rarity = 'commun';
-  let pityActive = false;
   
   if (S.compData.pityTracker >= 20) {
     S.compData.pityTracker = 0;
-    pityActive = true;
     const highRoll = Math.random() * 10;
     if (highRoll < 8.0) rarity = 'epique';
     else if (highRoll < 9.8) rarity = 'legendaire';
@@ -3987,9 +3996,9 @@ function spinGacha() {
   const possible = COMPANIONS.filter(c => c.rarity === rarity);
   const result = possible[Math.floor(Math.random() * possible.length)] || COMPANIONS[0];
   
-  // Construction des 45 éléments de la roulette
-  const totalItems = 45;
-  const targetIndex = 35; // L'élément gagnant s'arrêtera exactement ici
+  // Construction des 50 éléments de la roulette
+  const totalItems = 50;
+  const targetIndex = 38; // Le gagnant est placé au 38ème slot
   let reelHtml = '';
   
   for (let i = 0; i < totalItems; i++) {
@@ -4002,27 +4011,32 @@ function spinGacha() {
   }
   reel.innerHTML = reelHtml;
   
-  // Calcul exact du défilement centré sous le pointeur
-  const itemWidth = 96; // 84px + 12px margin
+  // Mesures et calcul du centrage exact sous la flèche
+  const itemStep = 92; // 80px + 12px margins
   const containerWidth = container.clientWidth || 500;
-  const finalOffset = (targetIndex * itemWidth) + (itemWidth / 2) - (containerWidth / 2);
+  const targetOffset = (targetIndex * itemStep) + (itemStep / 2) - (containerWidth / 2);
   
-  // Réinitialisation instantanée
+  // Réinitialisation instantanée à 0
   reel.style.transition = 'none';
   reel.style.transform = 'translateX(0px)';
+  void reel.offsetWidth; // Forcer le reflow du navigateur
   
-  // Lancement fluide de la rotation
+  // Démarrage fluide du défilement
   requestAnimationFrame(() => {
     setTimeout(() => {
-      reel.style.transition = 'transform 4.3s cubic-bezier(0.12, 0.85, 0.15, 1)';
-      reel.style.transform = `translateX(-${finalOffset}px)`;
-    }, 40);
+      reel.style.transition = 'transform 4.5s cubic-bezier(0.08, 0.82, 0.17, 1)';
+      reel.style.transform = `translateX(-${targetOffset}px)`;
+    }, 30);
   });
   
-  // Résolution à l'arrêt
+  // Fin de la rotation
   setTimeout(() => {
     isGachaSpinning = false;
     let isNew = false;
+    
+    // Allumer la carte gagnante
+    const winnerEl = reel.querySelector(`[data-idx="${targetIndex}"]`);
+    if (winnerEl) winnerEl.classList.add('is-winner');
     
     if (!S.compData.unlocked.includes(result.id)) {
       isNew = true;
@@ -4035,14 +4049,27 @@ function spinGacha() {
     }
     
     save();
-    renderGachaPane();
-    renderCompanions();
     recalc();
+    renderCompanions();
     
-    // Affichage du grand pop-up modal
-    showGachaWinModal(result, isNew);
-  }, 4500);
+    // Mettre à jour les informations du bouton et pity sans détruire la roulette
+    if (btn) {
+      btn.disabled = S.cookies < gachaCost();
+      btn.innerHTML = `🎰 Tirer ( ${fmt(gachaCost())} 🍪 )`;
+    }
+    const pityBadge = document.getElementById('gachaPityBadge');
+    if (pityBadge) {
+      const pityLeft = Math.max(0, 20 - (S.compData.pityTracker || 0));
+      pityBadge.innerHTML = `🛡️ Garantie Épique+ dans : <b>${pityLeft}</b> tirage${pityLeft > 1 ? 's' : ''}`;
+    }
+    
+    // Ouvrir le grand pop-up modal
+    setTimeout(() => {
+      showGachaWinModal(result, isNew);
+    }, 200);
+  }, 4600);
 }
+window.spinGacha = spinGacha;
 
 /* Système d'équipement 2 slots intuitif */
 function equipCompanionSlot(id, slotIndex) {
@@ -4162,9 +4189,7 @@ function renderGachaPane() {
       <div class="gacha-reel-container">
         <div class="gacha-pointer-center"></div>
         <div class="gacha-reel" id="gachaReel">
-          <div style="padding:0 20px; color:#747d8c; font-style:italic; font-size:14px; display:flex; align-items:center; height:100%;">
-            Prêt pour le tirage ! Cliquez ci-dessous pour lancer la machine...
-          </div>
+          ${buildInitialReelHtml()}
         </div>
       </div>
       <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost() ? 'disabled' : ''} style="min-width:240px; font-size:16px;">
@@ -4351,18 +4376,18 @@ window.showGachaInfo = function() {
       
       <h4 style="margin-top:15px; color:#3498db; border-bottom:1px solid #444; padding-bottom:5px;">📊 Les 6 Niveaux de Rareté</h4>
       <p style="font-size:13px; line-height:1.5;">
-        <span style="color:#bdc3c7; font-weight:bold;">Commun</span> (50%)<br>
-        <span style="color:#2ecc71; font-weight:bold;">Peu commun</span> (25%)<br>
-        <span style="color:#3498db; font-weight:bold;">Rare</span> (15%)<br>
-        <span style="color:#9b59b6; font-weight:bold;">Épique</span> (7%)<br>
-        <span style="color:#f1c40f; font-weight:bold;">Légendaire</span> (2.5%) — Contour doré éclatant ✨<br>
-        <span style="color:#ff4757; font-weight:bold;">Mythique</span> (0.5%) — Contour RGB arc-en-ciel animé 🌈
+        <span style="color:#bdc3c7; font-weight:bold;">Commun</span> (52%)<br>
+        <span style="color:#2ecc71; font-weight:bold;">Peu commun</span> (26%)<br>
+        <span style="color:#3498db; font-weight:bold;">Rare</span> (14%)<br>
+        <span style="color:#9b59b6; font-weight:bold;">Épique</span> (6.2%)<br>
+        <span style="color:#f1c40f; font-weight:bold;">Légendaire</span> (1.7%) — Contour doré éclatant ✨<br>
+        <span style="color:#ff4757; font-weight:bold;">Mythique</span> (0.1%) — Contour RGB arc-en-ciel animé 🌟
       </p>
       
       <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Sélection & Équipement Duo (2 Slots)</h4>
       <p style="font-size:13px; line-height:1.5;">
-        Vous disposez de <b>2 emplacements actifs</b> : <b>Slot Gauche</b> et <b>Slot Droite</b>.<br>
-        Cliquez sur <b>[🛡️ Slot G]</b> ou <b>[⚔️ Slot D]</b> sur n'importe quel compagnon débloqué pour l'équiper instantanément. Vos compagnons actifs apparaissent sous votre gros Cookie !
+        Vous disposez de <b>2 emplacements actifs</b> : <b>Slot Gauche (1)</b> et <b>Slot Droite (2)</b>.<br>
+        Cliquez sur <b>[🛡️ Slot G]</b> ou <b>[⚔️ Slot D]</b> sur n'importe quel compagnon débloqué, ou cliquez directement sur les slots <b>[+]</b> sous le cookie principal !
       </p>
       
       <h4 style="margin-top:15px; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px;">✨ Doublons et Montée en Niveau</h4>

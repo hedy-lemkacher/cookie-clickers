@@ -1154,11 +1154,12 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   flex-direction: row;
   align-items: center;
   height: 100%;
+  width: max-content;
   will-change: transform;
 }
 .gacha-item {
-  width: 84px;
-  height: 84px;
+  width: 80px;
+  height: 80px;
   margin: 0 6px;
   flex-shrink: 0;
   background: #1e272e;
@@ -1170,6 +1171,13 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   padding: 6px;
   box-sizing: border-box;
   overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.gacha-item.is-winner {
+  transform: scale(1.12);
+  box-shadow: 0 0 25px #ffd700, inset 0 0 10px #ffd700;
+  border-color: #ffd700 !important;
+  z-index: 3;
 }
 
 /* Panneau Duo Actif (2 slots bien clairs) */
