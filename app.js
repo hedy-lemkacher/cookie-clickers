@@ -466,22 +466,24 @@ function renderCasinoPane() {
     const max = gameMax();
     const SEG = [
   { death: true },
-  { life: true },
+  { cpsNeg: true },
   { halfBank: true },
-  { clickFz: true },
   { bank15: true },
+  { life: true },
   { cps1h: true },
-  { cpsNeg: true }
+  { clickFz: true },
+  { cps1h: true }
 ];
-    const COLORS = ['#000000', '#ff00ff', '#8a4c1c', '#ffd166', '#d9954a', '#a5602a', '#7a3e1d'];
+    const COLORS = ['#000000', '#7a3e1d', '#8a4c1c', '#d9954a', '#ff00ff', '#a5602a', '#ffd166', '#a5602a'];
     const now = Date.now();
     if (!S.casino.wheelNext) S.casino.wheelNext = 0;
-    const isReady = now >= S.casino.wheelNext || casinoUnlimited();
+    const isFrenzyActive = now < S.fz.until || now < clickFrenzyUntil;
+    const isReady = (now >= S.casino.wheelNext || casinoUnlimited()) && !isFrenzyActive;
     
     box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 30 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
       '<div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
       '<p class="casino-result" id="wheelResult">' + (isReady ? 'La roue est prête à tourner !' : 'Revenez plus tard...') + '</p>' +
-      '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>Tourner la roue !</button></div></div>';
+      '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>' + (isFrenzyActive ? 'Frénésie en cours...' : 'Tourner la roue !') + '</button></div></div>';
       
     const cv = box.querySelector('canvas'), g = cv.getContext('2d');
     const btn = box.querySelector('.w-btn');
@@ -533,7 +535,8 @@ function renderCasinoPane() {
     draw(0);
     
     btn.addEventListener('click', () => {
-      if (!isReady) return;
+      const isFrenzyActive = Date.now() < S.fz.until || Date.now() < clickFrenzyUntil;
+      if (!isReady || isFrenzyActive) return;
       btn.disabled = true;
       S.casino.wheelNext = Date.now() + 30 * 60 * 1000;
       save();
@@ -548,6 +551,7 @@ function renderCasinoPane() {
         if (k < 1) { casinoWheelRaf = requestAnimationFrame(frame); return; }
         
         // resolve
+        let gainVal = 0, lossVal = 0;
         if (s.death) {
           for (const b of BUILDINGS) {
             if (S.owned[b.id] > 0) {
@@ -555,6 +559,7 @@ function renderCasinoPane() {
             }
           }
           recalc();
+          toast('☠️', 'La Mort qui Tue', 'Vous avez perdu la moitié de vos bâtiments !');
         }
         if (s.life) {
           const ownedBlds = BUILDINGS.filter(b => S.owned[b.id] > 0);
@@ -563,25 +568,41 @@ function renderCasinoPane() {
             S.owned[b.id] *= 2;
           }
           recalc();
+          toast('🌈', 'La Vie qui Vie', 'Vos deux derniers bâtiments ont doublé !');
         }
         if (s.halfBank) {
-          S.cookies = Math.floor(S.cookies / 2);
+          lossVal = Math.floor(S.cookies / 2);
+          S.cookies -= lossVal;
+          toast('📉', 'Banqueroute', 'Vous avez perdu ' + fmt(lossVal) + ' cookies.');
         }
         if (s.clickFz) {
           clickFrenzyMult = 500;
           clickFrenzyUntil = Date.now() + 5000;
+          toast('👆', 'Clic Divin', 'Clics x500 pendant 5s !');
         }
         if (s.bank15) {
-          gain(Math.floor(S.cookies * 0.5));
+          gainVal = Math.floor(S.cookies * 0.5);
+          gain(gainVal);
+          toast('💰', 'Jackpot', 'Vous gagnez ' + fmt(gainVal) + ' cookies !');
         }
         if (s.cps1h) {
-          gain(steadyCps() * 3600);
+          gainVal = steadyCps() * 3600;
+          gain(gainVal);
+          toast('🍀', 'Chance', 'Vous gagnez ' + fmt(gainVal) + ' cookies !');
         }
         if (s.cpsNeg) {
-          S.cookies = Math.max(0, S.cookies - steadyCps() * 1800);
+          lossVal = steadyCps() * 1800;
+          if (lossVal > S.cookies) lossVal = S.cookies;
+          S.cookies = Math.max(0, S.cookies - lossVal);
+          toast('💸', 'Perte', 'Vous avez perdu ' + fmt(lossVal) + ' cookies.');
         }
         
-        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE (Banque divisée par 2)' : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT (Banque x1.5)' : s.cps1h ? '🍀 CHANCE (+1h de production)' : s.cpsNeg ? '💸 PERTE (-30m de production)' : '';
+        let msg = '';
+        if (gainVal > 0) msg = '+' + fmt(gainVal) + ' cookies !';
+        else if (lossVal > 0) msg = '-' + fmt(lossVal) + ' cookies...';
+        
+        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE ' + msg : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT ' + msg : s.cps1h ? '🍀 CHANCE ' + msg : s.cpsNeg ? '💸 PERTE ' + msg : '';
+        
         setTimeout(() => renderCasinoPane(), 3000);
       }
       casinoWheelRaf = requestAnimationFrame(frame);
