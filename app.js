@@ -1509,16 +1509,16 @@ function gameReaction(api) {
   }
   maze[1][1] = 'S';
   maze[height - 2][width - 2] = 'E';
-  for(let i=0; i<8; i++) {
-    let tx = Math.floor(Math.random() * (width - 2)) + 1;
-    let ty = Math.floor(Math.random() * (height - 2)) + 1;
-    if (maze[ty][tx] === ' ' && !(tx===1 && ty===1) && !(tx===width-2 && ty===height-2)) maze[ty][tx] = 'T';
+  const shifters = [];
+  for(let y=1; y<height-1; y++) {
+    for(let x=1; x<width-1; x++) {
+      if (maze[y][x] === ' ' && !(x===1 && y===1) && !(x===width-2 && y===height-2) && Math.random() < 0.15) {
+        shifters.push({x, y, solid: false});
+      }
+    }
   }
-  for(let i=0; i<8; i++) {
-    let tx = Math.floor(Math.random() * (width - 2)) + 1;
-    let ty = Math.floor(Math.random() * (height - 2)) + 1;
-    if (maze[ty][tx] === ' ' && !(tx===1 && ty===1) && !(tx===width-2 && ty===height-2)) maze[ty][tx] = 'T';
-  }
+  
+  
   api.body.innerHTML = '<p class="game-hint">Échappez-vous en moins de 18 secondes. Utilisez les flèches, ZQSD ou les boutons tactiles.</p>' +
     '<div class="maze-arena"><div class="maze-grid"></div><div class="maze-controls"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div></div>';
   const grid = api.body.querySelector('.maze-grid');
@@ -1529,9 +1529,9 @@ function gameReaction(api) {
     grid.style.gridTemplateColumns = 'repeat(' + width + ', 1fr)';
     maze.forEach((row, y) => row.forEach((cell, x) => {
       const tile = document.createElement('span');
-      tile.className = 'maze-cell ' + (cell === '#' ? 'wall' : cell === 'E' ? 'exit' : cell === 'T' ? 'trap' : 'path');
+      tile.className = 'maze-cell ' + (cell === '#' ? 'wall' : cell === 'E' ? 'exit' : 'path');
       if (player.x === x && player.y === y) tile.className += ' player';
-      tile.textContent = player.x === x && player.y === y ? '🍪' : cell === 'E' ? '🚪' : cell === 'T' ? '☠️' : '';
+      tile.textContent = player.x === x && player.y === y ? '🍪' : cell === 'E' ? '🚪' : '';
       grid.appendChild(tile);
     }));
   };
@@ -1541,7 +1541,7 @@ function gameReaction(api) {
     const [dx, dy] = deltas[direction];
     const nx = player.x + dx, ny = player.y + dy;
     if (nx < 0 || nx >= width || ny < 0 || ny >= height || !maze[ny] || maze[ny][nx] === '#') return;
-    if (maze[ny][nx] === 'T') { timeLeft = Math.max(0, timeLeft - 3); maze[ny][nx] = ' '; api.info('Piège ! -3s'); }
+    
     player.x = nx; player.y = ny;
     render();
     api.frac = Math.max(0, timeLeft / duration);
@@ -1556,8 +1556,23 @@ function gameReaction(api) {
   api.body.querySelectorAll('[data-dir]').forEach((button) => button.addEventListener('pointerdown', () => move(button.dataset.dir)));
   render();
   api.info('18,0 s');
+  let shiftTimer = 0;
   timer = setInterval(() => {
     timeLeft = Math.max(0, timeLeft - .1);
+    shiftTimer += 0.1;
+    if (shiftTimer >= 2) {
+      shiftTimer = 0;
+      shifters.forEach(s => {
+        s.solid = !s.solid;
+        maze[s.y][s.x] = s.solid ? '#' : ' ';
+        if (s.solid && player.x === s.x && player.y === s.y) {
+          timeLeft = Math.max(0, timeLeft - 3);
+          player.x = 1; player.y = 1;
+          api.info('Écrasé par un mur ! -3s');
+        }
+      });
+      render();
+    }
     api.info(timeLeft.toFixed(1).replace('.', ',') + ' s');
     if (timeLeft <= 0) api.end(0, 'Le temps est écoulé.');
   }, 100);
