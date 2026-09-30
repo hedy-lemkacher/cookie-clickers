@@ -1002,3 +1002,71 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   color: #fff;
   box-shadow: 0 0 15px rgba(76, 161, 175, 0.4);
 }
+
+
+/* --- GACHA & COMPANIONS --- */
+.gacha-header { margin-bottom: 20px; }
+.gacha-machine {
+  background: #2c3e50; padding: 20px; border-radius: 12px; text-align: center;
+  box-shadow: inset 0 0 20px #000; position: relative; margin-bottom: 30px;
+  border: 2px solid #34495e;
+}
+.gacha-reel-container {
+  width: 100%; height: 100px; background: #fff; border-radius: 8px; margin: 0 auto 20px;
+  overflow: hidden; position: relative; box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: flex-start;
+}
+.gacha-reel {
+  display: flex; flex-direction: row; align-items: center; gap: 20px;
+  transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+.gacha-item {
+  width: 80px; height: 80px; flex-shrink: 0; background: #eee; border-radius: 8px;
+  display: flex; justify-content: center; align-items: center; border: 2px solid #ccc;
+}
+.gacha-item img { max-width: 90%; max-height: 90%; object-fit: contain; }
+
+/* Rarities */
+.rarity-0 { border-color: #bdc3c7 !important; background: linear-gradient(135deg, #ecf0f1, #bdc3c7) !important; }
+.rarity-1 { border-color: #2ecc71 !important; background: linear-gradient(135deg, #a8e6cf, #2ecc71) !important; }
+.rarity-2 { border-color: #3498db !important; background: linear-gradient(135deg, #aed6f1, #3498db) !important; }
+.rarity-3 { border-color: #9b59b6 !important; background: linear-gradient(135deg, #d2b4de, #9b59b6) !important; }
+.rarity-4 { border-color: #f1c40f !important; background: linear-gradient(135deg, #f9e79f, #f1c40f) !important; box-shadow: 0 0 10px #f1c40f; }
+.rarity-5 { border-color: #e74c3c !important; background: linear-gradient(135deg, #f5b7b1, #e74c3c) !important; box-shadow: 0 0 15px #e74c3c; animation: pulseRed 2s infinite; }
+
+@keyframes pulseRed { 0% { box-shadow: 0 0 10px #e74c3c; } 50% { box-shadow: 0 0 20px #c0392b; } 100% { box-shadow: 0 0 10px #e74c3c; } }
+
+.collection-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-top: 15px;
+}
+.coll-item {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; border: 2px solid #555;
+  background: rgba(255,255,255,0.05); cursor: pointer; transition: transform 0.2s, filter 0.2s;
+  display: flex; justify-content: center; align-items: center; overflow: hidden;
+}
+.coll-item:hover { transform: scale(1.05); filter: brightness(1.2); }
+.coll-item img { max-width: 80%; max-height: 80%; object-fit: contain; z-index: 1; }
+.coll-item.locked { filter: grayscale(1) opacity(0.3); cursor: not-allowed; }
+.coll-item.locked:hover { transform: none; filter: grayscale(1) opacity(0.3); }
+
+.lvl-badge {
+  position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.8); color: white;
+  font-size: 10px; padding: 2px 4px; border-radius: 4px; font-weight: bold; z-index: 2;
+}
+.equipped-badge {
+  position: absolute; top: 2px; left: 2px; background: #2ecc71; color: white;
+  font-size: 9px; padding: 2px 4px; border-radius: 4px; font-weight: bold; z-index: 2;
+}
+
+#companions-container {
+  display: flex; justify-content: center; gap: 15px; margin-top: -10px; margin-bottom: 20px; z-index: 5; position: relative; pointer-events: none;
+}
+.active-comp {
+  width: 60px; height: 60px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+  animation: floatComp 3s ease-in-out infinite; pointer-events: none;
+}
+.active-comp img { width: 100%; height: 100%; object-fit: contain; }
+@keyframes floatComp { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+.gacha-locked { text-align:center; padding: 50px; color: #888; }
+.gacha-locked .lock-icon { font-size: 60px; margin-bottom: 20px; }
