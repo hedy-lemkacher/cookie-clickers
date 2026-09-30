@@ -3104,7 +3104,7 @@ function initFlappy() {
   let stars = Array.from({length: 60}, () => ({ x: Math.random()*400, y: Math.random()*400, r: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2 }));
 
   function runGame() {
-    if (!playing) return;
+    if (!playing || !document.body.contains(api.body)) return;
     const elapsed = (Date.now() - startTime) / 1000;
     const difficulty = Math.min(1, elapsed / currentTargetTime); 
     
@@ -3355,7 +3355,7 @@ if (tabTempleUps && tabTempleAsc) {
 
 
 function gameCelestialBowling(api, g) {
-  let playing = false, angle = -90, dir = 1, speed = 4;
+  let playing = false, angle = -90, dir = 1, speed = 2.5;
   let raf;
   
   api.body.innerHTML = `<div class="game-bowling">
@@ -3390,10 +3390,10 @@ function gameCelestialBowling(api, g) {
       // Calculate score based on angle. Perfect is 0.
       const diff = Math.abs(angle);
       let pins = 0;
-      if (diff < 5) pins = 10; // Strike
-      else if (diff < 15) pins = 7;
-      else if (diff < 30) pins = 4;
-      else if (diff < 50) pins = 1;
+      if (diff < 12) pins = 10; // Strike is much wider!
+      else if (diff < 25) pins = 7;
+      else if (diff < 40) pins = 4;
+      else if (diff < 60) pins = 1;
       else pins = 0; // Gutter
       
       if (pins === 10) {
@@ -3419,7 +3419,7 @@ function gameCelestialBowling(api, g) {
   });
   
   function runBowling() {
-    if (!playing) return;
+    if (!playing || !document.body.contains(api.body)) return;
     angle += speed * dir;
     if (angle >= 90) { angle = 90; dir = -1; }
     if (angle <= -90) { angle = -90; dir = 1; }
@@ -3429,7 +3429,7 @@ function gameCelestialBowling(api, g) {
 }
 
 function gameCelestialBasketball(api, g) {
-  let playing = false, hoopX = 0, hoopDir = 1, hoopSpeed = 5;
+  let playing = false, hoopX = 0, hoopDir = 1, hoopSpeed = 2.5;
   let cookieY = 0;
   let raf, shootRaf;
   let tries = 3;
@@ -3454,7 +3454,7 @@ function gameCelestialBasketball(api, g) {
   const areaW = api.body.querySelector('#cBaskArea').clientWidth;
   
   function runHoop() {
-    if (!playing) return;
+    if (!playing || !document.body.contains(api.body)) return;
     hoopX += hoopSpeed * hoopDir;
     if (hoopX >= areaW - 56) { hoopX = areaW - 56; hoopDir = -1; }
     if (hoopX <= 0) { hoopX = 0; hoopDir = 1; }
@@ -3477,7 +3477,7 @@ function gameCelestialBasketball(api, g) {
       if (cookieY > 110) { // reached hoop level
         const ballCenter = (areaW / 2);
         const hoopCenter = hoopX + 28;
-        if (Math.abs(ballCenter - hoopCenter) < 25) { // scored!
+        if (Math.abs(ballCenter - hoopCenter) < 40) { // much more forgiving!
           playing = false;
           ball.innerHTML = '✨';
           const gain = gameMax() * g.weight;
@@ -3508,7 +3508,7 @@ function gameCelestialBasketball(api, g) {
 }
 
 function gameCelestialFootball(api, g) {
-  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 6;
+  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 3.5;
   let cookieY = 0;
   let raf, shootRaf;
   let tries = 3;
@@ -3541,7 +3541,7 @@ function gameCelestialFootball(api, g) {
   gkX = gkMin;
   
   function runGK() {
-    if (!playing) return;
+    if (!playing || !document.body.contains(api.body)) return;
     gkX += gkSpeed * gkDir;
     if (gkX >= gkMax) { gkX = gkMax; gkDir = -1; }
     if (gkX <= gkMin) { gkX = gkMin; gkDir = 1; }
@@ -3564,7 +3564,7 @@ function gameCelestialFootball(api, g) {
       if (cookieY > 80 && cookieY < 120) { // ball reaching GK level
         const ballCenter = areaW / 2;
         const gkCenter = gkX + 15;
-        if (Math.abs(ballCenter - gkCenter) < 25) { // Saved!
+        if (Math.abs(ballCenter - gkCenter) < 15) { // harder for GK to save!
           tries--;
           triesTxt.textContent = tries;
           if (tries <= 0) {
