@@ -154,10 +154,26 @@
 
     <div class="pane" id="temple">
       <div class="card" style="text-align:center; background:linear-gradient(160deg,#1a0a2e,#2e1a0a); border:1px solid #9b59b6;">
-        <h3 class="card-title" style="color:#ffeb3b;"><span>🏆 Temple des Légendes</span></h3>
-        <p style="color:#d4b0ff;">Vous avez accompli l'impossible. Dépensez vos <b style='color:#ffeb3b;'>pépites célestes</b> pour obtenir des améliorations <b>permanentes</b> — elles survivent à toutes vos ascensions.</p>
-        <p id="templeChips" style="font-size:18px; font-weight:bold; color:#ffeb3b; margin:10px 0;"></p>
-        <div id="templeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;"></div>
+        <h3 class="card-title" style="color:#ffeb3b;"><span>🛕 Temple des Légendes</span></h3>
+        <p style="color:#d4b0ff;">Vous avez accompli l'impossible. Dépensez vos <b style='color:#ffeb3b;'>pépites célestes</b> pour obtenir des améliorations <b>permanentes</b> - elles survivent à toutes vos ascensions.</p>
+        
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:15px; margin-bottom:15px;">
+           <button id="tabTempleUps" class="big-btn" style="flex:1; background:#9b59b6; filter:brightness(1.2);">Améliorations</button>
+           <button id="tabTempleAsc" class="big-btn" style="flex:1; background:#55efc4; color:#2d3436; filter:brightness(0.8);">Ascension</button>
+        </div>
+
+        <div id="templeTabUps">
+           <p id="templeChips" style="font-size:18px; font-weight:bold; color:#ffeb3b; margin:10px 0;"></p>
+           <div id="templeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;"></div>
+        </div>
+
+        <div id="templeTabAsc" style="display:none; text-align:left; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #55efc4;">
+           <h3 style="color:#55efc4; margin-bottom:10px;">😇 Ascender au rang de divinité</h3>
+           <p style="margin-bottom:15px; color:#ddd;">Quand votre boulangerie devient gigantesque, vous pouvez tout recommencer à zéro en échange de <b>pépites célestes</b>. Chaque pépite donne <b>+2 % de production pour toujours</b>. Vos succès, votre style et vos statistiques sont conservés.</p>
+           <p style="font-size:18px; font-weight:bold; color:#ffeb3b; margin-bottom:10px;" id="templeChipsCurrent">✨ Pépites célestes possédées : 0</p>
+           <div id="ascInfo" style="margin-bottom:15px; font-size:15px;"></div>
+           <button class="big-btn" id="ascBtn" style="background:#55efc4; color:#2d3436; font-size:16px; width:100%;">Faire une ascension</button>
+        </div>
       </div>
     </div>
 
