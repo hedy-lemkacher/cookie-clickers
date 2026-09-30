@@ -465,14 +465,14 @@ function renderCasinoPane() {
     // WHEEL TAB
     const max = gameMax();
     const SEG = [
-  { death: true },
-  { cpsNeg: true },
-  { halfBank: true },
-  { bank15: true },
-  { life: true },
-  { cps1h: true },
-  { clickFz: true },
-  { cps1h: true }
+  { death: true, w: 0.3 },
+  { cpsNeg: true, w: 1 },
+  { halfBank: true, w: 1 },
+  { bank15: true, w: 1 },
+  { life: true, w: 0.3 },
+  { cps1h: true, w: 1 },
+  { clickFz: true, w: 1 },
+  { cps1h: true, w: 1 }
 ];
     const COLORS = ['#000000', '#7a3e1d', '#8a4c1c', '#d9954a', '#ff00ff', '#a5602a', '#ffd166', '#a5602a'];
     const now = Date.now();
@@ -488,17 +488,20 @@ function renderCasinoPane() {
     const cv = box.querySelector('canvas'), g = cv.getContext('2d');
     const btn = box.querySelector('.w-btn');
     const res = box.querySelector('#wheelResult');
-    const n = SEG.length, arc = Math.PI * 2 / n;
+    const n = SEG.length;
+    const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
     
     function draw(rot) {
       g.clearRect(0, 0, 320, 320);
       g.save();
       g.translate(160, 160);
       g.rotate(rot);
+      let currentAngle = 0;
       for (let i = 0; i < n; i++) {
+        const segArc = (SEG[i].w || 1) / totalW * Math.PI * 2;
         g.beginPath();
         g.moveTo(0, 0);
-        g.arc(0, 0, 152, i * arc, (i + 1) * arc);
+        g.arc(0, 0, 152, currentAngle, currentAngle + segArc);
         g.closePath();
         if (SEG[i].life) {
           const grad = g.createLinearGradient(0, -152, 0, 152);
@@ -512,7 +515,7 @@ function renderCasinoPane() {
         g.lineWidth = 3;
         g.stroke();
         g.save();
-        g.rotate(i * arc + arc / 2);
+        g.rotate(currentAngle + segArc / 2);
         g.textAlign = 'right';
         g.textBaseline = 'middle';
         g.fillStyle = '#1b0f09';
@@ -520,6 +523,7 @@ function renderCasinoPane() {
         const s = SEG[i];
         g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.halfBank ? '📉 /2' : s.clickFz ? '👆 x500' : s.bank15 ? '💰 x1.5' : s.cps1h ? '🍀 +1h' : s.cpsNeg ? '💸 -30m' : '', 140, 0);
         g.restore();
+        currentAngle += segArc;
       }
       g.beginPath();
       g.arc(0, 0, 28, 0, Math.PI * 2);
@@ -541,8 +545,20 @@ function renderCasinoPane() {
       S.casino.wheelNext = Date.now() + 30 * 60 * 1000;
       save();
       
-      const target = Math.floor(Math.random() * n), s = SEG[target];
-      const final = 6 * Math.PI * 2 - Math.PI / 2 - (target * arc + arc / 2) + rand(-arc * 0.35, arc * 0.35);
+      
+      let randVal = Math.random() * totalW;
+      let target = 0, accum = 0;
+      for (let i = 0; i < n; i++) {
+        const w = SEG[i].w || 1;
+        if (randVal >= accum && randVal < accum + w) { target = i; break; }
+        accum += w;
+      }
+      const s = SEG[target];
+      let targetStartAngle = 0;
+      for (let i = 0; i < target; i++) targetStartAngle += (SEG[i].w || 1) / totalW * Math.PI * 2;
+      const targetArc = (SEG[target].w || 1) / totalW * Math.PI * 2;
+      const targetMidAngle = targetStartAngle + targetArc / 2;
+      const final = 6 * Math.PI * 2 - Math.PI / 2 - targetMidAngle + rand(-targetArc * 0.35, targetArc * 0.35);
       const t0 = performance.now(), D = 4500;
       
       function frame(t) {
