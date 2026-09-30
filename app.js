@@ -218,6 +218,7 @@ const ACHIEVEMENTS = [
   // --- Succès Compagnons ---
   { icon: '🎰', name: 'Premier Recrutement',  desc: 'Débloquer votre premier compagnon à la Machine à sous.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 1 },
   { icon: '🛡️', name: 'Duo de Choc',          desc: 'Équiper deux compagnons en même temps.',                 test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 2 },
+  { icon: '⚔️', name: 'Trio Invincible',      desc: 'Équiper trois compagnons en même temps.',                test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 3 },
   { icon: '💎', name: 'Évolution Gourmande',  desc: 'Améliorer un compagnon au niveau 3 ou plus.',             test: () => S.compData && S.compData.levels && Object.values(S.compData.levels).some(lvl => lvl >= 3) },
   { icon: '🌟', name: 'Collectionneur Averti', desc: 'Débloquer 10 compagnons différents.',                    test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 10 },
   { icon: '👑', name: 'Compagnon Légendaire', desc: 'Débloquer un compagnon de rareté Légendaire ou Mythique.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && (c.rarity === 'legendaire' || c.rarity === 'mythique'); }) },
@@ -2978,27 +2979,6 @@ function refreshAll() {
   refreshStore();
   refreshShowcase();
   checkAchievements();
-  renderEquippedCompanions();
-}
-
-function renderEquippedCompanions() {
-  const container = $('#companions-container');
-  if (!container) return;
-  container.innerHTML = '';
-  if (!S.compData || !S.compData.equipped) return;
-  S.compData.equipped.forEach(id => {
-    const comp = COMPANIONS.find(c => c.id === id);
-    if (!comp) return;
-    const div = document.createElement('div');
-    // Apply rarity class (0=common … 5=mythic) for colored border
-    const rarityClass = 'rarity-' + comp.rarity;
-    div.className = `active-comp ${rarityClass}`;
-    const img = document.createElement('img');
-    img.src = comp.img;
-    img.alt = comp.name;
-    div.appendChild(img);
-    container.appendChild(div);
-  });
 }
 
 const msLevel = () => S.baked >= 1000 ? Math.floor(Math.log10(S.baked) / 3) : 0;
@@ -3366,6 +3346,7 @@ const TEMPLE_UPGRADES = [
   { id: 'celestial_bowling', name: '🎳 Bowling Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Bowling', apply: () => {} },
   { id: 'celestial_basketball', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', apply: () => {} },
   { id: 'celestial_football', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', apply: () => {} },
+  { id: 'comp_trio',  name: '🛡️ Trio Légendaire',      cost: 15,  desc: 'Débloque un 3ème emplacement de compagnon actif (3 compagnons équipés)', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); recalc(); } },
   { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
   { id: 'power+',     name: '⏱️ Pouvoir Prolongé',     cost: 10,  desc: 'Le buff Touche Entrée dure 90s au lieu de 60s',       apply: () => {} },
   { id: 'frenzy+',    name: '🔥 Grande Frénésie',      cost: 20,  desc: 'Le bonus de la touche Entrée dure 45s au lieu de 30s',            apply: () => {} },
@@ -3868,20 +3849,39 @@ function compHas(powerType) {
   return total;
 }
 
-/* Affichage des compagnons sous le gros cookie principal (2 slots interactifs avec +) */
+function maxCompanionSlots() {
+  return (S.temple && S.temple.includes('comp_trio')) ? 3 : 2;
+}
+window.maxCompanionSlots = maxCompanionSlots;
+
+/* Affichage des compagnons sous le gros cookie principal (2 ou 3 slots interactifs avec + et tooltip soigné) */
 function renderCompanions() {
   const ctn = document.getElementById('companions-container');
   if (!ctn) return;
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [];
 
+  const maxSlots = maxCompanionSlots();
+  while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
+  if (S.compData.equipped.length > maxSlots) S.compData.equipped = S.compData.equipped.slice(0, maxSlots);
+
   let html = '';
   
-  // Slot 0 (Gauche) et Slot 1 (Droite)
-  [0, 1].forEach((slotIdx) => {
+  for (let slotIdx = 0; slotIdx < maxSlots; slotIdx++) {
     const id = S.compData.equipped[slotIdx] || null;
-    const slotLabel = slotIdx === 0 ? 'Slot Gauche (1)' : 'Slot Droite (2)';
-    const slotShort = slotIdx === 0 ? 'Slot 1' : 'Slot 2';
+    let slotLabel = '';
+    let slotShort = '';
+    let slotIcon = '🛡️';
+
+    if (maxSlots === 2) {
+      slotLabel = slotIdx === 0 ? 'Slot Gauche (1)' : 'Slot Droite (2)';
+      slotShort = slotIdx === 0 ? 'Slot 1' : 'Slot 2';
+      slotIcon = slotIdx === 0 ? '🛡️' : '⚔️';
+    } else {
+      if (slotIdx === 0) { slotLabel = 'Slot Gauche (1)'; slotShort = 'Slot 1'; slotIcon = '🛡️'; }
+      else if (slotIdx === 1) { slotLabel = 'Slot Centre (2)'; slotShort = 'Slot 2'; slotIcon = '👑'; }
+      else { slotLabel = 'Slot Droite (3)'; slotShort = 'Slot 3'; slotIcon = '⚔️'; }
+    }
     
     if (id) {
       const c = COMPANIONS.find(x => x.id === id);
@@ -3889,30 +3889,46 @@ function renderCompanions() {
         const val = Math.round(companionVal(id) * 100);
         const lvl = S.compData.levels[id] || 1;
         const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
-        const tipText = `${c.name} (${slotLabel})\nRareté : ${RARITIES[c.rarity].name}\nNiveau ${lvl}\nEffet : ${c.desc.replace('{val}', val)}\n\n👉 Cliquez pour modifier ou retirer ce compagnon.`;
+        const rarityInfo = RARITIES[c.rarity] || { name: c.rarity, color: '#bdc3c7' };
         
         html += `
-          <div class="active-comp-wrapper" title="${tipText}" data-open-selector="${slotIdx}">
+          <div class="active-comp-wrapper" data-open-selector="${slotIdx}">
             <div class="active-comp-slot rarity-${c.rarity} ${friendClass}" data-open-selector="${slotIdx}">
               ${renderCompanionVisual(c, 54)}
               <span class="active-comp-lvl">Lvl ${lvl}</span>
             </div>
             <span class="active-comp-label" data-open-selector="${slotIdx}">${c.name.length > 12 ? c.name.slice(0, 11) + '…' : c.name}</span>
+            
+            <!-- Tooltip survol élégant et design -->
+            <div class="comp-hover-tooltip rarity-${c.rarity}">
+              <div class="comp-tooltip-header">
+                <div class="comp-tooltip-name">${c.name}</div>
+                <div class="comp-tooltip-rarity" style="color:${rarityInfo.color};">${rarityInfo.name} · Niv. ${lvl}</div>
+              </div>
+              <div class="comp-tooltip-slot">${slotIcon} ${slotLabel}</div>
+              <div class="comp-tooltip-power">⚡ ${c.desc.replace('{val}', `<span class="comp-tooltip-val">+${val}%</span>`)}</div>
+              <div class="comp-tooltip-hint">👉 Cliquer pour modifier ou retirer</div>
+            </div>
           </div>
         `;
       }
     } else {
       // Slot vide avec le "+"
       html += `
-        <div class="active-comp-wrapper" title="Emplacement ${slotLabel} vide.\n👉 Cliquez pour choisir et équiper un compagnon !" data-open-selector="${slotIdx}">
+        <div class="active-comp-wrapper" data-open-selector="${slotIdx}">
           <div class="active-comp-slot empty" data-open-selector="${slotIdx}">
             <span class="slot-plus-icon" data-open-selector="${slotIdx}">+</span>
           </div>
           <span class="active-comp-label" style="color:#747d8c;" data-open-selector="${slotIdx}">${slotShort}</span>
+          
+          <div class="comp-hover-tooltip empty-tooltip">
+            <div class="comp-tooltip-name">${slotIcon} Emplacement ${slotShort} vide</div>
+            <div class="comp-tooltip-hint">👉 Cliquer pour choisir un compagnon</div>
+          </div>
         </div>
       `;
     }
-  });
+  }
   
   ctn.innerHTML = html;
 }
@@ -3922,7 +3938,14 @@ window.openCompanionSelector = function(slotIdx) {
   slotIdx = parseInt(slotIdx, 10);
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   
-  const slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
+  const maxSlots = maxCompanionSlots();
+  let slotName = '';
+  if (maxSlots === 2) {
+    slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
+  } else {
+    slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : (slotIdx === 1 ? 'Emplacement 2 (Centre)' : 'Emplacement 3 (Droite)');
+  }
+
   const currentEquippedId = S.compData.equipped[slotIdx] || null;
   const unlocked = S.compData.unlocked || [];
   
@@ -3960,7 +3983,8 @@ window.openCompanionSelector = function(slotIdx) {
       if (!c) continue;
       const lvl = S.compData.levels[id] || 1;
       const isHere = S.compData.equipped[slotIdx] === id;
-      const isOther = S.compData.equipped[slotIdx === 0 ? 1 : 0] === id;
+      const otherSlotIndex = S.compData.equipped.findIndex((eqId, idx) => idx !== slotIdx && eqId === id);
+      const isOther = otherSlotIndex !== -1;
       const val = Math.round(companionVal(id) * 100);
       const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
       
@@ -3973,7 +3997,7 @@ window.openCompanionSelector = function(slotIdx) {
           <span style="font-size:10px; color:${RARITIES[c.rarity].color}; font-weight:bold; pointer-events:none;">${RARITIES[c.rarity].name} · Lvl ${lvl}</span>
           <span style="font-size:10px; color:#2ed573; margin-top:3px; line-height:1.2; pointer-events:none;">+${val}%</span>
           <span style="font-size:9px; margin-top:5px; font-weight:bold; color:${isHere ? '#2ed573' : (isOther ? '#ffa502' : '#70a1ff')}; pointer-events:none;">
-            ${isHere ? '✓ Équipé ici' : (isOther ? '⇄ Autre slot' : '👉 Choisir')}
+            ${isHere ? '✓ Équipé ici' : (isOther ? `⇄ Slot ${otherSlotIndex + 1}` : '👉 Choisir')}
           </span>
         </div>
       `;
@@ -4002,6 +4026,31 @@ function showGachaWinModal(result, isNew) {
   const shards = (S.compData && S.compData.shards && S.compData.shards[result.id]) || 0;
   const friendClass = (result.isFriend && result.img) ? 'is-friend' : '';
   const rarityInfo = RARITIES[result.rarity] || { name: result.rarity, color: '#bdc3c7' };
+  const maxSlots = maxCompanionSlots();
+  
+  let equipButtonsHtml = '';
+  if (maxSlots === 2) {
+    equipButtonsHtml = `
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
+        🛡️ Équiper Slot G
+      </button>
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
+        ⚔️ Équiper Slot D
+      </button>
+    `;
+  } else {
+    equipButtonsHtml = `
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
+        🛡️ Slot G
+      </button>
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
+        👑 Slot C
+      </button>
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="2" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
+        ⚔️ Slot D
+      </button>
+    `;
+  }
   
   mBody.innerHTML = `
     <div class="gacha-win-content">
@@ -4027,12 +4076,7 @@ function showGachaWinModal(result, isNew) {
       
       <div class="gacha-win-actions">
         <div class="gacha-win-equip-duo">
-          <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
-            🛡️ Équiper Slot G
-          </button>
-          <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
-            ⚔️ Équiper Slot D
-          </button>
+          ${equipButtonsHtml}
         </div>
         <button class="big-btn" onclick="closeModal()" style="font-size:14px; padding:10px;">
           ✓ Super !
@@ -4184,9 +4228,9 @@ function spinGacha(count = 1) {
     const result = res.comp;
     const isNew = res.isNew;
     
-    // Construction des 50 éléments de la roulette
-    const totalItems = 50;
-    const targetIndex = 38;
+    // Construction de 80 éléments pour une animation plus longue, plus fluide et plus palpitante
+    const totalItems = 80;
+    const targetIndex = 62;
     let reelHtml = '';
     
     for (let i = 0; i < totalItems; i++) {
@@ -4209,7 +4253,7 @@ function spinGacha(count = 1) {
     
     requestAnimationFrame(() => {
       setTimeout(() => {
-        reel.style.transition = 'transform 4.5s cubic-bezier(0.08, 0.82, 0.17, 1)';
+        reel.style.transition = 'transform 7.0s cubic-bezier(0.06, 0.85, 0.15, 1)';
         reel.style.transform = `translateX(-${targetOffset}px)`;
       }, 30);
     });
@@ -4232,8 +4276,8 @@ function spinGacha(count = 1) {
       
       setTimeout(() => {
         showGachaWinModal(result, isNew);
-      }, 200);
-    }, 4600);
+      }, 250);
+    }, 7150);
   } else {
     // Tirage x10
     const results = [];
@@ -4241,7 +4285,7 @@ function spinGacha(count = 1) {
       results.push(rollOneCompanion());
     }
     
-    const totalItems = 40;
+    const totalItems = 60;
     let reelHtml = '';
     for (let i = 0; i < totalItems; i++) {
       const itemComp = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
@@ -4258,8 +4302,8 @@ function spinGacha(count = 1) {
     
     requestAnimationFrame(() => {
       setTimeout(() => {
-        reel.style.transition = 'transform 2.2s cubic-bezier(0.12, 0.8, 0.25, 1)';
-        reel.style.transform = `translateX(-${totalItems * 60}px)`;
+        reel.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.85, 0.2, 1)';
+        reel.style.transform = `translateX(-${totalItems * 65}px)`;
       }, 30);
     });
     
@@ -4270,34 +4314,42 @@ function spinGacha(count = 1) {
       renderCompanions();
       renderGachaPane();
       showGachaMultiWinModal(results);
-    }, 2300);
+    }, 3600);
   }
 }
 window.spinGacha = spinGacha;
 
-/* Système d'équipement 2 slots intuitif */
+/* Système d'équipement multi-slots intuitif (2 ou 3 slots) */
 function equipCompanionSlot(id, slotIndex) {
   slotIndex = parseInt(slotIndex, 10);
+  const maxSlots = maxCompanionSlots();
+  if (slotIndex < 0 || slotIndex >= maxSlots) slotIndex = 0;
+
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
-  if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [null, null];
+  if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [];
+  while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
   
-  while (S.compData.equipped.length < 2) S.compData.equipped.push(null);
-  
-  const otherSlot = (slotIndex === 0) ? 1 : 0;
-  
+  let slotTxt = `Slot ${slotIndex + 1}`;
+  if (maxSlots === 2) {
+    slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : 'Slot Droite (2)';
+  } else {
+    slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : (slotIndex === 1 ? 'Slot Centre (2)' : 'Slot Droite (3)');
+  }
+
   if (S.compData.equipped[slotIndex] === id) {
     // Si déjà équipé sur ce slot -> déséquiper
     S.compData.equipped[slotIndex] = null;
-    toast('🛡️', 'Compagnon retiré', 'Emplacement libéré.');
+    toast('🛡️', 'Compagnon retiré', `Emplacement ${slotTxt} libéré.`);
   } else {
-    // Si le compagnon était dans l'autre slot, le déplacer
-    if (S.compData.equipped[otherSlot] === id) {
-      S.compData.equipped[otherSlot] = null;
+    // Si le compagnon était dans un autre slot, le déplacer
+    for (let i = 0; i < maxSlots; i++) {
+      if (i !== slotIndex && S.compData.equipped[i] === id) {
+        S.compData.equipped[i] = null;
+      }
     }
     S.compData.equipped[slotIndex] = id;
     const c = COMPANIONS.find(x => x.id === id);
     const name = c ? c.name : id;
-    const slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : 'Slot Droite (2)';
     toast('🛡️', 'Compagnon équipé !', `${name} placé au ${slotTxt}.`);
   }
   
@@ -4369,6 +4421,7 @@ function renderGachaPane() {
   }
   
   const pityLeft = Math.max(0, 20 - (S.compData.pityTracker || 0));
+  const maxSlots = maxCompanionSlots();
   
   let html = `
     <div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -4425,64 +4478,60 @@ function renderGachaPane() {
     </div>
   `;
   
-  // Duo Actif (Panneau de sélection 2 slots Gauche et Droite)
-  const slot0Id = S.compData.equipped[0] || null;
-  const slot1Id = S.compData.equipped[1] || null;
-  const c0 = slot0Id ? COMPANIONS.find(x => x.id === slot0Id) : null;
-  const c1 = slot1Id ? COMPANIONS.find(x => x.id === slot1Id) : null;
-  
+  // Section Compagnons Actifs (Duo ou Trio)
+  let activeSlotsHtml = '';
+  for (let sIdx = 0; sIdx < maxSlots; sIdx++) {
+    const sId = S.compData.equipped[sIdx] || null;
+    const cObj = sId ? COMPANIONS.find(x => x.id === sId) : null;
+    
+    let sTitle = '';
+    let sIcon = '🛡️';
+    let sBtnTag = 'Slot G';
+    if (maxSlots === 2) {
+      sTitle = sIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
+      sIcon = sIdx === 0 ? '🛡️' : '⚔️';
+      sBtnTag = sIdx === 0 ? 'Slot G' : 'Slot D';
+    } else {
+      if (sIdx === 0) { sTitle = 'Emplacement 1 (Gauche)'; sIcon = '🛡️'; sBtnTag = 'Slot G'; }
+      else if (sIdx === 1) { sTitle = 'Emplacement 2 (Centre)'; sIcon = '👑'; sBtnTag = 'Slot C'; }
+      else { sTitle = 'Emplacement 3 (Droite)'; sIcon = '⚔️'; sBtnTag = 'Slot D'; }
+    }
+
+    activeSlotsHtml += `
+      <div class="duo-slot-box ${cObj ? 'filled rarity-' + cObj.rarity : ''}">
+        ${cObj ? `
+          <div class="duo-slot-avatar">
+            ${renderCompanionVisual(cObj, 48)}
+          </div>
+          <div class="duo-slot-info">
+            <div class="duo-slot-header">
+              <span class="duo-slot-name">${cObj.name}</span>
+              <span style="font-size:11px; font-weight:bold; color:${RARITIES[cObj.rarity].color};">Lvl ${S.compData.levels[cObj.id] || 1}</span>
+            </div>
+            <div class="duo-slot-desc">⚡ ${cObj.desc.replace('{val}', Math.round(companionVal(cObj.id)*100))}</div>
+          </div>
+          <button class="btn-unequip-slot" data-unequip-slot="${sIdx}" title="Retirer">✕</button>
+        ` : `
+          <div style="font-size:24px; color:#57606f; margin-left:6px;">${sIcon}</div>
+          <div class="duo-slot-empty-text">
+            <b>${sTitle}</b><br>
+            <span style="font-size:11px; color:#747d8c;">Cliquez sur [${sIcon} ${sBtnTag}] sur un compagnon ci-dessous.</span>
+          </div>
+        `}
+      </div>
+    `;
+  }
+
   html += `
     <div class="active-duo-section">
       <div class="active-duo-title">
-        <span>⚔️ Vos 2 Compagnons Actifs (Duo Équipé)</span>
-        <small style="color:#a4b0be; font-size:12px; font-weight:normal;">Les bonus se cumulent !</small>
+        <span>⚔️ Vos ${maxSlots} Compagnons Actifs (${maxSlots === 3 ? 'Trio Équipé' : 'Duo Équipé'})</span>
+        <small style="color:#a4b0be; font-size:12px; font-weight:normal;">
+          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : 'Les 3 bonus se cumulent !'}
+        </small>
       </div>
       <div class="active-duo-grid">
-        <!-- Emplacement 1 (Gauche) -->
-        <div class="duo-slot-box ${c0 ? 'filled rarity-' + c0.rarity : ''}">
-          ${c0 ? `
-            <div class="duo-slot-avatar">
-              ${renderCompanionVisual(c0, 48)}
-            </div>
-            <div class="duo-slot-info">
-              <div class="duo-slot-header">
-                <span class="duo-slot-name">${c0.name}</span>
-                <span style="font-size:11px; font-weight:bold; color:${RARITIES[c0.rarity].color};">Lvl ${S.compData.levels[c0.id] || 1}</span>
-              </div>
-              <div class="duo-slot-desc">⚡ ${c0.desc.replace('{val}', Math.round(companionVal(c0.id)*100))}</div>
-            </div>
-            <button class="btn-unequip-slot" data-unequip-slot="0" title="Retirer">✕</button>
-          ` : `
-            <div style="font-size:24px; color:#57606f; margin-left:6px;">🛡️</div>
-            <div class="duo-slot-empty-text">
-              <b>Emplacement 1 (Gauche)</b><br>
-              <span style="font-size:11px; color:#747d8c;">Cliquez sur [🛡️ Slot G] sur un compagnon ci-dessous.</span>
-            </div>
-          `}
-        </div>
-
-        <!-- Emplacement 2 (Droite) -->
-        <div class="duo-slot-box ${c1 ? 'filled rarity-' + c1.rarity : ''}">
-          ${c1 ? `
-            <div class="duo-slot-avatar">
-              ${renderCompanionVisual(c1, 48)}
-            </div>
-            <div class="duo-slot-info">
-              <div class="duo-slot-header">
-                <span class="duo-slot-name">${c1.name}</span>
-                <span style="font-size:11px; font-weight:bold; color:${RARITIES[c1.rarity].color};">Lvl ${S.compData.levels[c1.id] || 1}</span>
-              </div>
-              <div class="duo-slot-desc">⚡ ${c1.desc.replace('{val}', Math.round(companionVal(c1.id)*100))}</div>
-            </div>
-            <button class="btn-unequip-slot" data-unequip-slot="1" title="Retirer">✕</button>
-          ` : `
-            <div style="font-size:24px; color:#57606f; margin-left:6px;">⚔️</div>
-            <div class="duo-slot-empty-text">
-              <b>Emplacement 2 (Droite)</b><br>
-              <span style="font-size:11px; color:#747d8c;">Cliquez sur [⚔️ Slot D] sur un compagnon ci-dessous.</span>
-            </div>
-          `}
-        </div>
+        ${activeSlotsHtml}
       </div>
     </div>
   `;
@@ -4510,13 +4559,40 @@ function renderGachaPane() {
   for (let c of filteredCompanions) {
     const unl = S.compData.unlocked.includes(c.id);
     const lvl = S.compData.levels[c.id] || 1;
-    const isEq0 = S.compData.equipped[0] === c.id;
-    const isEq1 = S.compData.equipped[1] === c.id;
     const shards = S.compData.shards[c.id] || 0;
     const upgradeCost = lvl;
     const canUpgrade = shards >= upgradeCost;
     
     if (unl) {
+      let cardActionsHtml = '';
+      if (maxSlots === 2) {
+        const isEq0 = S.compData.equipped[0] === c.id;
+        const isEq1 = S.compData.equipped[1] === c.id;
+        cardActionsHtml = `
+          <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Équiper ou retirer du Slot Gauche">
+            ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
+          </button>
+          <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Équiper ou retirer du Slot Droite">
+            ${isEq1 ? '✓ Slot D' : '⚔️ Slot D'}
+          </button>
+        `;
+      } else {
+        const isEq0 = S.compData.equipped[0] === c.id;
+        const isEq1 = S.compData.equipped[1] === c.id;
+        const isEq2 = S.compData.equipped[2] === c.id;
+        cardActionsHtml = `
+          <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Slot Gauche">
+            ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
+          </button>
+          <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Slot Centre">
+            ${isEq1 ? '✓ Slot C' : '👑 Slot C'}
+          </button>
+          <button class="btn-slot-equip ${isEq2 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="2" title="Slot Droite">
+            ${isEq2 ? '✓ Slot D' : '⚔️ Slot D'}
+          </button>
+        `;
+      }
+
       html += `
         <div class="companion-card rarity-${c.rarity}">
           <div class="comp-card-top">
@@ -4530,13 +4606,8 @@ function renderGachaPane() {
           </div>
           <div class="comp-card-power">⚡ ${c.desc.replace('{val}', Math.round(companionVal(c.id)*100))}</div>
           <div class="comp-shards-bar">💎 Éclats : <b>${shards} / ${upgradeCost}</b></div>
-          <div class="comp-card-actions">
-            <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Équiper ou retirer du Slot Gauche">
-              ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
-            </button>
-            <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Équiper ou retirer du Slot Droite">
-              ${isEq1 ? '✓ Slot D' : '⚔️ Slot D'}
-            </button>
+          <div class="comp-card-actions ${maxSlots === 3 ? 'trio-actions' : ''}">
+            ${cardActionsHtml}
           </div>
           ${canUpgrade ? `
             <button class="btn-comp-upgrade" data-upgrade-id="${c.id}">
@@ -4595,15 +4666,16 @@ window.showGachaInfo = function() {
         <span style="color:#ff4757; font-weight:bold;">Mythique</span> (0.1%) — Contour RGB arc-en-ciel animé 🌟
       </p>
       
-      <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Sélection & Équipement Duo (2 Slots)</h4>
+      <h4 style="margin-top:15px; color:#e67e22; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Sélection & Équipement (2 à 3 Slots)</h4>
       <p style="font-size:13px; line-height:1.5;">
-        Vous disposez de <b>2 emplacements actifs</b> : <b>Slot Gauche (1)</b> et <b>Slot Droite (2)</b>.<br>
-        Cliquez sur <b>[🛡️ Slot G]</b> ou <b>[⚔️ Slot D]</b> sur n'importe quel compagnon débloqué, ou cliquez directement sur les slots <b>[+]</b> sous le cookie principal !
+        Vous disposez de <b>2 emplacements actifs</b> de base (<b>Slot Gauche</b> et <b>Slot Droite</b>).<br>
+        Débloquez l'amélioration <b>Trio Légendaire</b> dans le <b>Temple des Légendes</b> pour équiper un <b>3ème compagnon</b> au Centre !<br>
+        Cliquez sur les boutons d'équipement ou directement sur les slots <b>[+]</b> sous le cookie principal !
       </p>
       
       <h4 style="margin-top:15px; color:#2ecc71; border-bottom:1px solid #444; padding-bottom:5px;">✨ Doublons et Montée en Niveau</h4>
       <p style="font-size:13px; line-height:1.5;">
-        Obtenir un doublon vous donne un <b>Éclat 💎</b> de ce compagnon. Utilisez ces éclats pour faire monter son niveau et augmenter sa puissance !
+        Obtenir un doublon vous donne un <b>Éclat 💎</b> de ce compagnon. Utilisez ces éclats pour faire monter son niveau et démultiplier ses effets !
       </p>
       
       <h4 style="margin-top:15px; color:#eb4d4b; border-bottom:1px solid #444; padding-bottom:5px;">🛡️ Garantie (Pity Tracker)</h4>
