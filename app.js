@@ -3780,23 +3780,23 @@ function renderCompanions() {
         const tipText = `${c.name} (${slotLabel})\nRareté : ${RARITIES[c.rarity].name}\nNiveau ${lvl}\nEffet : ${c.desc.replace('{val}', val)}\n\n👉 Cliquez pour modifier ou retirer ce compagnon.`;
         
         html += `
-          <div class="active-comp-wrapper" title="${tipText}" onclick="openCompanionSelector(${slotIdx})">
-            <div class="active-comp-slot rarity-${c.rarity} ${friendClass}">
+          <div class="active-comp-wrapper" title="${tipText}" data-open-selector="${slotIdx}">
+            <div class="active-comp-slot rarity-${c.rarity} ${friendClass}" data-open-selector="${slotIdx}">
               ${renderCompanionVisual(c, 54)}
               <span class="active-comp-lvl">Lvl ${lvl}</span>
             </div>
-            <span class="active-comp-label">${c.name.length > 12 ? c.name.slice(0, 11) + '…' : c.name}</span>
+            <span class="active-comp-label" data-open-selector="${slotIdx}">${c.name.length > 12 ? c.name.slice(0, 11) + '…' : c.name}</span>
           </div>
         `;
       }
     } else {
       // Slot vide avec le "+"
       html += `
-        <div class="active-comp-wrapper" title="Emplacement ${slotLabel} vide.\n👉 Cliquez pour choisir et équiper un compagnon !" onclick="openCompanionSelector(${slotIdx})">
-          <div class="active-comp-slot empty">
-            <span class="slot-plus-icon">+</span>
+        <div class="active-comp-wrapper" title="Emplacement ${slotLabel} vide.\n👉 Cliquez pour choisir et équiper un compagnon !" data-open-selector="${slotIdx}">
+          <div class="active-comp-slot empty" data-open-selector="${slotIdx}">
+            <span class="slot-plus-icon" data-open-selector="${slotIdx}">+</span>
           </div>
-          <span class="active-comp-label" style="color:#747d8c;">${slotShort}</span>
+          <span class="active-comp-label" style="color:#747d8c;" data-open-selector="${slotIdx}">${slotShort}</span>
         </div>
       `;
     }
@@ -3807,6 +3807,7 @@ function renderCompanions() {
 
 /* Modal Sélecteur de compagnon en cliquant sur un slot */
 window.openCompanionSelector = function(slotIdx) {
+  slotIdx = parseInt(slotIdx, 10);
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   
   const slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
@@ -3825,7 +3826,7 @@ window.openCompanionSelector = function(slotIdx) {
   if (currentEquippedId) {
     modalHtml += `
       <div style="margin-bottom:15px;">
-        <button class="big-btn" onclick="unequipCompanionSlot(${slotIdx}); closeModal();" style="background:#ff4757; font-size:13px; padding:6px 14px;">
+        <button class="big-btn" data-unequip-slot="${slotIdx}" style="background:#ff4757; font-size:13px; padding:6px 14px;">
           ✕ Retirer le compagnon actuel
         </button>
       </div>
@@ -3852,14 +3853,14 @@ window.openCompanionSelector = function(slotIdx) {
       const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
       
       modalHtml += `
-        <div class="selector-comp-card rarity-${c.rarity} ${isHere ? 'active-slot' : ''}" onclick="equipCompanionSlot('${c.id}', ${slotIdx}); closeModal();">
-          <div style="width:48px; height:48px; margin-bottom:6px;" class="${friendClass}">
+        <div class="selector-comp-card rarity-${c.rarity} ${isHere ? 'active-slot' : ''}" data-equip-id="${c.id}" data-equip-slot="${slotIdx}">
+          <div style="width:48px; height:48px; margin-bottom:6px; pointer-events:none;" class="${friendClass}">
             ${renderCompanionVisual(c, 48)}
           </div>
-          <b style="font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${c.name}</b>
-          <span style="font-size:10px; color:${RARITIES[c.rarity].color}; font-weight:bold;">${RARITIES[c.rarity].name} · Lvl ${lvl}</span>
-          <span style="font-size:10px; color:#2ed573; margin-top:3px; line-height:1.2;">+${val}%</span>
-          <span style="font-size:9px; margin-top:5px; font-weight:bold; color:${isHere ? '#2ed573' : (isOther ? '#ffa502' : '#70a1ff')}">
+          <b style="font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; pointer-events:none;">${c.name}</b>
+          <span style="font-size:10px; color:${RARITIES[c.rarity].color}; font-weight:bold; pointer-events:none;">${RARITIES[c.rarity].name} · Lvl ${lvl}</span>
+          <span style="font-size:10px; color:#2ed573; margin-top:3px; line-height:1.2; pointer-events:none;">+${val}%</span>
+          <span style="font-size:9px; margin-top:5px; font-weight:bold; color:${isHere ? '#2ed573' : (isOther ? '#ffa502' : '#70a1ff')}; pointer-events:none;">
             ${isHere ? '✓ Équipé ici' : (isOther ? '⇄ Autre slot' : '👉 Choisir')}
           </span>
         </div>
@@ -3914,10 +3915,10 @@ function showGachaWinModal(result, isNew) {
       
       <div class="gacha-win-actions">
         <div class="gacha-win-equip-duo">
-          <button class="big-btn" onclick="equipCompanionSlot('${result.id}', 0); closeModal(); toast('🛡️', 'Compagnon équipé', '${result.name} placé au Slot Gauche');" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
+          <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
             🛡️ Équiper Slot G
           </button>
-          <button class="big-btn" onclick="equipCompanionSlot('${result.id}', 1); closeModal(); toast('⚔️', 'Compagnon équipé', '${result.name} placé au Slot Droite');" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
+          <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
             ⚔️ Équiper Slot D
           </button>
         </div>
@@ -4216,7 +4217,7 @@ function renderGachaPane() {
               </div>
               <div class="duo-slot-desc">⚡ ${c0.desc.replace('{val}', Math.round(companionVal(c0.id)*100))}</div>
             </div>
-            <button class="btn-unequip-slot" onclick="unequipCompanionSlot(0)" title="Retirer">✕</button>
+            <button class="btn-unequip-slot" data-unequip-slot="0" title="Retirer">✕</button>
           ` : `
             <div style="font-size:24px; color:#57606f; margin-left:6px;">🛡️</div>
             <div class="duo-slot-empty-text">
@@ -4239,7 +4240,7 @@ function renderGachaPane() {
               </div>
               <div class="duo-slot-desc">⚡ ${c1.desc.replace('{val}', Math.round(companionVal(c1.id)*100))}</div>
             </div>
-            <button class="btn-unequip-slot" onclick="unequipCompanionSlot(1)" title="Retirer">✕</button>
+            <button class="btn-unequip-slot" data-unequip-slot="1" title="Retirer">✕</button>
           ` : `
             <div style="font-size:24px; color:#57606f; margin-left:6px;">⚔️</div>
             <div class="duo-slot-empty-text">
@@ -4296,15 +4297,15 @@ function renderGachaPane() {
           <div class="comp-card-power">⚡ ${c.desc.replace('{val}', Math.round(companionVal(c.id)*100))}</div>
           <div class="comp-shards-bar">💎 Éclats : <b>${shards} / ${upgradeCost}</b></div>
           <div class="comp-card-actions">
-            <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" onclick="equipCompanionSlot('${c.id}', 0)" title="Équiper ou retirer du Slot Gauche">
+            <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Équiper ou retirer du Slot Gauche">
               ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
             </button>
-            <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" onclick="equipCompanionSlot('${c.id}', 1)" title="Équiper ou retirer du Slot Droite">
+            <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Équiper ou retirer du Slot Droite">
               ${isEq1 ? '✓ Slot D' : '⚔️ Slot D'}
             </button>
           </div>
           ${canUpgrade ? `
-            <button class="btn-comp-upgrade" onclick="upgradeCompanion('${c.id}')">
+            <button class="btn-comp-upgrade" data-upgrade-id="${c.id}">
               ⬆️ Améliorer (Niv. ${lvl + 1})
             </button>
           ` : ''}
@@ -4386,3 +4387,42 @@ function injectCompData(s) {
   if (!s.compData) s.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   return s;
 }
+
+/* Écouteur global d'événements pour les compagnons (100% compatible CSP et délégation) */
+document.addEventListener('click', (e) => {
+  const equipBtn = e.target.closest('[data-equip-id]');
+  if (equipBtn) {
+    const id = equipBtn.dataset.equipId;
+    const slot = parseInt(equipBtn.dataset.equipSlot, 10);
+    equipCompanionSlot(id, slot);
+    if (modal && modal.classList.contains('on') && !e.target.closest('.companion-grid')) {
+      closeModal();
+    }
+    return;
+  }
+  
+  const unequipBtn = e.target.closest('[data-unequip-slot]');
+  if (unequipBtn) {
+    const slot = parseInt(unequipBtn.dataset.unequipSlot, 10);
+    unequipCompanionSlot(slot);
+    if (modal && modal.classList.contains('on')) {
+      closeModal();
+    }
+    return;
+  }
+  
+  const selectorBtn = e.target.closest('[data-open-selector]');
+  if (selectorBtn) {
+    const slot = parseInt(selectorBtn.dataset.openSelector, 10);
+    openCompanionSelector(slot);
+    return;
+  }
+  
+  const upgradeBtn = e.target.closest('[data-upgrade-id]');
+  if (upgradeBtn) {
+    const id = upgradeBtn.dataset.upgradeId;
+    upgradeCompanion(id);
+    return;
+  }
+});
+
