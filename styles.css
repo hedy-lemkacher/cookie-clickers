@@ -1429,14 +1429,14 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   filter: brightness(1.15);
 }
 
-/* Compagnons actifs sous le gros cookie */
+/* Compagnons actifs sous le gros cookie (2 slots interactifs Gauche et Droite) */
 #companions-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  margin-top: 6px;
-  margin-bottom: 12px;
+  gap: 28px;
+  margin-top: 10px;
+  margin-bottom: 15px;
   z-index: 10;
   position: relative;
 }
@@ -1445,51 +1445,174 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .active-comp-wrapper:hover {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 .active-comp-slot {
-  width: 60px;
-  height: 60px;
-  border-radius: 14px;
-  background: #1e272e;
-  border: 2.5px solid #57606f;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%; /* Cercle par défaut */
+  background: #141a1f;
+  border: 3px solid #57606f;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 5px;
   box-sizing: border-box;
   animation: floatComp 3.5s ease-in-out infinite alternate;
   position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+}
+/* Cadre arrondi pour les photos spéciales des 7 amis */
+.active-comp-slot.is-friend-photo {
+  border-radius: 16px !important;
 }
 .active-comp-slot:nth-child(2) {
   animation-delay: -1.75s;
 }
+/* Slot vide avec le "+" */
+.active-comp-slot.empty {
+  border: 2.5px dashed #747d8c;
+  background: rgba(20, 26, 31, 0.6);
+  cursor: pointer;
+}
+.active-comp-slot.empty:hover {
+  border-color: #f1c40f;
+  background: rgba(241, 196, 15, 0.1);
+}
+.slot-plus-icon {
+  font-size: 28px;
+  color: #a4b0be;
+  font-weight: 300;
+  transition: color 0.2s, transform 0.2s;
+}
+.active-comp-slot.empty:hover .slot-plus-icon {
+  color: #f1c40f;
+  transform: scale(1.25);
+}
+
 .active-comp-lvl {
   position: absolute;
-  bottom: -6px;
-  right: -6px;
+  bottom: -4px;
+  right: -4px;
   background: #2f3542;
-  border: 1px solid #747d8c;
+  border: 1.5px solid #747d8c;
   color: #fff;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 1px 5px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 .active-comp-label {
   font-size: 11px;
   font-weight: bold;
-  color: #dcdde1;
-  margin-top: 4px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  color: #f1f2f6;
+  margin-top: 5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
-@keyframes floatComp {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-7px); }
+/* Modals Gagnant Gacha et Sélecteur */
+.gacha-win-content {
+  text-align: center;
+  padding: 15px 10px;
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.gacha-win-visual {
+  width: 110px;
+  height: 110px;
+  margin: 15px auto;
+  border-radius: 50%;
+  padding: 8px;
+  background: #141a1f;
+  border: 3.5px solid #bdc3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.gacha-win-visual.is-friend {
+  border-radius: 18px !important;
+}
+.gacha-win-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f1c40f;
+  margin: 10px 0 4px;
+}
+.gacha-win-rarity {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.gacha-win-power {
+  background: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #2ed573;
+  margin: 10px auto 20px;
+  max-width: 320px;
+  line-height: 1.4;
+  border: 1px solid rgba(46, 213, 115, 0.2);
+}
+.gacha-win-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.gacha-win-equip-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Sélecteur de Compagnon Modal */
+.selector-comp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 10px 4px;
+  margin: 15px 0;
+}
+.selector-comp-card {
+  background: #1e272e;
+  border: 2px solid #353b48;
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.selector-comp-card:hover {
+  transform: scale(1.05);
+  border-color: #f1c40f;
+  background: #273440;
+}
+.selector-comp-card.active-slot {
+  border-color: #2ed573;
+  background: rgba(46, 213, 115, 0.15);
 }
 
 .gacha-locked { text-align: center; padding: 50px; color: #888; }
