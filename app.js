@@ -381,27 +381,6 @@ function updateCasinoLimit() {
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const code = input.value.trim().toUpperCase();
-  if (code === 'OMO') {
-    if (S.omoUsed) {
-      status.textContent = 'Ce code a déjà été utilisé !';
-      status.classList.remove('on');
-      return;
-    }
-    S.omoUsed = true;
-    for (const b of BUILDINGS) {
-      if (S.owned[b.id] > 0) {
-        S.owned[b.id] *= 2;
-      }
-    }
-    recalc();
-    refreshStore();
-    status.textContent = '✨ Code OMO activé : Bâtiments doublés !';
-    status.classList.add('on');
-    input.value = '';
-    toast('✨', 'Code Secret', 'Tous vos bâtiments ont été doublés !');
-    save();
-    return;
-  }
   if (code !== 'LMK') {
     status.textContent = 'Code incorrect.';
     status.classList.remove('on');
