@@ -143,6 +143,13 @@ const ACHIEVEMENTS = [
   { icon: '✋', name: 'Main divine',          desc: 'Gagner 1 million de cookies en un seul clic.', test: () => S.bestClick >= 1e6 },
   { icon: '🌈', name: 'Lumière pure',         desc: 'Posséder un prisme.',                     test: () => owned('prism') >= 1 },
   { icon: '🎁', name: 'Fidèle',               desc: 'Récupérer un cadeau du jour.',            test: () => S.dailyCount >= 1 },
+  // --- Succès Compagnons ---
+  { icon: '🎰', name: 'Premier Recrutement',  desc: 'Débloquer votre premier compagnon à la Machine à sous.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 1 },
+  { icon: '🛡️', name: 'Duo de Choc',          desc: 'Équiper deux compagnons en même temps.',                 test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 2 },
+  { icon: '💎', name: 'Évolution Gourmande',  desc: 'Améliorer un compagnon au niveau 3 ou plus.',             test: () => S.compData && S.compData.levels && Object.values(S.compData.levels).some(lvl => lvl >= 3) },
+  { icon: '🌟', name: 'Collectionneur Averti', desc: 'Débloquer 10 compagnons différents.',                    test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 10 },
+  { icon: '👑', name: 'Compagnon Légendaire', desc: 'Débloquer un compagnon de rareté Légendaire ou Mythique.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && (c.rarity === 'legendaire' || c.rarity === 'mythique'); }) },
+  { icon: '🌌', name: 'Divinité Mythique',     desc: 'Débloquer un compagnon de rareté Mythique.',             test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && c.rarity === 'mythique'; }) },
 ];
 
 /* --- Personnalisation --- */
@@ -821,16 +828,24 @@ function recalc() {
 }
 const countUps = (prefix) => upCount[prefix] || 0;
 const multiplier = (id) => Math.pow(2, countUps(id));
-const prestigeMult = () => 1 + S.chips * 0.02;
+const prestigeMult = () => 1 + S.chips * 0.02 * (1 + (typeof compHas === 'function' ? compHas('ascension_boost') : 0));
 
 let activeEvent = null;
 function eventBoost(id) {
   return activeEvent && activeEvent.ev.b.id === id && Date.now() < activeEvent.boostUntil ? activeEvent.boost : 1;
 }
 function buildingCps(b, noBoost) {
-  return b.cps * multiplier(b.id) * prestigeMult() * (noBoost ? 1 : eventBoost(b.id));
+  const bBoost = (typeof compHas === 'function') ? (compHas('building_' + b.id) + compHas('all_buildings')) : 0;
+  return b.cps * multiplier(b.id) * (1 + bBoost) * prestigeMult() * (noBoost ? 1 : eventBoost(b.id));
 }
-function baseCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b); return s * (S.temple && S.temple.length ? templeProdBonus() : 1); }
+function baseCps() {
+  let s = 0;
+  for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b);
+  const compCps = (typeof compHas === 'function')
+    ? (compHas('cps') + compHas('cps_master') + compHas('cps_brain') + compHas('cps_click_hybrid') + compHas('speed') + (compHas('double_edged') > 0 ? compHas('double_edged') : 0))
+    : 0;
+  return s * (1 + compCps) * (S.temple && S.temple.length ? templeProdBonus() : 1);
+}
 function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b, true); return s; }
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() { return baseCps() * frenzyMult(); }
@@ -877,9 +892,15 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => {
   if (e.key === 'Enter') isEnterPressed = false;
 });
-const comboCap = () => 2 + countUps('combo');
-const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02);
-function clickBase() { return (multiplier('cursor') + cps() * 0.01 * countUps('mouse')) * (S.temple ? templeClickBonus() : 1); }
+const comboCap = () => (2 + countUps('combo')) * (1 + (typeof compHas === 'function' ? compHas('combo_power') : 0));
+const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02 * (1 + (typeof compHas === 'function' ? compHas('combo_power') : 0)));
+function clickBase() {
+  const compClick = (typeof compHas === 'function')
+    ? (compHas('click') + compHas('click_master') + compHas('cps_click_hybrid') - (compHas('double_edged') > 0 ? 0.5 : 0))
+    : 0;
+  const clickMult = Math.max(0.1, 1 + compClick);
+  return (multiplier('cursor') + cps() * 0.01 * countUps('mouse')) * clickMult * (S.temple ? templeClickBonus() : 1);
+}
 function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
 let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
@@ -926,7 +947,9 @@ function buyCount(b) {
 }
 function price(b, n) {
   const r = 1.15;
-  return Math.ceil(b.base * Math.pow(r, owned(b.id)) * (Math.pow(r, n) - 1) / (r - 1));
+  const disc = Math.min(0.75, (typeof compHas === 'function' ? (compHas('discount') + compHas('building_discount')) : 0));
+  const baseCost = Math.ceil(b.base * Math.pow(r, owned(b.id)) * (Math.pow(r, n) - 1) / (r - 1));
+  return Math.max(1, Math.round(baseCost * (1 - disc)));
 }
 
 /* Affichage des nombres */
@@ -956,7 +979,13 @@ function fmtTime(sec) {
   if (sec >= 60) return Math.floor(sec / 60) + ' min ' + String(sec % 60).padStart(2, '0');
   return sec + ' s';
 }
-function gain(n) { S.cookies += n; S.baked += n; S.bakedAll += n; }
+function gain(n) {
+  let mult = 1;
+  const luck = (typeof compHas === 'function' ? compHas('luck_mult') : 0);
+  if (luck > 0 && Math.random() < luck) mult *= 2;
+  const actual = Math.round(n * mult);
+  S.cookies += actual; S.baked += actual; S.bakedAll += actual;
+}
 function checkSpeedrun() {
   const world = activeWorld();
   if (!world || world.mode !== 'speedrun') return;
@@ -1318,7 +1347,8 @@ function rollFrenzyPower() {
 function startFrenzy() {
   const now = Date.now();
   const mult = rollFrenzyPower();
-  const dur = rand(3, 25) * (1 + 0.25 * countUps('fzdur'));
+  const frenzyBonus = (typeof compHas === 'function' ? (compHas('golden_vision') + compHas('frenzy_dur')) : 0);
+  const dur = rand(3, 25) * (1 + 0.25 * countUps('fzdur')) * (1 + frenzyBonus);
   S.fz.mult = mult;
   S.fz.dur = dur;
   S.fz.until = now + dur * 1000;
@@ -1335,7 +1365,10 @@ function updateFrenzy(now) {
    COOKIE DORÉ
    ===================================================================== */
 const golden = $('#golden');
-const goldenDelay = () => rand(300, 900) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) * 1000;
+const goldenDelay = () => {
+  const freqBonus = (typeof compHas === 'function' ? compHas('golden_freq') : 0);
+  return rand(300, 900) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) / (1 + freqBonus) * 1000;
+};
 let goldenNext = Date.now() + rand(30, 90) * 1000, goldenEnd = 0;
 let activeGoldenCookies = [];
 
@@ -1416,10 +1449,11 @@ function spawnGoldenRain() {
       checkAchievements();
       
       if (type === 'gold') {
-        const bonus = Math.floor(S.cookies * 0.25);
+        const goldRewardBonus = (typeof compHas === 'function' ? compHas('golden_reward') : 0);
+        const bonus = Math.floor(S.cookies * 0.25 * (1 + goldRewardBonus));
         gain(bonus);
-        floatText(e.clientX, e.clientY, 'x1.25 !');
-        toast('🌟', 'Cookie d\'Or', 'Jackpot ! +25% de vos cookies en banque !');
+        floatText(e.clientX, e.clientY, '+' + fmt(bonus));
+        toast('🌟', 'Cookie d\'Or', 'Jackpot ! +' + Math.round(25 * (1 + goldRewardBonus)) + '% de vos cookies en banque !');
       } else if (type === 'silver') {
         S.cookies = Math.floor(S.cookies / 2);
         toast('🥈', 'Cookie d\'argent', 'Aïe ! Vous perdez la moitié de vos cookies.');
@@ -1457,7 +1491,8 @@ const evInterval = () => rand(150, 330) * Math.pow(0.8, countUps('evfreq')) * 10
 const unlockedEvents = () => EVENTS.filter((e) => owned(e.b.id) >= e.need);
 function evPerIcon(ev) {
   const bTotal = owned(ev.b.id) * buildingCps(ev.b, true);
-  return Math.max(bTotal * EV_B_SEC[ev.tier], steadyCps() * EV_ALL_SEC[ev.tier], 10) * Math.pow(1.5, countUps('evgain'));
+  const evCompBonus = (typeof compHas === 'function' ? compHas('events') : 0);
+  return Math.max(bTotal * EV_B_SEC[ev.tier], steadyCps() * EV_ALL_SEC[ev.tier], 10) * Math.pow(1.5, countUps('evgain')) * (1 + evCompBonus);
 }
 function updateEvents(now) {
   if (activeEvent) {
@@ -1584,9 +1619,13 @@ const celestialCooldown = (g) => {
   if (S.ups.includes('celestial_cd2')) mult -= 0.25; 
   if (S.ups.includes('celestial_cd3')) mult -= 0.25; 
   if (S.temple && S.temple.includes('chrono')) mult *= 0.5;
-  return Math.max(60000, g.cd * 60 * mult * 1000); 
+  const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
+  return Math.max(60000, g.cd * 60 * mult / (1 + arcadeSpeedBonus) * 1000); 
 };
-const gameCooldown = (g) => g.cd * 60 * Math.pow(0.8, countUps('arcade')) * 1000;
+const gameCooldown = (g) => {
+  const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
+  return g.cd * 60 * Math.pow(0.8, countUps('arcade')) / (1 + arcadeSpeedBonus) * 1000;
+};
 const gameReady = (g) => window.__adminMode || Date.now() >= (S.games[g.id] || 0);
 /* Gain maximum = 5 minutes de production (avec un minimum en début de partie) */
 const gameMax = () => Math.max(steadyCps() * 300, multiplier('cursor') * 200 + 100) * Math.pow(1.4, countUps('ticket'));
@@ -2532,11 +2571,11 @@ function renderAchPane() {
 $('#ascBtn').addEventListener('click', () => {
   const g = chipsPotential();
   if (g < 1) return;
-  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations repartent de zéro, mais vous gagnez ' + g +
+  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments, améliorations et compagnons repartent de zéro, mais vous gagnez ' + g +
     ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
   if (activeEvent) endEvent();
   const keep = {};
-  keep.compData = S.compData;
+  keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
@@ -2546,6 +2585,7 @@ $('#ascBtn').addEventListener('click', () => {
   recalc();
   refreshAll();
   renderAchPane();
+  if (typeof renderCompanions === 'function') renderCompanions();
   save();
   toast('😇', 'Ascension', 'Vous avez maintenant ' + S.chips + ' pépites célestes !');
   celebrate();
@@ -3641,40 +3681,63 @@ const COMPANIONS = [
   // Communs (Cookies CSS/SVG)
   { id: 'c_classic', name: 'Cookie classique', rarity: 'commun', powerType: 'cps', powerBase: 0.05, powerStep: 0.02, desc: 'Production globale +{val}%', style: { c: ['#f6cd86', '#dc9a4f', '#a5602a'], chip: '#4b2411', edge: '#8a4c1c' } },
   { id: 'c_mini', name: 'Mini-cookie', rarity: 'commun', powerType: 'click', powerBase: 0.05, powerStep: 0.02, desc: 'Puissance des clics +{val}%', style: { c: ['#ffd384', '#e2a85e', '#b87532'], chip: '#5c2c16', edge: '#8a4f1e', isMini: true } },
-  { id: 'c_choco', name: 'Cookie chocolat', rarity: 'commun', powerType: 'cps', powerBase: 0.06, powerStep: 0.02, desc: 'Production globale +{val}%', style: { c: ['#5a2f17', '#3d1d0c', '#241006'], chip: '#180a03', edge: '#220d04' } },
-  { id: 'c_pepite', name: 'Cookie pépite', rarity: 'commun', powerType: 'click', powerBase: 0.06, powerStep: 0.02, desc: 'Puissance des clics +{val}%', style: { c: ['#fab86b', '#de9141', '#a86221'], chip: '#7a3e1d', edge: '#7a3e1d', extraChips: true } },
-  { id: 'c_caramel', name: 'Cookie au caramel', rarity: 'commun', powerType: 'building_grandma', powerBase: 0.15, powerStep: 0.05, desc: 'Les grands-mères produisent +{val}%', style: { c: ['#f8c291', '#e58e26', '#b71540'], chip: '#b71540', edge: '#e58e26', glaze: '#f6b93b' } },
+  { id: 'c_choco', name: 'Cookie tout chocolat', rarity: 'commun', powerType: 'cps', powerBase: 0.06, powerStep: 0.02, desc: 'Production globale +{val}%', style: { c: ['#5a2f17', '#3d1d0c', '#241006'], chip: '#180a03', edge: '#220d04' } },
+  { id: 'c_pepite', name: 'Cookie pépite d\'or', rarity: 'commun', powerType: 'click', powerBase: 0.06, powerStep: 0.02, desc: 'Puissance des clics +{val}%', style: { c: ['#fab86b', '#de9141', '#a86221'], chip: '#7a3e1d', edge: '#7a3e1d', extraChips: true } },
+  { id: 'c_caramel', name: 'Cookie caramel fondant', rarity: 'commun', powerType: 'building_grandma', powerBase: 0.15, powerStep: 0.05, desc: 'Les grands-mères produisent +{val}%', style: { c: ['#f8c291', '#e58e26', '#b71540'], chip: '#b71540', edge: '#e58e26', isCaramel: true } },
+  { id: 'c_beurre', name: 'Cookie pur beurre', rarity: 'commun', powerType: 'building_cursor', powerBase: 0.20, powerStep: 0.06, desc: 'Les curseurs produisent +{val}%', style: { c: ['#fff4cc', '#ffeaa7', '#fdcb6e'], chip: '#d35400', edge: '#e1b12c', isButter: true } },
+  { id: 'c_sucre', name: 'Cookie au sucre roux', rarity: 'commun', powerType: 'cps_click_hybrid', powerBase: 0.04, powerStep: 0.01, desc: 'Production et clics +{val}%', style: { c: ['#edd6b8', '#d7a15c', '#9b5e28'], chip: '#613613', edge: '#783e0c', isSugar: true } },
+  { id: 'c_cannelle', name: 'Cookie à la cannelle', rarity: 'commun', powerType: 'events', powerBase: 0.12, powerStep: 0.03, desc: 'Gains des événements +{val}%', style: { c: ['#e0a96d', '#bf7a36', '#773d12'], chip: '#401804', edge: '#5a2d0c', isCinnamon: true } },
   
   // Peu communs (Cookies CSS/SVG)
   { id: 'c_ghost', name: 'Cookie fantôme', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.10, powerStep: 0.03, desc: 'Production globale +{val}%', style: { c: ['#ffffff', '#dff9fb', '#c7ecee'], chip: '#00d2d3', edge: '#22a6b3', isGhost: true } },
   { id: 'c_ninja', name: 'Cookie ninja', rarity: 'peu_commun', powerType: 'click', powerBase: 0.10, powerStep: 0.03, desc: 'Puissance des clics +{val}%', style: { c: ['#3d3d3d', '#2f3542', '#1e272e'], chip: '#ff4757', edge: '#ff4757', isNinja: true } },
-  { id: 'c_pirate', name: 'Cookie pirate', rarity: 'peu_commun', powerType: 'events', powerBase: 0.15, powerStep: 0.05, desc: 'Gains des événements +{val}%', style: { c: ['#8c531b', '#6d3c0e', '#482404'], chip: '#f1c40f', edge: '#2c3e50', isPirate: true } },
-  { id: 'c_robot', name: 'Cookie robot', rarity: 'peu_commun', powerType: 'building_factory', powerBase: 0.20, powerStep: 0.05, desc: 'Les usines produisent +{val}%', style: { c: ['#dcdde1', '#718093', '#2f3640'], chip: '#00d2d3', edge: '#00d2d3', isRobot: true } },
+  { id: 'c_pirate', name: 'Cookie pirate', rarity: 'peu_commun', powerType: 'events', powerBase: 0.18, powerStep: 0.05, desc: 'Gains des événements +{val}%', style: { c: ['#8c531b', '#6d3c0e', '#482404'], chip: '#f1c40f', edge: '#2c3e50', isPirate: true } },
+  { id: 'c_robot', name: 'Cookie robot', rarity: 'peu_commun', powerType: 'building_factory', powerBase: 0.25, powerStep: 0.06, desc: 'Les usines produisent +{val}%', style: { c: ['#dcdde1', '#718093', '#2f3640'], chip: '#00d2d3', edge: '#00d2d3', isRobot: true } },
   { id: 'c_choc_blanc', name: 'Cookie chocolat blanc', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.12, powerStep: 0.03, desc: 'Production globale +{val}%', style: { c: ['#fff9e6', '#f5e6cb', '#deb887'], chip: '#ffffff', edge: '#c49a6c', berryChips: true } },
-  { id: 'c_fraise', name: 'Cookie à la fraise', rarity: 'peu_commun', powerType: 'building_farm', powerBase: 0.20, powerStep: 0.05, desc: 'Les fermes produisent +{val}%', style: { c: ['#ff9ff3', '#f368e0', '#b83b5e'], chip: '#6ab04c', edge: '#b83b5e', isStrawberry: true } },
+  { id: 'c_fraise', name: 'Cookie à la fraise', rarity: 'peu_commun', powerType: 'building_farm', powerBase: 0.25, powerStep: 0.06, desc: 'Les fermes produisent +{val}%', style: { c: ['#ff9ff3', '#f368e0', '#b83b5e'], chip: '#6ab04c', edge: '#b83b5e', isStrawberry: true } },
+  { id: 'c_flocon', name: 'Cookie flocon d\'avoine', rarity: 'peu_commun', powerType: 'building_mine', powerBase: 0.25, powerStep: 0.06, desc: 'Les mines produisent +{val}%', style: { c: ['#fae5b9', '#dfb875', '#a37c3f'], chip: '#5c431d', edge: '#8a652a', isOat: true } },
+  { id: 'c_sel', name: 'Cookie caramel salé', rarity: 'peu_commun', powerType: 'combo_power', powerBase: 0.15, powerStep: 0.04, desc: 'Efficacité des combos +{val}%', style: { c: ['#f6c589', '#d48834', '#8a4b08'], chip: '#ffffff', edge: '#6d3600', isSalt: true } },
+  { id: 'c_citron', name: 'Cookie citron givré', rarity: 'peu_commun', powerType: 'frenzy_dur', powerBase: 0.15, powerStep: 0.04, desc: 'Durée des frénésies +{val}%', style: { c: ['#ffffc2', '#fff176', '#fbc02d'], chip: '#f57f17', edge: '#f9a825', isLemon: true } },
+  { id: 'c_noisette', name: 'Cookie praliné noisette', rarity: 'peu_commun', powerType: 'building_bank', powerBase: 0.25, powerStep: 0.06, desc: 'Les banques produisent +{val}%', style: { c: ['#d7a77e', '#ab6e3a', '#6f3a12'], chip: '#401800', edge: '#592906', isNut: true } },
 
   // Rares (Cookies CSS/SVG)
-  { id: 'c_knight', name: 'Cookie chevalier', rarity: 'rare', powerType: 'click', powerBase: 0.20, powerStep: 0.05, desc: 'Puissance des clics +{val}%', style: { c: ['#dfe4ea', '#a4b0be', '#57606f'], chip: '#2f3542', edge: '#2f3542', isKnight: true } },
-  { id: 'c_astro', name: 'Cookie astronaute', rarity: 'rare', powerType: 'building_ship', powerBase: 0.25, powerStep: 0.08, desc: 'Les fusées produisent +{val}%', style: { c: ['#341f97', '#1e272e', '#010a15'], chip: '#f1c40f', edge: '#54a0ff', isSpace: true } },
-  { id: 'c_mage', name: 'Cookie magicien', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.15, powerStep: 0.03, desc: 'Apparition des cookies dorés +{val}%', style: { c: ['#8854d0', '#5f27cd', '#341f97'], chip: '#ffd32a', edge: '#ff5e57', isMagic: true } },
-  { id: 'c_dragon', name: 'Cookie dragon', rarity: 'rare', powerType: 'cps', powerBase: 0.25, powerStep: 0.05, desc: 'Production globale +{val}%', style: { c: ['#eb3b5a', '#b71540', '#4b1218'], chip: '#fed330', edge: '#fc5c65', isDragon: true } },
+  { id: 'c_knight', name: 'Cookie chevalier', rarity: 'rare', powerType: 'click', powerBase: 0.22, powerStep: 0.05, desc: 'Puissance des clics +{val}%', style: { c: ['#dfe4ea', '#a4b0be', '#57606f'], chip: '#2f3542', edge: '#2f3542', isKnight: true } },
+  { id: 'c_astro', name: 'Cookie astronaute', rarity: 'rare', powerType: 'building_ship', powerBase: 0.30, powerStep: 0.08, desc: 'Les fusées produisent +{val}%', style: { c: ['#341f97', '#1e272e', '#010a15'], chip: '#f1c40f', edge: '#54a0ff', isSpace: true } },
+  { id: 'c_mage', name: 'Cookie magicien', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.18, powerStep: 0.04, desc: 'Apparition des cookies dorés +{val}%', style: { c: ['#8854d0', '#5f27cd', '#341f97'], chip: '#ffd32a', edge: '#ff5e57', isMagic: true } },
+  { id: 'c_dragon', name: 'Cookie dragon', rarity: 'rare', powerType: 'cps', powerBase: 0.25, powerStep: 0.06, desc: 'Production globale +{val}%', style: { c: ['#eb3b5a', '#b71540', '#4b1218'], chip: '#fed330', edge: '#fc5c65', isDragon: true } },
+  { id: 'c_mineur', name: 'Cookie nain mineur', rarity: 'rare', powerType: 'building_mine', powerBase: 0.40, powerStep: 0.10, desc: 'Les mines produisent +{val}%', style: { c: ['#95a5a6', '#7f8c8d', '#34495e'], chip: '#f1c40f', edge: '#2c3e50', isMiner: true } },
+  { id: 'c_banquier', name: 'Cookie banquier d\'or', rarity: 'rare', powerType: 'building_bank', powerBase: 0.40, powerStep: 0.10, desc: 'Les banques produisent +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#d6a014'], chip: '#27ae60', edge: '#b7860b', isBanker: true } },
+  { id: 'c_alchimiste', name: 'Cookie alchimiste', rarity: 'rare', powerType: 'building_lab', powerBase: 0.40, powerStep: 0.10, desc: 'Les labos produisent +{val}%', style: { c: ['#9b59b6', '#8e44ad', '#4a154b'], chip: '#2ecc71', edge: '#6c3483', isAlchemist: true } },
+  { id: 'c_templier', name: 'Cookie templier sacré', rarity: 'rare', powerType: 'building_temple', powerBase: 0.40, powerStep: 0.10, desc: 'Les temples produisent +{val}%', style: { c: ['#f5f6fa', '#dcdde1', '#718093'], chip: '#e74c3c', edge: '#e74c3c', isTemplar: true } },
+  { id: 'c_arcade', name: 'Cookie 8-bit rétro', rarity: 'rare', powerType: 'arcade_speed', powerBase: 0.25, powerStep: 0.06, desc: 'Vitesse de recharge des mini-jeux +{val}%', style: { c: ['#1e3799', '#0c2461', '#041033'], chip: '#e74c3c', edge: '#4a69bd', isArcade: true } },
+  { id: 'c_glace', name: 'Cookie givré polaire', rarity: 'rare', powerType: 'frenzy_dur', powerBase: 0.25, powerStep: 0.06, desc: 'Durée des frénésies +{val}%', style: { c: ['#dff9fb', '#c7ecee', '#7ed6df'], chip: '#22a6b3', edge: '#22a6b3', isIce: true } },
 
   // Épiques (Cookies CSS/SVG)
-  { id: 'c_demon', name: 'Cookie démon', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
-  { id: 'c_ange', name: 'Cookie ange', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.10, powerStep: 0.02, desc: 'Efficacité des pépites célestes +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
-  { id: 'c_roi', name: 'Cookie roi', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.15, powerStep: 0.04, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#f9ca24', '#f0932b', '#eb4d4b'], chip: '#6ab04c', edge: '#f0932b', isKing: true } },
-  { id: 'c_gold', name: 'Cookie doré', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.35, powerStep: 0.10, desc: 'Gains des cookies dorés +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
+  { id: 'c_demon', name: 'Cookie démon infernal', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
+  { id: 'c_ange', name: 'Cookie séraphin céleste', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.15, powerStep: 0.03, desc: 'Efficacité des pépites célestes +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
+  { id: 'c_roi', name: 'Cookie souverain impérial', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.20, powerStep: 0.05, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#f9ca24', '#f0932b', '#eb4d4b'], chip: '#6ab04c', edge: '#f0932b', isKing: true } },
+  { id: 'c_gold', name: 'Cookie lingot suprême', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.40, powerStep: 0.10, desc: 'Gains des cookies dorés +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
+  { id: 'c_diamant', name: 'Cookie de diamant pur', rarity: 'epique', powerType: 'building_discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments de {val}%', style: { c: ['#e0f7fa', '#80deea', '#26c6da'], chip: '#ffffff', edge: '#00acc1', isDiamond: true } },
+  { id: 'c_vortex', name: 'Cookie vortex astral', rarity: 'epique', powerType: 'building_prism', powerBase: 0.50, powerStep: 0.12, desc: 'Les prismes produisent +{val}%', style: { c: ['#6c5ce7', '#341f97', '#1b0a40'], chip: '#fd79a8', edge: '#a29bfe', isVortex: true } },
+  { id: 'c_cyber', name: 'Cookie cybernétique', rarity: 'epique', powerType: 'building_matrix', powerBase: 0.50, powerStep: 0.12, desc: 'Les matrix produisent +{val}%', style: { c: ['#10ac84', '#01a3a4', '#1e272e'], chip: '#00d2d3', edge: '#10ac84', isCyber: true } },
+  { id: 'c_nebuleuse', name: 'Cookie nébuleuse stellaire', rarity: 'epique', powerType: 'cps', powerBase: 0.35, powerStep: 0.08, desc: 'Production globale +{val}%', style: { c: ['#301b5c', '#5e2a84', '#a445b2'], chip: '#f78fb3', edge: '#e056fd', isNebula: true } },
 
   // Légendaires (Amis avec photo OU thématiques)
   { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'legendaire', powerType: 'luck_mult', powerBase: 0.25, powerStep: 0.05, desc: '{val}% de chances de doubler n\'importe quel gain' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
-  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.12, powerStep: 0.03, desc: 'Réduit le coût de tous les achats de {val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût de tous les achats de {val}%' },
+  { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
+  { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
+  { id: 'c_empereur', name: 'Cookie Empereur Stellaire', rarity: 'legendaire', powerType: 'all_buildings', powerBase: 0.45, powerStep: 0.10, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#2c3e50', '#8e44ad', '#f1c40f'], chip: '#f39c12', edge: '#f1c40f', isEmperor: true } },
+  { id: 'c_titan', name: 'Cookie Titan Colossal', rarity: 'legendaire', powerType: 'click_master', powerBase: 0.80, powerStep: 0.20, desc: 'Puissance des clics +{val}% (Impact écrasant)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#d63031', edge: '#e17055', isTitan: true } },
 
-  // Mythiques (Amis avec photo)
+  // Mythiques (Amis avec photo OU Divinités suprêmes)
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'speed', powerBase: 2.00, powerStep: 0.50, desc: 'Vitesse de production +{val}%' },
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'double_edged', powerBase: 3.50, powerStep: 1.00, desc: 'Production +{val}%, mais clics -50%' },
-  { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' }
+  { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
+  { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } },
+  { id: 'c_divin', name: 'Cookie Dieu des Pâtissiers', rarity: 'mythique', powerType: 'divine_omni', powerBase: 1.80, powerStep: 0.50, desc: 'Production, Clics et Bâtiments +{val}% (Bénédiction Absolue)', style: { c: ['#ffffff', '#fff9e6', '#f6e58d'], chip: '#f9ca24', edge: '#f1c40f', isDivine: true } }
 ];
 
 /* Générateur visuel : Photos d'amis OU Cookie SVG vectoriel stylé */
@@ -3697,13 +3760,13 @@ function renderCompanionVisual(c, size = 50) {
     extraSvg += `<ellipse cx="50" cy="18" rx="28" ry="8" fill="none" stroke="#f9ca24" stroke-width="5" filter="drop-shadow(0 0 4px #f9ca24)"/><circle cx="38" cy="45" r="4" fill="#485460"/><circle cx="62" cy="45" r="4" fill="#485460"/>`;
   } else if (s.isDemon) {
     extraSvg += `<polygon points="20,25 32,38 18,45" fill="#ff3838"/><polygon points="80,25 68,38 82,45" fill="#ff3838"/><circle cx="38" cy="48" r="4.5" fill="#fed330"/><circle cx="62" cy="48" r="4.5" fill="#fed330"/>`;
-  } else if (s.isKing) {
+  } else if (s.isKing || s.isEmperor) {
     extraSvg += `<polygon points="24,28 34,10 50,22 66,10 76,28" fill="#f9ca24" stroke="#e1b12c" stroke-width="2"/><circle cx="34" cy="10" r="3" fill="#eb4d4b"/><circle cx="50" cy="22" r="3" fill="#4cd137"/><circle cx="66" cy="10" r="3" fill="#eb4d4b"/>`;
   } else if (s.isSpace) {
     extraSvg += `<ellipse cx="50" cy="50" rx="32" ry="22" fill="#54a0ff" opacity="0.4" stroke="#70a1ff" stroke-width="3"/><polygon points="50,24 53,30 60,31 55,36 56,42 50,39 44,42 45,36 40,31 47,30" fill="#ffd32a"/>`;
-  } else if (s.isKnight) {
+  } else if (s.isKnight || s.isTemplar) {
     extraSvg += `<rect x="25" y="42" width="50" height="12" rx="3" fill="#2f3542"/><line x1="50" y1="25" x2="50" y2="75" stroke="#f1f2f6" stroke-width="3" opacity="0.7"/>`;
-  } else if (s.isMagic) {
+  } else if (s.isMagic || s.isAlchemist) {
     extraSvg += `<polygon points="50,15 54,26 65,27 57,34 59,45 50,40 41,45 43,34 35,27 46,26" fill="#ffd32a" filter="drop-shadow(0 0 5px #ffd32a)"/>`;
   } else if (s.isDragon) {
     extraSvg += `<polygon points="22,35 12,20 32,25" fill="#fed330"/><polygon points="78,35 88,20 68,25" fill="#fed330"/><circle cx="36" cy="48" r="5" fill="#fed330"/><circle cx="64" cy="48" r="5" fill="#fed330"/><polygon points="36,48 38,48 37,51" fill="#000"/><polygon points="64,48 66,48 65,51" fill="#000"/>`;
@@ -3711,6 +3774,46 @@ function renderCompanionVisual(c, size = 50) {
     extraSvg += `<polygon points="20,32 50,14 80,32 50,26" fill="#2c3e50"/><circle cx="50" cy="22" r="4" fill="#f1c40f"/><line x1="30" y1="36" x2="48" y2="56" stroke="#111" stroke-width="3"/><circle cx="42" cy="48" r="7" fill="#111"/>`;
   } else if (s.isStrawberry) {
     extraSvg += `<polygon points="50,8 44,20 56,20" fill="#4cd137"/><polygon points="40,12 36,22 48,20" fill="#4cd137"/><polygon points="60,12 64,22 52,20" fill="#4cd137"/>`;
+  } else if (s.isButter) {
+    extraSvg += `<rect x="35" y="35" width="30" height="24" rx="4" fill="#ffeaa7" stroke="#fdcb6e" stroke-width="2"/>`;
+  } else if (s.isSugar) {
+    extraSvg += `<circle cx="45" cy="30" r="3" fill="#fff" opacity="0.8"/><circle cx="65" cy="45" r="2.5" fill="#fff" opacity="0.8"/><circle cx="30" cy="55" r="3" fill="#fff" opacity="0.8"/><circle cx="55" cy="65" r="2" fill="#fff" opacity="0.8"/>`;
+  } else if (s.isCinnamon) {
+    extraSvg += `<path d="M30 30 Q50 20 70 30 Q50 40 30 30" fill="none" stroke="#d35400" stroke-width="3"/><path d="M25 60 Q50 50 75 60" fill="none" stroke="#d35400" stroke-width="3"/>`;
+  } else if (s.isOat) {
+    extraSvg += `<ellipse cx="40" cy="35" rx="7" ry="4" fill="#f5cd79" transform="rotate(-30 40 35)"/><ellipse cx="60" cy="55" rx="7" ry="4" fill="#f5cd79" transform="rotate(30 60 55)"/><ellipse cx="35" cy="65" rx="7" ry="4" fill="#f5cd79"/>`;
+  } else if (s.isSalt) {
+    extraSvg += `<rect x="30" y="32" width="5" height="5" fill="#fff"/><rect x="65" y="36" width="5" height="5" fill="#fff"/><rect x="48" y="60" width="5" height="5" fill="#fff"/>`;
+  } else if (s.isLemon) {
+    extraSvg += `<path d="M35 30 A 20 20 0 0 1 65 30 Z" fill="#ffeaa7" stroke="#fdcb6e" stroke-width="2"/>`;
+  } else if (s.isNut) {
+    extraSvg += `<circle cx="50" cy="45" r="14" fill="#d35400" stroke="#a04000" stroke-width="2"/><ellipse cx="50" cy="52" rx="10" ry="4" fill="#e67e22"/>`;
+  } else if (s.isMiner) {
+    extraSvg += `<path d="M30 25 L70 65 M70 25 L30 65" stroke="#7f8c8d" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="30" r="6" fill="#f1c40f"/>`;
+  } else if (s.isBanker) {
+    extraSvg += `<text x="50" y="58" font-size="28" font-weight="bold" fill="#2ecc71" text-anchor="middle" font-family="Arial">$</text>`;
+  } else if (s.isArcade) {
+    extraSvg += `<rect x="32" y="42" width="36" height="20" rx="4" fill="#2c3e50"/><circle cx="42" cy="52" r="4" fill="#e74c3c"/><rect x="54" y="48" width="8" height="8" fill="#3498db"/>`;
+  } else if (s.isIce) {
+    extraSvg += `<line x1="50" y1="20" x2="50" y2="80" stroke="#74b9ff" stroke-width="3"/><line x1="20" y1="50" x2="80" y2="50" stroke="#74b9ff" stroke-width="3"/><line x1="28" y1="28" x2="72" y2="72" stroke="#74b9ff" stroke-width="2"/><line x1="28" y1="72" x2="72" y2="28" stroke="#74b9ff" stroke-width="2"/>`;
+  } else if (s.isDiamond) {
+    extraSvg += `<polygon points="50,18 72,45 50,75 28,45" fill="#70a1ff" opacity="0.8" stroke="#ffffff" stroke-width="2"/>`;
+  } else if (s.isVortex) {
+    extraSvg += `<circle cx="50" cy="50" r="28" fill="none" stroke="#a29bfe" stroke-width="4" stroke-dasharray="8 6"/><circle cx="50" cy="50" r="14" fill="none" stroke="#6c5ce7" stroke-width="4" stroke-dasharray="6 4"/>`;
+  } else if (s.isCyber) {
+    extraSvg += `<rect x="25" y="30" width="50" height="40" rx="6" fill="none" stroke="#00d2d3" stroke-width="3"/><path d="M35 50 L45 50 L50 40 L55 60 L60 50 L65 50" fill="none" stroke="#00ff88" stroke-width="2.5"/>`;
+  } else if (s.isNebula) {
+    extraSvg += `<ellipse cx="50" cy="50" rx="35" ry="18" fill="none" stroke="#e056fd" stroke-width="3" transform="rotate(-25 50 50)" filter="drop-shadow(0 0 6px #e056fd)"/><circle cx="50" cy="50" r="6" fill="#ffbe76"/>`;
+  } else if (s.isPhoenix) {
+    extraSvg += `<path d="M20 60 Q50 10 80 60 Q50 45 20 60" fill="#ff3838" opacity="0.8"/><circle cx="50" cy="35" r="6" fill="#ffd32a" filter="drop-shadow(0 0 6px #ff9f43)"/>`;
+  } else if (s.isChrono) {
+    extraSvg += `<circle cx="50" cy="50" r="24" fill="none" stroke="#f1c40f" stroke-width="3.5"/><line x1="50" y1="50" x2="50" y2="34" stroke="#f1c40f" stroke-width="3" stroke-linecap="round"/><line x1="50" y1="50" x2="62" y2="50" stroke="#f1c40f" stroke-width="3" stroke-linecap="round"/>`;
+  } else if (s.isTitan) {
+    extraSvg += `<path d="M25 40 L50 20 L75 40 L65 75 L35 75 Z" fill="#2d3436" stroke="#e17055" stroke-width="3"/><circle cx="50" cy="45" r="8" fill="#e17055" filter="drop-shadow(0 0 5px #d63031)"/>`;
+  } else if (s.isBlackHole) {
+    extraSvg += `<circle cx="50" cy="50" r="28" fill="#050505" stroke="#ff4757" stroke-width="4" filter="drop-shadow(0 0 10px #ff4757)"/><circle cx="50" cy="50" r="16" fill="#000" stroke="#a55eea" stroke-width="2"/>`;
+  } else if (s.isDivine) {
+    extraSvg += `<circle cx="50" cy="50" r="30" fill="none" stroke="#f1c40f" stroke-width="3" filter="drop-shadow(0 0 8px #f1c40f)"/><polygon points="50,15 54,26 65,27 57,34 59,45 50,40 41,45 43,34 35,27 46,26" fill="#ffffff" filter="drop-shadow(0 0 5px #fff)"/><circle cx="50" cy="50" r="8" fill="#ffd32a"/>`;
   }
 
   return `<svg viewBox="0 0 100 100" class="cookie-svg-art" style="width:100%; height:100%;">
@@ -3749,8 +3852,18 @@ function compHas(powerType) {
   for (let id of S.compData.equipped) {
     if (!id) continue;
     const c = COMPANIONS.find(x => x.id === id);
-    if (c && c.powerType === powerType) {
-      total += companionVal(id);
+    if (!c) continue;
+    const val = companionVal(id);
+    if (c.powerType === powerType) {
+      total += val;
+    } else if (c.powerType === 'divine_omni') {
+      if (powerType === 'cps' || powerType === 'click' || powerType === 'all_buildings') {
+        total += val;
+      }
+    } else if (c.powerType === 'chrono_master') {
+      if (powerType === 'arcade_speed' || powerType === 'frenzy_dur' || powerType === 'golden_vision') {
+        total += val;
+      }
     }
   }
   return total;
