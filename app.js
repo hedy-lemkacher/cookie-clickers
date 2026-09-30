@@ -575,6 +575,7 @@ function renderCasinoPane() {
             }
           }
           recalc();
+          refreshStore();
           toast('☠️', 'La Mort qui Tue', 'Vous avez perdu la moitié de vos bâtiments !');
         }
         if (s.life) {
@@ -584,6 +585,7 @@ function renderCasinoPane() {
             S.owned[b.id] *= 2;
           }
           recalc();
+          refreshStore();
           toast('🌈', 'La Vie qui Vie', 'Vos deux derniers bâtiments ont doublé !');
         }
         if (s.halfBank) {
