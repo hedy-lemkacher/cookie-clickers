@@ -109,12 +109,12 @@ special('ticket', '🎫', 'Ticket d\'or',            'Les mini-jeux rapportent <
 
 /* --- Raretés & Compagnons --- */
 const RARITIES = {
-  commun: { name: 'Commun', prob: 52, color: '#bdc3c7' },
+  commun: { name: 'Commun', prob: 52.05, color: '#bdc3c7' },
   peu_commun: { name: 'Peu commun', prob: 26, color: '#2ecc71' },
   rare: { name: 'Rare', prob: 14, color: '#3498db' },
   epique: { name: 'Épique', prob: 6.2, color: '#9b59b6' },
   legendaire: { name: 'Légendaire', prob: 1.7, color: '#f1c40f' },
-  mythique: { name: 'Mythique', prob: 0.1, color: '#ff4757' }
+  mythique: { name: 'Mythique', prob: 0.05, color: '#ff4757' }
 };
 
 const COMPANIONS = [
@@ -154,7 +154,7 @@ const COMPANIONS = [
 
   // Épiques (Cookies CSS/SVG)
   { id: 'c_demon', name: 'Cookie démon infernal', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
-  { id: 'c_ange', name: 'Cookie séraphin céleste', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.15, powerStep: 0.03, desc: 'Efficacité des pépites célestes +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
+  { id: 'c_ange', name: 'Cookie séraphin céleste', rarity: 'epique', powerType: 'golden_dur', powerBase: 0.25, powerStep: 0.05, desc: 'Durée des frénésies +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
   { id: 'c_roi', name: 'Cookie souverain impérial', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.20, powerStep: 0.05, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#f9ca24', '#f0932b', '#eb4d4b'], chip: '#6ab04c', edge: '#f0932b', isKing: true } },
   { id: 'c_gold', name: 'Cookie lingot suprême', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.40, powerStep: 0.10, desc: 'Gains des cookies dorés +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
   { id: 'c_diamant', name: 'Cookie de diamant pur', rarity: 'epique', powerType: 'building_discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments de {val}%', style: { c: ['#e0f7fa', '#80deea', '#26c6da'], chip: '#ffffff', edge: '#00acc1', isDiamond: true } },
@@ -216,7 +216,7 @@ const ACHIEVEMENTS = [
   { icon: '🌈', name: 'Lumière pure',         desc: 'Posséder un prisme.',                     test: () => owned('prism') >= 1 },
   { icon: '🎁', name: 'Fidèle',               desc: 'Récupérer un cadeau du jour.',            test: () => S.dailyCount >= 1 },
   // --- Succès Compagnons ---
-  { icon: '🎰', name: 'Premier Recrutement',  desc: 'Débloquer votre premier compagnon à la Machine à sous.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 1 },
+  { icon: '🎰', name: 'Premier Recrutement',  desc: 'Débloquer votre premier compagnon.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 1 },
   { icon: '🛡️', name: 'Duo de Choc',          desc: 'Équiper deux compagnons en même temps.',                 test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 2 },
   { icon: '⚔️', name: 'Trio Invincible',      desc: 'Équiper trois compagnons en même temps.',                test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 3 },
   { icon: '💎', name: 'Évolution Gourmande',  desc: 'Améliorer un compagnon au niveau 3 ou plus.',             test: () => S.compData && S.compData.levels && Object.values(S.compData.levels).some(lvl => lvl >= 3) },
@@ -327,7 +327,8 @@ function load() {
       if (S.ascensions > 0 && S.chips === 0 && S.bakedAll > 1e12) {
           S.chips = 70; // Emergency compensation
       }
-      if (S.chips > 100) S.chips = 50;
+      if (S.chips >= 70) S.chips = 0;
+      else if (S.chips > 25) S.chips = 25;
       S.casino = Object.assign(freshState().casino, S.casino);
       S.compData = Object.assign(freshState().compData, S.compData);
     }
@@ -2609,7 +2610,7 @@ function gameCook(api) {
 /* =====================================================================
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
-const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / 1e12) * 0.5));
+const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1e12 * Math.pow(5, S.ascensions))) * 0.5));
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -2629,23 +2630,36 @@ function renderAchPane() {
     ['Temps de jeu', fmtTime(S.playTime)],
   ];
   $('#statsGrid').innerHTML = rows.map(([k, v]) => '<div><span>' + k + '</span><b>' + v + '</b></div>').join('');
-  const pot = chipsPotential(), g = pot - S.chips;
+  const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(5, S.ascensions);
   $('#ascInfo').innerHTML =
     '<p>Pépites célestes : <b>' + S.chips + '</b> (+' + S.chips * 2 + ' % de production)</p>' +
     (g > 0
       ? '<p>Une ascension maintenant vous rapporterait <b>' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g * 2 + ' %).</p>'
-      : '<p>Prochaine pépite quand vous aurez cuit <b>' + fmt(Math.pow(pot + 1, 3) * 1e12) + '</b> cookies au total.</p>');
+      : '<p>Prochaine pépite quand vous aurez cuit <b>' + fmt(nextTarget) + '</b> cookies.</p>');
   $('#ascBtn').disabled = g < 1;
   if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
 }
-$('#ascBtn').addEventListener('click', () => {
-  const g = chipsPotential();
-  if (g < 1) return;
-  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments, améliorations et compagnons repartent de zéro, mais vous gagnez ' + g +
-    ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
+
+function performAscension(g, keptCompId = null) {
   if (activeEvent) endEvent();
   const keep = {};
-  keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  
+  if (keptCompId && S.compData && S.compData.unlocked && S.compData.unlocked.includes(keptCompId)) {
+    const lvl = (S.compData.levels && S.compData.levels[keptCompId]) || 1;
+    const sh = (S.compData.shards && S.compData.shards[keptCompId]) || 0;
+    keep.compData = {
+      unlocked: [keptCompId],
+      equipped: [keptCompId],
+      shards: { [keptCompId]: sh },
+      levels: { [keptCompId]: lvl },
+      pulls: 0,
+      pityTracker: 0
+    };
+  } else {
+    keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  }
+
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
@@ -2656,9 +2670,67 @@ $('#ascBtn').addEventListener('click', () => {
   refreshAll();
   renderAchPane();
   if (typeof renderCompanions === 'function') renderCompanions();
+  if (typeof renderGachaPane === 'function') renderGachaPane();
   save();
-  toast('😇', 'Ascension', 'Vous avez maintenant ' + S.chips + ' pépites célestes !');
+  const keptName = keptCompId ? (COMPANIONS.find(x => x.id === keptCompId)?.name || 'Votre compagnon') : null;
+  toast('😇', 'Ascension Réussie !', `Vous avez maintenant ${S.chips} pépites célestes !` + (keptName ? ` 🤝 ${keptName} vous a accompagné !` : ''));
   celebrate();
+}
+
+$('#ascBtn').addEventListener('click', () => {
+  const g = chipsPotential();
+  if (g < 1) return;
+
+  const canKeepFriend = S.temple && S.temple.includes('keep_friend') && S.compData && S.compData.unlocked && S.compData.unlocked.length > 0;
+
+  if (canKeepFriend) {
+    current = { ended: true, api: { frac: 0 } };
+    mInfo.textContent = '';
+    
+    let compCardsHtml = '';
+    for (let id of S.compData.unlocked) {
+      const c = COMPANIONS.find(x => x.id === id);
+      if (!c) continue;
+      const lvl = (S.compData.levels && S.compData.levels[id]) || 1;
+      const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
+      compCardsHtml += `
+        <div class="selector-comp-card rarity-${c.rarity}" data-asc-keep="${c.id}" style="cursor:pointer;">
+          <div style="width:48px; height:48px; margin-bottom:6px; pointer-events:none;" class="${friendClass}">
+            ${renderCompanionVisual(c, 48)}
+          </div>
+          <b style="font-size:12px; color:#fff; pointer-events:none;">${c.name}</b>
+          <span style="font-size:10px; color:${RARITIES[c.rarity].color}; font-weight:bold; pointer-events:none;">${RARITIES[c.rarity].name} · Lvl ${lvl}</span>
+          <button class="big-btn" data-asc-keep="${c.id}" style="margin-top:6px; font-size:11px; padding:4px 8px; width:100%; background:#2ecc71;">
+            🤝 Conserver
+          </button>
+        </div>
+      `;
+    }
+
+    mBody.innerHTML = `
+      <div style="padding:15px; text-align:center;">
+        <div style="font-size:44px; margin-bottom:6px;">😇</div>
+        <h2 style="color:#f1c40f; margin-bottom:6px;">Ascension Céleste</h2>
+        <p style="font-size:13px; color:#ced6e0; margin-bottom:12px;">
+          Vous allez gagner <b style="color:#ffeb3b;">+${g} pépite(s) céleste(s)</b> (+${g * 2}% prod).<br>
+          Grâce à <b>« Conserver mes amis »</b>, choisissez <b>1 compagnon</b> à emmener avec vous :
+        </p>
+        <div class="selector-comp-grid" style="max-height:300px; overflow-y:auto;">
+          ${compCardsHtml}
+        </div>
+        <div style="display:flex; justify-content:center; gap:12px; margin-top:16px;">
+          <button class="big-btn" onclick="closeModal();" style="background:#57606f; font-size:12px; padding:8px 14px;">Annuler</button>
+          <button class="big-btn" data-asc-keep="none" style="background:#e74c3c; font-size:12px; padding:8px 14px;">Ne garder aucun compagnon</button>
+        </div>
+      </div>
+    `;
+    modal.classList.add('on');
+    return;
+  }
+
+  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations repartent de zéro, mais vous gagnez ' + g +
+    ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
+  performAscension(g, null);
 });
 $('#reset').addEventListener('click', () => {
   if (!confirm('Effacer complètement votre partie ? Tout sera perdu, même les succès.')) return;
@@ -3347,6 +3419,7 @@ const TEMPLE_UPGRADES = [
   { id: 'celestial_basketball', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', apply: () => {} },
   { id: 'celestial_football', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', apply: () => {} },
   { id: 'comp_trio',  name: '🛡️ Trio Légendaire',      cost: 15,  desc: 'Débloque un 3ème emplacement de compagnon actif (3 compagnons équipés)', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); recalc(); } },
+  { id: 'keep_friend', name: '🤝 Conserver mes amis',   cost: 20,  desc: 'Permet de conserver au choix 1 compagnon lors de chaque Ascension', apply: () => {} },
   { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
   { id: 'power+',     name: '⏱️ Pouvoir Prolongé',     cost: 10,  desc: 'Le buff Touche Entrée dure 90s au lieu de 60s',       apply: () => {} },
   { id: 'frenzy+',    name: '🔥 Grande Frénésie',      cost: 20,  desc: 'Le bonus de la touche Entrée dure 45s au lieu de 30s',            apply: () => {} },
@@ -3971,9 +4044,9 @@ window.openCompanionSelector = function(slotIdx) {
   if (unlocked.length === 0) {
     modalHtml += `
       <div style="padding:30px; color:#747d8c; font-size:14px;">
-        <div style="font-size:40px; margin-bottom:10px;">🎰</div>
+        <div style="font-size:40px; margin-bottom:10px;">👥</div>
         Vous n'avez pas encore débloqué de compagnons.<br>
-        Rendez-vous dans l'onglet <b>Machine à sous</b> pour effectuer vos premiers tirages !
+        Rendez-vous dans l'onglet <b>Compagnons</b> pour effectuer vos premiers tirages !
       </div>
     `;
   } else {
@@ -4093,13 +4166,13 @@ function gachaCost(count = 1) {
   const pulls = (S.compData && S.compData.pulls) || 0;
   let total = 0;
   for (let i = 0; i < count; i++) {
-    total += Math.max(1e5, cps() * 400) * Math.pow(1.025, pulls + i);
+    total += Math.max(1000, cps() * 20) * Math.pow(1.01, pulls + i);
   }
-  if (count >= 10) total *= 0.9;
+  if (count >= 10) total *= 0.85;
   return Math.ceil(total);
 }
 
-/* Machine à sous / Roulette ultra-fluide avec Tirage x1 et Tirage x10 */
+/* Roulette / Tirage de Compagnons ultra-fluide avec Tirage x1 et Tirage x10 */
 let isGachaSpinning = false;
 
 function buildInitialReelHtml() {
@@ -4128,7 +4201,7 @@ function showGachaMultiWinModal(results) {
     const rarityInfo = RARITIES[c.rarity] || { name: c.rarity, color: '#bdc3c7' };
     
     gridHtml += `
-      <div class="gacha-multi-card rarity-${c.rarity} ${friendClass}" style="background:rgba(20,20,30,0.85); border:2px solid ${rarityInfo.color}; border-radius:12px; padding:10px 6px; text-align:center; position:relative; box-shadow:0 4px 10px rgba(0,0,0,0.4); display:flex; flex-direction:column; align-items:center; justify-content:space-between;">
+      <div class="gacha-multi-card rarity-${c.rarity} ${friendClass}" style="background:rgba(20,20,30,0.85); border:2px solid ${rarityInfo.color}; border-radius:12px; padding:10px 6px; text-align:center; position:relative; box-shadow:0 4px 10px rgba(0,0,0,0.4); display:flex; flex-direction:column; align-items:center; justify-content:space-between; cursor:pointer;" data-comp-detail="${c.id}">
         ${r.isNew ? '<span style="position:absolute; top:-7px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.5); z-index:2; white-space:nowrap;">NOUVEAU</span>' : '<span style="position:absolute; top:-7px; left:50%; transform:translateX(-50%); background:#3498db; color:white; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.5); z-index:2; white-space:nowrap;">+1 ÉCLAT</span>'}
         <div style="width:52px; height:52px; margin:6px auto 4px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;">
           ${renderCompanionVisual(c, 52)}
@@ -4143,9 +4216,10 @@ function showGachaMultiWinModal(results) {
   
   mBody.innerHTML = `
     <div style="padding:10px 12px; text-align:center;">
-      <h2 style="margin:0 0 5px; font-size:22px; color:#f1c40f;">🎰 Tirage x10 - Résultats !</h2>
+      <h2 style="margin:0 0 5px; font-size:22px; color:#f1c40f;">👥 Tirage x10 - Résultats !</h2>
       <p style="font-size:13px; color:#dfe4ea; margin:0 0 10px;">
-        🎉 <b>${newCount}</b> nouveau(x) compagnon(s) · 💎 <b>${shardCount}</b> éclat(s) de doublon(s)
+        🎉 <b>${newCount}</b> nouveau(x) compagnon(s) · 💎 <b>${shardCount}</b> éclat(s) de doublon(s)<br>
+        <i>(Cliquez sur une carte pour voir les détails)</i>
       </p>
       
       ${gridHtml}
@@ -4185,7 +4259,7 @@ function spinGacha(count = 1) {
   if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   
   isGachaSpinning = true;
-  if (btn1) { btn1.disabled = true; btn1.textContent = '🎰 Tirage...'; }
+  if (btn1) { btn1.disabled = true; btn1.textContent = '👥 Tirage...'; }
   if (btn10) { btn10.disabled = true; btn10.textContent = '✨ Tirage...'; }
   
   function rollOneCompanion() {
@@ -4228,9 +4302,9 @@ function spinGacha(count = 1) {
     const result = res.comp;
     const isNew = res.isNew;
     
-    // Construction de 80 éléments pour une animation plus longue, plus fluide et plus palpitante
-    const totalItems = 80;
-    const targetIndex = 62;
+    // Animation très rapide (~1.2 secondes)
+    const totalItems = 30;
+    const targetIndex = 22;
     let reelHtml = '';
     
     for (let i = 0; i < totalItems; i++) {
@@ -4253,9 +4327,9 @@ function spinGacha(count = 1) {
     
     requestAnimationFrame(() => {
       setTimeout(() => {
-        reel.style.transition = 'transform 7.0s cubic-bezier(0.06, 0.85, 0.15, 1)';
+        reel.style.transition = 'transform 1.2s cubic-bezier(0.12, 0.85, 0.25, 1)';
         reel.style.transform = `translateX(-${targetOffset}px)`;
-      }, 30);
+      }, 20);
     });
     
     setTimeout(() => {
@@ -4276,16 +4350,16 @@ function spinGacha(count = 1) {
       
       setTimeout(() => {
         showGachaWinModal(result, isNew);
-      }, 250);
-    }, 7150);
+      }, 100);
+    }, 1250);
   } else {
-    // Tirage x10
+    // Tirage x10 ultra rapide (~0.7s)
     const results = [];
     for (let i = 0; i < 10; i++) {
       results.push(rollOneCompanion());
     }
     
-    const totalItems = 60;
+    const totalItems = 25;
     let reelHtml = '';
     for (let i = 0; i < totalItems; i++) {
       const itemComp = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
@@ -4302,9 +4376,9 @@ function spinGacha(count = 1) {
     
     requestAnimationFrame(() => {
       setTimeout(() => {
-        reel.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.85, 0.2, 1)';
+        reel.style.transition = 'transform 0.7s cubic-bezier(0.15, 0.85, 0.3, 1)';
         reel.style.transform = `translateX(-${totalItems * 65}px)`;
-      }, 30);
+      }, 20);
     });
     
     setTimeout(() => {
@@ -4314,7 +4388,7 @@ function spinGacha(count = 1) {
       renderCompanions();
       renderGachaPane();
       showGachaMultiWinModal(results);
-    }, 3600);
+    }, 750);
   }
 }
 window.spinGacha = spinGacha;
@@ -4427,7 +4501,7 @@ function renderGachaPane() {
     <div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
         <h3 style="display:flex; align-items:center; gap:10px; margin:0;">
-          🎰 Machine à sous
+          👥 Compagnons
           <button style="background:#3498db; border:none; border-radius:50%; width:24px; height:24px; color:white; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.4);" onclick="showGachaInfo()" title="Guide des compagnons">?</button>
         </h3>
         <p style="margin:4px 0 0; color:#a4b0be; font-size:13px;">Tirez et recrutez des compagnons légendaires !</p>
@@ -4451,20 +4525,20 @@ function renderGachaPane() {
       </div>
       <div class="gacha-actions-row" style="display:flex; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap;">
         <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost(1) ? 'disabled' : ''} style="min-width:180px; font-size:15px; padding:12px 18px;">
-          ${isGachaSpinning ? 'Tirage en cours...' : `🎰 Tirer x1 ( ${fmt(gachaCost(1))} 🍪 )`}
+          ${isGachaSpinning ? '👥 Tirage en cours...' : `👥 Tirer x1 ( ${fmt(gachaCost(1))} 🍪 )`}
         </button>
         <button class="big-btn" id="btnSpinGacha10" ${isGachaSpinning || S.cookies < gachaCost(10) ? 'disabled' : ''} style="min-width:210px; font-size:15px; padding:12px 18px; background:linear-gradient(135deg, #e67e22, #f39c12); box-shadow:0 4px 15px rgba(243,156,18,0.4);">
-          ${isGachaSpinning ? 'Tirage en cours...' : `✨ Tirer x10 ( ${fmt(gachaCost(10))} 🍪 )`}
+          ${isGachaSpinning ? '👥 Tirage en cours...' : `✨ Tirer x10 ( ${fmt(gachaCost(10))} 🍪 )`}
         </button>
       </div>
       <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <b style="color:#a4b0be;">Taux :</b>
-        <span style="color:#bdc3c7;">Commun (52%)</span> ·
+        <span style="color:#bdc3c7;">Commun (52.05%)</span> ·
         <span style="color:#2ecc71;">Peu commun (26%)</span> ·
         <span style="color:#3498db;">Rare (14%)</span> ·
         <span style="color:#9b59b6;">Épique (6.2%)</span> ·
         <span style="color:#f1c40f;">Légendaire (1.7%)</span> ·
-        <span style="color:#ff4757; font-weight:bold;">Mythique (0.1% 🌟)</span>
+        <span style="color:#ff4757; font-weight:bold;">Mythique (0.05% 🌟)</span>
       </div>
     </div>
     
@@ -4595,7 +4669,7 @@ function renderGachaPane() {
 
       html += `
         <div class="companion-card rarity-${c.rarity}">
-          <div class="comp-card-top">
+          <div class="comp-card-top" data-comp-detail="${c.id}" style="cursor:pointer;" title="Cliquez pour les détails">
             <div class="comp-card-visual">
               ${renderCompanionVisual(c, 44)}
             </div>
@@ -4628,7 +4702,7 @@ function renderGachaPane() {
               <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name}</div>
             </div>
           </div>
-          <div class="comp-card-power" style="color:#747d8c;">Débloquez ce compagnon à la Machine à sous.</div>
+          <div class="comp-card-power" style="color:#747d8c;">Débloquez ce compagnon dans l'onglet Compagnons.</div>
         </div>
       `;
     }
@@ -4691,6 +4765,75 @@ window.showGachaInfo = function() {
   modal.classList.add('on');
 };
 
+window.openCompanionDetail = function(cid) {
+  const c = COMPANIONS.find(x => x.id === cid);
+  if (!c) return;
+  
+  const lvl = S.compData?.levels[c.id] || 1;
+  const shards = S.compData?.shards[c.id] || 0;
+  const val = Math.round(companionVal(c.id) * 100);
+  const isEquipped = S.compData?.equipped.includes(c.id);
+  
+  let explanation = '';
+  if (c.powerType.includes('cps') || c.powerType === 'all_buildings') {
+    explanation = `Multiplie de manière globale votre production automatique (CPS) par ${1 + (val/100)}.`;
+  } else if (c.powerType.includes('click')) {
+    explanation = `Rend vos clics manuels ${1 + (val/100)} fois plus puissants.`;
+  } else if (c.powerType === 'building_matrix' || c.powerType === 'building_prism' || c.powerType.startsWith('building_')) {
+    explanation = `Cible un bâtiment spécifique (ici : ${c.powerType.split('_')[1]}) pour démultiplier sa production.`;
+  } else if (c.powerType === 'golden_freq') {
+    explanation = `Les cookies dorés apparaissent ${val}% plus souvent.`;
+  } else if (c.powerType === 'golden_dur') {
+    explanation = `Toutes vos frénésies durent ${val}% plus longtemps.`;
+  } else if (c.powerType === 'events') {
+    explanation = `Augmente la puissance et les gains lors des événements aléatoires de ${val}%.`;
+  } else if (c.powerType === 'discount') {
+    explanation = `Réduit le coût en cookies de tous les achats de ${val}%.`;
+  } else if (c.powerType === 'double_edged') {
+    explanation = `Double tranchant : vous offre un énorme bonus, mais un malus équivalent sur un autre aspect du jeu.`;
+  } else if (c.powerType === 'luck_mult') {
+    explanation = `Vous confère ${val}% de chances aléatoires de doubler les gains obtenus.`;
+  } else if (c.powerType === 'speed') {
+    explanation = `Accélère drastiquement la cadence de jeu de ${val}%.`;
+  } else if (c.powerType === 'minigame_god') {
+    explanation = `Vos récompenses lors des mini-jeux sont augmentées de ${val}%.`;
+  } else {
+    explanation = `Confère un puissant bonus thématique.`;
+  }
+
+  current = { ended: true, api: { frac: 0 } };
+  mInfo.textContent = '';
+  mBody.innerHTML = `
+    <div style="padding:20px; text-align:center;">
+      <div style="width:80px; height:80px; margin:0 auto 15px; border-radius:50%; box-shadow:0 0 20px ${RARITIES[c.rarity].color}88;">
+        ${renderCompanionVisual(c, 80)}
+      </div>
+      <h2 style="color:#fff; margin-bottom:5px;">${c.name}</h2>
+      <div style="color:${RARITIES[c.rarity].color}; font-weight:bold; font-size:14px; margin-bottom:15px;">
+        ${RARITIES[c.rarity].name} · Niveau ${lvl}
+      </div>
+      
+      <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px; text-align:left; margin-bottom:20px;">
+        <h4 style="margin:0 0 10px; color:#f1c40f;">Statistiques actuelles</h4>
+        <div style="font-size:14px; color:#dfe4ea; margin-bottom:8px;">
+          <b>Effet :</b> ${c.desc.replace('{val}', val)}
+        </div>
+        <div style="font-size:13px; color:#a4b0be; font-style:italic;">
+          ${explanation}
+        </div>
+      </div>
+      
+      <div style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-bottom:20px;">
+        <div>💎 Éclats : <b>${shards} / ${lvl}</b></div>
+        <div>Statut : <b style="color:${isEquipped ? '#2ecc71' : '#e74c3c'};">${isEquipped ? 'Équipé' : 'En repos'}</b></div>
+      </div>
+      
+      <button class="big-btn" onclick="closeModal()" style="width:200px;">Fermer</button>
+    </div>
+  `;
+  modal.classList.add('on');
+};
+
 function injectCompData(s) {
   if (!s.compData) s.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   return s;
@@ -4698,6 +4841,24 @@ function injectCompData(s) {
 
 /* Écouteur global d'événements pour les compagnons (100% compatible CSP et délégation) */
 document.addEventListener('click', (e) => {
+  // Ascension "Conserver mes amis" handler
+  const ascKeepBtn = e.target.closest('[data-asc-keep]');
+  if (ascKeepBtn) {
+    const keepId = ascKeepBtn.dataset.ascKeep;
+    const g = chipsPotential() - S.chips;
+    closeModal();
+    performAscension(g, keepId === 'none' ? null : keepId);
+    return;
+  }
+
+  // Companion detail popup handler
+  const compDetailBtn = e.target.closest('[data-comp-detail]');
+  if (compDetailBtn && !e.target.closest('[data-equip-id]') && !e.target.closest('[data-upgrade-id]')) {
+    const cid = compDetailBtn.dataset.compDetail;
+    openCompanionDetail(cid);
+    return;
+  }
+
   const equipBtn = e.target.closest('[data-equip-id]');
   if (equipBtn) {
     const id = equipBtn.dataset.equipId;
