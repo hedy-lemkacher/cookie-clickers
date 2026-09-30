@@ -1,0 +1,29 @@
+| Compagnon | Fichier | Rareté | Image attendue |
+| --- | --- | --- | --- |
+| Cookie classique | cookie_classique.png | Commun | Un cookie basique très simple |
+| Mini-cookie | mini_cookie.png | Commun | Un tout petit cookie mignon |
+| Cookie chocolat | cookie_chocolat.png | Commun | Un cookie tout en chocolat |
+| Cookie pépite | cookie_pepite.png | Commun | Un cookie avec de grosses pépites |
+| Cookie au caramel | cookie_au_caramel.png | Commun | Un cookie dégoulinant de caramel |
+| Cookie fantôme | cookie_fantome.png | Peu commun | Un cookie translucide avec un drap blanc |
+| Cookie ninja | cookie_ninja.png | Peu commun | Un cookie avec un bandeau ninja et des shurikens |
+| Cookie pirate | cookie_pirate.png | Peu commun | Un cookie avec un cache-œil et un chapeau de pirate |
+| Cookie robot | cookie_robot.png | Peu commun | Un cookie métallique avec des engrenages |
+| Cookie au chocolat blanc | cookie_au_chocolat_blanc.png | Peu commun | Un cookie clair avec des pépites blanches |
+| Cookie à la fraise | cookie_a_la_fraise.png | Peu commun | Un cookie rose avec des morceaux de fraise |
+| Cookie chevalier | cookie_chevalier.png | Rare | Un cookie en armure avec une petite épée |
+| Cookie astronaute | cookie_astronaute.png | Rare | Un cookie dans un scaphandre spatial |
+| Cookie magicien | cookie_magicien.png | Rare | Un cookie avec un chapeau pointu et une baguette |
+| Cookie dragon | cookie_dragon.png | Rare | Un cookie avec des ailes et des écailles de dragon |
+| Cookie démon | cookie_demon.png | Épique | Un cookie rouge avec des cornes et une fourche |
+| Cookie ange | cookie_ange.png | Épique | Un cookie lumineux avec des ailes à plumes et une auréole |
+| Cookie roi | cookie_roi.png | Épique | Un cookie majestueux avec une couronne sertie de joyaux |
+| Cookie doré | cookie_dore.png | Épique | Un cookie entièrement en or massif étincelant |
+| Le crâne d'Ayoub | le_crane_d_ayoub.png | Mythique | Image d'un grand crâne / cerveau symbolisant l'intelligence |
+| Adam sur FIFA | adam_sur_fifa.png | Mythique | Adam très concentré/rageant avec une manette de jeu |
+| Le panipuri de Vikash | le_panipuri_de_vikash.png | Légendaire | Un délicieux panipuri stylisé et appétissant |
+| Les lunettes d'Abdel | les_lunettes_d_abdel.png | Légendaire | Des lunettes reconnaissables et brillantes |
+| La casquette d'Hedy | la_casquette_d_hedy.png | Légendaire | Une casquette de style unique |
+| La blessure d'Adam | la_blessure_d_adam.png | Mythique | Représentation humoristique d'une blessure (ex: bandage dramatique) |
+| Ayoub au tableau | ayoub_au_tableau.png | Mythique | Ayoub comme un professeur expliquant quelque chose au tableau |
+| Chris sous Jolagreen | chris_sous_jolagreen.png | Mythique | Chris dans une posture fun en référence à Jolagreen |

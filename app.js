@@ -185,6 +185,7 @@ function freshState() {
     gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
+    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
     cheat: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
@@ -251,6 +252,7 @@ function load() {
          if (S.games[g]) { if (Array.isArray(S.games[g])) S.games[g] = []; else if (S.games[g] > Date.now()) S.games[g] = 0; }
       });
       S.casino = Object.assign(freshState().casino, S.casino);
+      S.compData = Object.assign(freshState().compData, S.compData);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
   if (S.bakedAll < S.baked) S.bakedAll = S.baked;
@@ -1143,7 +1145,7 @@ function buyBuilding(b) {
 }
 function buyUpgrade(u) {
   if (S.cookies < u.cost || hasUp(u.id)) return;
-  S.cookies -= u.cost;
+  S.cookies -= cost;
   S.ups.push(u.id);
   recalc();
   hideTip();
@@ -1711,7 +1713,7 @@ function finishGame(state, frac, detail) {
   if (state.cleanup) state.cleanup();
   const g = state.g;
   frac = Math.max(0, Math.min(g.over ? 1.5 : 1, frac || 0));
-  const reward = Math.round(gameMax() * frac * (g.weight || 1));
+  const reward = Math.round(gameMax() * frac * (g.weight || 1) * (1 + compHas('minigame_god')));
   gain(reward);
   S.gamesPlayed++;
   S.gameBest[g.id] = Math.max(S.gameBest[g.id] || 0, frac);
@@ -2533,6 +2535,7 @@ $('#ascBtn').addEventListener('click', () => {
     ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
   if (activeEvent) endEvent();
   const keep = {};
+  keep.compData = S.compData;
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
@@ -2860,6 +2863,7 @@ function updateDots() {
    AFFICHAGE PRINCIPAL
    ===================================================================== */
 function refreshAll() {
+  renderCompanions();
   refreshStore();
   refreshShowcase();
   checkAchievements();
@@ -3360,30 +3364,50 @@ if (tabTempleUps && tabTempleAsc) {
 
 // CELESTIAL GAMES LOGIC
 
-
 function gameCelestialBowling(api, g) {
   let playing = false, angle = -90, dir = 1, speed = 2.5;
-  let raf;
+  let raf, animRaf;
   
-  api.body.innerHTML = `<div class="game-bowling">
-    <p class="game-hint">Arrêtez la flèche quand elle pointe <b>tout droit</b> (au centre) pour faire un Strike !</p>
-    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain d'un Strike : ${fmt(gameMax() * g.weight)} 🍪</div>
-    <div style="position:relative;width:200px;height:100px;margin:20px auto;border-bottom:4px solid #fff;overflow:hidden;">
-      <div id="cBowlingPinArea" style="position:absolute;top:10px;left:0;width:100%;height:30px;display:flex;justify-content:center;gap:5px;">
-        <span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span><span style="font-size:24px;">🥛</span>
+  api.body.innerHTML = `<div class="game-bowling" style="background:#1a0f14; border-radius:12px; padding:20px; overflow:hidden;">
+    <p class="game-hint" style="color:#ddd; margin-bottom:15px;">Arrêtez la flèche bien au centre pour un <b>Strike</b> !</p>
+    
+    <div style="position:relative; width:280px; height:350px; margin:0 auto 20px auto; background:linear-gradient(#2c1e16, #5c3a21); border-left:10px solid #111; border-right:10px solid #111; border-radius:5px; perspective:600px; overflow:hidden;" id="cBowlingAlley">
+      <!-- Piste -->
+      <div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px);"></div>
+      
+      <!-- Quilles -->
+      <div id="cBowlingPins" style="position:absolute; top:30px; left:0; width:100%; height:60px; display:flex; justify-content:center; gap:8px; transition: 0.5s;">
+        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5));">🥛</span>
+        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5)); margin-top:-15px;">🥛</span>
+        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5));">🥛</span>
       </div>
-      <div style="position:absolute;bottom:0;left:50%;width:4px;height:50px;background:#f1c40f;transform-origin:bottom center;transform:translateX(-50%) rotate(-90deg);" id="cBowlingArrow">
-        <div style="position:absolute;top:-5px;left:-6px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:12px solid #f1c40f;"></div>
+      
+      <!-- Boule (Cookie) -->
+      <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1);">🍪</div>
+      
+      <!-- Flèche de visée -->
+      <div style="position:absolute; bottom:40px; left:50%; width:4px; height:80px; background:rgba(241, 196, 15, 0.8); transform-origin:bottom center; transform:translateX(-50%) rotate(-90deg); z-index:10;" id="cBowlingArrow">
+        <div style="position:absolute; top:-5px; left:-8px; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:15px solid #f1c40f;"></div>
       </div>
     </div>
+    
     <div style="text-align:center;">
-      <button id="cBowlingBtn" class="big-btn" style="background:linear-gradient(135deg, #e74c3c, #c0392b); width:150px;">Lancer</button>
+      <button id="cBowlingBtn" class="big-btn" style="background:linear-gradient(135deg, #e74c3c, #c0392b); width:180px; font-size:18px;">LANCER</button>
     </div>
   </div>`;
   
   const arrow = api.body.querySelector('#cBowlingArrow');
   const btn = api.body.querySelector('#cBowlingBtn');
-  const pinArea = api.body.querySelector('#cBowlingPinArea');
+  const ball = api.body.querySelector('#cBowlingBall');
+  const pinsArea = api.body.querySelector('#cBowlingPins');
+  
+  function runBowling() {
+    angle += speed * dir;
+    if (angle >= 90) { angle = 90; dir = -1; }
+    if (angle <= -90) { angle = -90; dir = 1; }
+    arrow.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    raf = requestAnimationFrame(runBowling);
+  }
   
   btn.addEventListener('click', () => {
     if (!playing) {
@@ -3393,47 +3417,37 @@ function gameCelestialBowling(api, g) {
     } else {
       playing = false;
       cancelAnimationFrame(raf);
-      cancelAnimationFrame(raf);
+      btn.disabled = true;
+      btn.textContent = '...';
+      arrow.style.display = 'none';
       
-      // Calculate score based on angle. Perfect is 0.
       const diff = Math.abs(angle);
       let pins = 0;
-      if (diff < 12) pins = 10; // Strike is much wider!
-      else if (diff < 25) pins = 7;
-      else if (diff < 40) pins = 4;
-      else if (diff < 60) pins = 1;
-      else pins = 0; // Gutter
+      if (diff < 15) pins = 10;
+      else if (diff < 30) pins = 7;
+      else if (diff < 50) pins = 4;
+      else if (diff < 70) pins = 1;
+      else pins = 0;
       
-      if (pins === 10) {
-        pinArea.innerHTML = '<span style="font-size:24px;color:#f1c40f;font-weight:bold;">STRIKE ! 🥛💥</span>';
-        const gain = gameMax() * g.weight; // Huge gain
-        S.cookies += gain;
-        toast('🎳', 'Strike Céleste !', '+' + fmt(gain) + ' cookies');
-        setTimeout(() => api.end(0, "Jeu terminé"), 2000);
-      } else {
-        pinArea.innerHTML = `<span style="font-size:20px;color:#fff;">${pins} quilles renversées</span>`;
-        if (pins > 0) {
-           const partialGain = Math.floor((gameMax() * g.weight) * (pins/10));
-           S.cookies += partialGain;
-           toast('🎳', 'Bien joué', '+' + fmt(partialGain) + ' cookies');
+      const targetX = (angle / 90) * 120;
+      ball.style.transform = `translate(${targetX}px, -260px) scale(0.5)`;
+      
+      setTimeout(() => {
+        if (pins === 10) {
+          pinsArea.innerHTML = '<div style="font-size:36px; color:#f1c40f; font-weight:bold; text-shadow:0 0 10px #f1c40f; animation: pulse 0.5s infinite;">STRIKE !</div>';
+          setTimeout(() => api.end(1, "Strike Céleste !"), 1500);
+        } else if (pins > 0) {
+          pinsArea.style.opacity = '0.5';
+          pinsArea.style.transform = 'translateY(-20px) rotate(' + (angle) + 'deg)';
+          setTimeout(() => api.end(pins/10, `${pins} quilles renversées`), 1500);
         } else {
-           toast('🎳', 'Gouttière', 'Vous n\'avez touché aucune quille...');
+          pinsArea.innerHTML = '<div style="font-size:24px; color:#aaa; margin-top:10px;">Gouttière...</div>';
+          setTimeout(() => api.end(0, "Gouttière, la boule est tombée sur le côté."), 1500);
         }
-        btn.textContent = 'Terminé';
-        btn.disabled = true;
-        setTimeout(() => api.end(0, "Jeu terminé"), 2000);
-      }
+      }, 1000);
     }
   });
-  
-  function runBowling() {
-    if (!playing) return;
-    angle += speed * dir;
-    if (angle >= 90) { angle = 90; dir = -1; }
-    if (angle <= -90) { angle = -90; dir = 1; }
-    arrow.style.transform = `translateX(-50%) rotate(${angle}deg)`;
-    raf = requestAnimationFrame(runBowling);
-  }
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(animRaf); };
 }
 
 function gameCelestialBasketball(api, g) {
@@ -3445,7 +3459,6 @@ function gameCelestialBasketball(api, g) {
   
   api.body.innerHTML = `<div class="game-basketball">
     <p class="game-hint">Tirez quand le panier est aligné avec le cookie. <span id="cBaskTries">${tries}</span> essais.</p>
-    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain du Panier : ${fmt(gameMax() * g.weight)} 🍪</div>
     <div style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
       <div id="cHoop" style="position:absolute;top:10px;left:0;width:50px;height:15px;border:3px solid #e74c3c;border-radius:50%;box-shadow:0 10px 0 rgba(231,76,60,0.3);"></div>
       <div id="cBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
@@ -3462,7 +3475,6 @@ function gameCelestialBasketball(api, g) {
   const areaW = api.body.querySelector('#cBaskArea').clientWidth;
   
   function runHoop() {
-    if (!playing) return;
     hoopX += hoopSpeed * hoopDir;
     if (hoopX >= areaW - 56) { hoopX = areaW - 56; hoopDir = -1; }
     if (hoopX <= 0) { hoopX = 0; hoopDir = 1; }
@@ -3485,17 +3497,18 @@ function gameCelestialBasketball(api, g) {
       if (cookieY > 110) { // reached hoop level
         const ballCenter = (areaW / 2);
         const hoopCenter = hoopX + 28;
-        if (Math.abs(ballCenter - hoopCenter) < 40) { // much more forgiving!
+        if (Math.abs(ballCenter - hoopCenter) < 40) { // scored!
           playing = false;
           ball.innerHTML = '✨';
-          
-          setTimeout(() => { if(typeof api.end === 'function') api.end(1, 'Bien joué !'); else if(typeof api.close === 'function') api.end(0, "Jeu terminé"); }, 1500);
+          setTimeout(() => api.end(1, 'Bien joué !'), 1500);
           return;
         } else if (cookieY > 150) { // missed
           tries--;
           triesTxt.textContent = tries;
           if (tries <= 0) {
             playing = false;
+            btn.textContent = 'Terminé';
+            btn.disabled = true;
             setTimeout(() => api.end(0, "Plus d'essais..."), 1500);
           } else {
             shooting = false;
@@ -3506,7 +3519,7 @@ function gameCelestialBasketball(api, g) {
       }
       shootRaf = requestAnimationFrame(animateShoot);
     }
-    shootRaf = requestAnimationFrame(animateShoot);
+    animateShoot();
   });
   return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
@@ -3519,42 +3532,33 @@ function gameCelestialFootball(api, g) {
   let shooting = false;
   
   api.body.innerHTML = `<div class="game-football">
-    <p class="game-hint">Marquez un but en évitant le gardien. <span id="cFoTries">${tries}</span> essais.</p>
-    <div style="text-align:center; margin:10px 0; color:#ffb347; font-weight:bold; font-size:16px;">Gain du But : ${fmt(gameMax() * g.weight)} 🍪</div>
-    <div style="position:relative;width:100%;height:150px;background:#27ae60;border:2px solid #fff;border-radius:5px;margin-bottom:10px;overflow:hidden;" id="cFoArea">
-      <!-- Goal -->
-      <div style="position:absolute;top:0;left:50%;width:100px;margin-left:-50px;height:40px;border:3px solid #fff;border-top:none;"></div>
-      <!-- Goalkeeper -->
-      <div id="cGK" style="position:absolute;top:20px;left:50%;margin-left:-15px;width:30px;height:40px;font-size:24px;line-height:40px;text-align:center;">🥛</div>
-      <!-- Ball -->
-      <div id="cFoBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
+    <p class="game-hint">Marquez le penalty en évitant le verre de lait. <span id="cFooTries">${tries}</span> essais.</p>
+    <div style="position:relative;width:100%;height:150px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
+      <div style="position:absolute;top:0;left:10%;width:80%;height:20px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-right:3px solid #fff;box-sizing:border-box;"></div>
+      <div id="cGk" style="position:absolute;top:20px;left:0;width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;">🥛</div>
+      <div id="cBallFoo" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
     <div style="text-align:center;">
-      <button id="cFoBtn" class="big-btn" style="background:linear-gradient(135deg, #2980b9, #2c3e50); width:150px;">Tirer</button>
+      <button id="cFooBtn" class="big-btn" style="background:linear-gradient(135deg, #27ae60, #2ecc71); width:150px;">Tirer</button>
     </div>
   </div>`;
   
-  const gk = api.body.querySelector('#cGK');
-  const ball = api.body.querySelector('#cFoBall');
-  const btn = api.body.querySelector('#cFoBtn');
-  const triesTxt = api.body.querySelector('#cFoTries');
-  const areaW = api.body.querySelector('#cFoArea').clientWidth;
-  // GK moves within the 100px goal area
-  const gkMin = (areaW / 2) - 50;
-  const gkMax = (areaW / 2) + 50 - 30; // 30 is width of GK
-  gkX = gkMin;
+  const gk = api.body.querySelector('#cGk');
+  const ball = api.body.querySelector('#cBallFoo');
+  const btn = api.body.querySelector('#cFooBtn');
+  const triesTxt = api.body.querySelector('#cFooTries');
+  const areaW = api.body.querySelector('#cFooArea').clientWidth;
   
-  function runGK() {
-    if (!playing) return;
+  function runGk() {
     gkX += gkSpeed * gkDir;
-    if (gkX >= gkMax) { gkX = gkMax; gkDir = -1; }
-    if (gkX <= gkMin) { gkX = gkMin; gkDir = 1; }
+    if (gkX >= areaW - 30) { gkX = areaW - 30; gkDir = -1; }
+    if (gkX <= 0) { gkX = 0; gkDir = 1; }
     gk.style.left = gkX + 'px';
-    raf = requestAnimationFrame(runGK);
+    raf = requestAnimationFrame(runGk);
   }
   
   playing = true;
-  runGK();
+  runGk();
   
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0) return;
@@ -3573,6 +3577,8 @@ function gameCelestialFootball(api, g) {
           triesTxt.textContent = tries;
           if (tries <= 0) {
             playing = false;
+            btn.textContent = 'Terminé';
+            btn.disabled = true;
             setTimeout(() => api.end(0, "Arrêt du gardien !"), 1500);
           } else {
             shooting = false;
@@ -3583,13 +3589,296 @@ function gameCelestialFootball(api, g) {
       } else if (cookieY > 120) { // scored!
           playing = false;
           ball.innerHTML = '✨';
-          
-          setTimeout(() => { if(typeof api.end === 'function') api.end(1, 'Bien joué !'); else if(typeof api.close === 'function') api.end(0, "Jeu terminé"); }, 1500);
+          setTimeout(() => api.end(1, 'Buuut !'), 1500);
           return;
       }
       shootRaf = requestAnimationFrame(animateShoot);
     }
-    shootRaf = requestAnimationFrame(animateShoot);
+    animateShoot();
   });
   return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
+
+
+const RARITIES = {
+  commun: { name: 'Commun', prob: 50, color: '#bdc3c7' },
+  peu_commun: { name: 'Peu commun', prob: 25, color: '#2ecc71' },
+  rare: { name: 'Rare', prob: 15, color: '#3498db' },
+  epique: { name: 'Épique', prob: 7, color: '#9b59b6' },
+  legendaire: { name: 'Légendaire', prob: 2.5, color: '#f1c40f' },
+  mythique: { name: 'Mythique', prob: 0.5, color: '#e74c3c' }
+};
+
+const COMPANIONS = [
+  // Communs
+  { id: 'c_classic', name: 'Cookie classique', img: 'cookie_classique.png', rarity: 'commun', powerType: 'cps', powerBase: 0.05, powerStep: 0.02, desc: 'Augmente la production de {val}%' },
+  { id: 'c_mini', name: 'Mini-cookie', img: 'mini_cookie.png', rarity: 'commun', powerType: 'click', powerBase: 0.05, powerStep: 0.02, desc: 'Augmente la puissance des clics de {val}%' },
+  { id: 'c_choco', name: 'Cookie chocolat', img: 'cookie_chocolat.png', rarity: 'commun', powerType: 'cps', powerBase: 0.06, powerStep: 0.02, desc: 'Augmente la production de {val}%' },
+  { id: 'c_pepite', name: 'Cookie pépite', img: 'cookie_pepite.png', rarity: 'commun', powerType: 'click', powerBase: 0.06, powerStep: 0.02, desc: 'Augmente la puissance des clics de {val}%' },
+  { id: 'c_caramel', name: 'Cookie au caramel', img: 'cookie_au_caramel.png', rarity: 'commun', powerType: 'building_grandma', powerBase: 0.1, powerStep: 0.05, desc: 'Les grands-mères produisent {val}% de plus' },
+  // Peu communs
+  { id: 'c_ghost', name: 'Cookie fantôme', img: 'cookie_fantome.png', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.1, powerStep: 0.03, desc: 'Augmente la production de {val}%' },
+  { id: 'c_ninja', name: 'Cookie ninja', img: 'cookie_ninja.png', rarity: 'peu_commun', powerType: 'click', powerBase: 0.1, powerStep: 0.03, desc: 'Augmente la puissance des clics de {val}%' },
+  { id: 'c_pirate', name: 'Cookie pirate', img: 'cookie_pirate.png', rarity: 'peu_commun', powerType: 'events', powerBase: 0.1, powerStep: 0.05, desc: 'Récompenses des événements +{val}%' },
+  { id: 'c_robot', name: 'Cookie robot', img: 'cookie_robot.png', rarity: 'peu_commun', powerType: 'building_factory', powerBase: 0.15, powerStep: 0.05, desc: 'Les usines produisent {val}% de plus' },
+  { id: 'c_choc_blanc', name: 'Cookie chocolat blanc', img: 'cookie_au_chocolat_blanc.png', rarity: 'peu_commun', powerType: 'cps', powerBase: 0.12, powerStep: 0.03, desc: 'Augmente la production de {val}%' },
+  { id: 'c_fraise', name: 'Cookie à la fraise', img: 'cookie_a_la_fraise.png', rarity: 'peu_commun', powerType: 'building_farm', powerBase: 0.15, powerStep: 0.05, desc: 'Les fermes produisent {val}% de plus' },
+  // Rares
+  { id: 'c_knight', name: 'Cookie chevalier', img: 'cookie_chevalier.png', rarity: 'rare', powerType: 'click', powerBase: 0.2, powerStep: 0.05, desc: 'Augmente la puissance des clics de {val}%' },
+  { id: 'c_astro', name: 'Cookie astronaute', img: 'cookie_astronaute.png', rarity: 'rare', powerType: 'building_ship', powerBase: 0.2, powerStep: 0.1, desc: 'Les fusées produisent {val}% de plus' },
+  { id: 'c_mage', name: 'Cookie magicien', img: 'cookie_magicien.png', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.1, powerStep: 0.02, desc: 'Les cookies dorés apparaissent {val}% plus souvent' },
+  { id: 'c_dragon', name: 'Cookie dragon', img: 'cookie_dragon.png', rarity: 'rare', powerType: 'cps', powerBase: 0.2, powerStep: 0.05, desc: 'Augmente la production de {val}%' },
+  // Épiques
+  { id: 'c_demon', name: 'Cookie démon', img: 'cookie_demon.png', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.25, powerStep: 0.08, desc: 'Production et clics +{val}%' },
+  { id: 'c_ange', name: 'Cookie ange', img: 'cookie_ange.png', rarity: 'epique', powerType: 'ascension_boost', powerBase: 0.05, powerStep: 0.01, desc: 'Les pépites célestes sont {val}% plus efficaces' },
+  { id: 'c_roi', name: 'Cookie roi', img: 'cookie_roi.png', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.1, powerStep: 0.03, desc: 'Tous les bâtiments produisent {val}% de plus' },
+  { id: 'c_gold', name: 'Cookie doré', img: 'cookie_dore.png', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.3, powerStep: 0.1, desc: 'Gains des cookies dorés +{val}%' },
+  // Légendaires
+  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', rarity: 'legendaire', powerType: 'luck_mult', powerBase: 0.2, powerStep: 0.05, desc: '{val}% de chances de doubler n\'importe quel gain' },
+  { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.5, powerStep: 0.1, desc: 'Durée des frénésies +{val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', rarity: 'legendaire', powerType: 'discount', powerBase: 0.1, powerStep: 0.02, desc: 'Réduit le coût de tout de {val}%' },
+  // Mythiques
+  { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.0, powerStep: 0.5, desc: 'Production +{val}% et l\'esprit s\'ouvre' },
+  { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', rarity: 'mythique', powerType: 'speed', powerBase: 2.0, powerStep: 0.5, desc: 'La vitesse globale du jeu augmente de {val}%' },
+  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', rarity: 'mythique', powerType: 'double_edged', powerBase: 3.0, powerStep: 1.0, desc: 'Production +{val}%, mais clics -50%' },
+  { id: 'c_tableau', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', rarity: 'mythique', powerType: 'upgrade_discount', powerBase: 0.5, powerStep: 0.1, desc: 'Améliorations {val}% moins chères' },
+  { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.0, powerStep: 0.5, desc: 'Gains des mini-jeux +{val}%' }
+];
+
+function companionVal(cId) {
+  const c = COMPANIONS.find(x => x.id === cId);
+  if (!c) return 0;
+  const lvl = S.compData.levels[cId] || 1;
+  return c.powerBase + (lvl - 1) * c.powerStep;
+}
+
+function compHas(powerType) {
+  if (!S.compData || !S.compData.equipped) return 0;
+  let total = 0;
+  for (let id of S.compData.equipped) {
+    const c = COMPANIONS.find(x => x.id === id);
+    if (c && c.powerType === powerType) {
+      total += companionVal(id);
+    }
+  }
+  return total;
+}
+
+function renderCompanions() {
+  const ctn = document.getElementById('companions-container');
+  if (!ctn) return;
+  if (!S.compData || !S.compData.equipped || S.compData.equipped.length === 0) {
+    ctn.innerHTML = '';
+    return;
+  }
+  let html = '';
+  for (let id of S.compData.equipped) {
+    const c = COMPANIONS.find(x => x.id === id);
+    if (c) {
+      html += `<div class="companion-slot rarity-${c.rarity}" title="${c.name}\n${c.desc.replace('{val}', Math.round(companionVal(id)*100))}"><img src="${c.img}" alt="${c.name}"></div>`;
+    }
+  }
+  ctn.innerHTML = html;
+}
+
+function gachaCost() {
+  return Math.max(1e6, cps() * 1800) * Math.pow(1.1, S.compData.pulls || 0); // 30 mins of CPS
+}
+
+let isGachaSpinning = false;
+function spinGacha() {
+  if (isGachaSpinning) return;
+  const cost = gachaCost();
+  if (S.cookies < cost) {
+    toast('❌', 'Fonds insuffisants', 'Il vous faut ' + fmt(cost) + ' cookies.');
+    return;
+  }
+  S.cookies -= cost;
+  S.compData.pulls = (S.compData.pulls || 0) + 1;
+  S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
+  
+  isGachaSpinning = true;
+  renderGachaPane();
+  
+  const reel = document.getElementById('gachaReel');
+  if (!reel) { isGachaSpinning = false; return; }
+  
+  // Decide result
+  let rVal = Math.random() * 100;
+  let rarity = 'commun';
+  let pityActive = false;
+  
+  if (S.compData.pityTracker >= 20) {
+    rarity = 'epique'; // Guaranteed epic+ every 20 pulls
+    S.compData.pityTracker = 0;
+    pityActive = true;
+    rVal = Math.random() * 10; // 0-10 -> epique(7), legendaire(2.5), mythique(0.5)
+  }
+  
+  let acc = 0;
+  for (let k in RARITIES) {
+    if (pityActive && (k==='commun' || k==='peu_commun' || k==='rare')) continue;
+    acc += RARITIES[k].prob;
+    if (rVal <= acc) { rarity = k; break; }
+  }
+  
+  const possible = COMPANIONS.filter(c => c.rarity === rarity);
+  const result = possible[Math.floor(Math.random() * possible.length)];
+  
+  // Create reel items
+  let reelHtml = '';
+  for(let i=0; i<30; i++) {
+    const rc = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+    reelHtml += `<div class="gacha-item rarity-${rc.rarity}"><img src="${rc.img}"></div>`;
+  }
+  reelHtml += `<div class="gacha-item rarity-${result.rarity}"><img src="${result.img}"></div>`;
+  for(let i=0; i<5; i++) {
+    const rc = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+    reelHtml += `<div class="gacha-item rarity-${rc.rarity}"><img src="${rc.img}"></div>`;
+  }
+  reel.innerHTML = reelHtml;
+  
+  // Animate
+  reel.style.transition = 'none';
+  reel.style.transform = 'translateX(0)';
+  
+  setTimeout(() => {
+    reel.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+    reel.style.transform = `translateX(-${30 * 100}px)`;
+  }, 50);
+  
+  setTimeout(() => {
+    isGachaSpinning = false;
+    
+    // Add to collection
+    if (!S.compData.unlocked.includes(result.id)) {
+      S.compData.unlocked.push(result.id);
+      S.compData.levels[result.id] = 1;
+      toast('🎉', 'Nouveau Compagnon !', result.name + ' (' + RARITIES[result.rarity].name + ')');
+    } else {
+      S.compData.shards[result.id] = (S.compData.shards[result.id] || 0) + 1;
+      toast('✨', 'Doublon', '+1 Éclat pour ' + result.name);
+    }
+    
+    if (rarity === 'mythique') celebrate();
+    
+    save();
+    renderGachaPane();
+    renderCompanions();
+    recalc();
+  }, 4100);
+}
+
+function equipCompanion(id) {
+  if (S.compData.equipped.includes(id)) {
+    S.compData.equipped = S.compData.equipped.filter(x => x !== id);
+  } else {
+    if (S.compData.equipped.length >= 2) {
+      S.compData.equipped.shift();
+    }
+    S.compData.equipped.push(id);
+  }
+  save();
+  renderGachaPane();
+  renderCompanions();
+  recalc();
+}
+
+function upgradeCompanion(id) {
+  const cost = S.compData.levels[id] || 1;
+  if ((S.compData.shards[id] || 0) >= cost) {
+    S.compData.shards[id] -= cost;
+    S.compData.levels[id]++;
+    save();
+    renderGachaPane();
+    renderCompanions();
+    recalc();
+  }
+}
+
+function renderGachaPane() {
+  const pane = document.getElementById('gachaPane');
+  if (!pane) return;
+  
+  if (S.ascensions === 0) {
+    pane.innerHTML = `<div class="gacha-locked">
+      <div class="lock-icon">🔒</div>
+      <h2>MACHINE À SOUS VERROUILLÉE</h2>
+      <p>Effectuez votre première Ascension pour débloquer la Machine à sous et recruter des compagnons.</p>
+    </div>`;
+    return;
+  }
+  
+  let html = `<div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div><h3>Machine à sous</h3><p>Recrutez des compagnons !</p></div>
+    <div style="text-align:right;"><small>Garantie Épique+ dans ${20 - (S.compData.pityTracker||0)}</small></div>
+  </div>`;
+  
+  html += `<div class="gacha-machine">
+    <div class="gacha-reel-container">
+      <div class="gacha-reel" id="gachaReel"></div>
+      <div style="position:absolute; top:0; bottom:0; left:50%; width:4px; background:rgba(255,0,0,0.5); transform:translateX(-50%); z-index:2;"></div>
+    </div>
+    <button class="big-btn" id="btnSpinGacha" ${isGachaSpinning || S.cookies < gachaCost() ? 'disabled' : ''}>Tirer ( ${fmt(gachaCost())} 🍪 )</button>
+    <div style="margin-top:10px; font-size:11px; color:#888;">Probas: `;
+  
+  for(let k in RARITIES) {
+    html += `<span style="color:${RARITIES[k].color}">${RARITIES[k].name}:${RARITIES[k].prob}%</span> `;
+  }
+  html += `</div></div>`;
+  
+  html += `<h3>Votre Collection (${S.compData.unlocked.length} / ${COMPANIONS.length})</h3>
+    <p class="small">Sélectionnez jusqu'à 2 compagnons actifs.</p>
+    <div class="collection-grid">`;
+    
+  for(let c of COMPANIONS) {
+    const unl = S.compData.unlocked.includes(c.id);
+    const lvl = S.compData.levels[c.id] || 1;
+    const eq = S.compData.equipped.includes(c.id);
+    const shards = S.compData.shards[c.id] || 0;
+    
+    if (unl) {
+      html += `<div class="coll-item rarity-${c.rarity}" onclick="equipCompanion('${c.id}')" title="${c.name}\n${c.desc.replace('{val}', Math.round(companionVal(c.id)*100))}">
+        <img src="${c.img}" alt="${c.name}">
+        <div class="lvl-badge">Lvl ${lvl}</div>
+        ${eq ? '<div class="equipped-badge">ÉQUIPÉ</div>' : ''}
+      </div>`;
+      
+      // Upgrade btn logic could be added in a modal, but for simplicity let's just make clicking it equip/unequip, and add upgrade via double click or a separate panel. Let's do a simple prompt if they want to upgrade.
+    } else {
+      html += `<div class="coll-item locked" title="??? (${RARITIES[c.rarity].name})"><img src="${c.img}"></div>`;
+    }
+  }
+  html += `</div>`;
+  
+  pane.innerHTML = html;
+  
+  const btn = document.getElementById('btnSpinGacha');
+  if (btn) btn.addEventListener('click', spinGacha);
+}
+
+// Intercept companion clicks for upgrades
+document.addEventListener('contextmenu', (e) => {
+  const item = e.target.closest('.coll-item');
+  if (item && item.onclick) {
+    e.preventDefault();
+    const id = item.getAttribute('onclick').match(/'([^']+)'/)[1];
+    const shards = S.compData.shards[id] || 0;
+    const cost = S.compData.levels[id] || 1;
+    if (shards >= cost) {
+      if(confirm('Améliorer ce compagnon pour ' + cost + ' éclat(s) ? (Vous en avez ' + shards + ')')) {
+        upgradeCompanion(id);
+      }
+    } else {
+      toast('ℹ️', 'Éclats insuffisants', 'Il vous faut ' + cost + ' éclat(s). Vous en avez ' + shards + '.');
+    }
+  }
+});
+
+// Update freshState to include compData
+function injectCompData(s) {
+  if (!s.compData) s.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  return s;
+}
+
+// Hook into existing app.js logic
