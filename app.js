@@ -2610,7 +2610,7 @@ function gameCook(api) {
 /* =====================================================================
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
-const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1e12 * Math.pow(5, S.ascensions))) * 0.5));
+const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1e12 * Math.pow(2.5, S.ascensions))) * 0.5));
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -2631,7 +2631,7 @@ function renderAchPane() {
   ];
   $('#statsGrid').innerHTML = rows.map(([k, v]) => '<div><span>' + k + '</span><b>' + v + '</b></div>').join('');
   const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(5, S.ascensions);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(2.5, S.ascensions);
   $('#ascInfo').innerHTML =
     '<p>Pépites célestes : <b>' + S.chips + '</b> (+' + S.chips * 2 + ' % de production)</p>' +
     (g > 0
@@ -3515,6 +3515,7 @@ function initTemple() {
       renderTemple();
       toast('🏆', 'Temple des Légendes', u.name + ' acheté !');
     }));
+    if (typeof updateTempleAscensionInfo === 'function') updateTempleAscensionInfo();
   }
 
   renderTemple();
@@ -3533,6 +3534,19 @@ const tabTempleAsc = document.getElementById('tabTempleAsc');
 const templeTabUps = document.getElementById('templeTabUps');
 const templeTabAsc = document.getElementById('templeTabAsc');
 
+function updateTempleAscensionInfo() {
+  const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(2.5, S.ascensions);
+  const ascInfo = document.getElementById('ascInfo');
+  if (ascInfo) {
+    ascInfo.innerHTML = (g > 0
+      ? '<p style="color:#2ecc71;">Une ascension maintenant vous rapporterait <b>+' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g * 2 + ' % de prod).</p>'
+      : '<p style="color:#a4b0be;">Prochaine pépite quand vous aurez cuit <b>' + fmt(nextTarget) + '</b> cookies.</p>');
+  }
+  const ascBtn = document.getElementById('ascBtn');
+  if (ascBtn) ascBtn.disabled = g < 1;
+}
+
 if (tabTempleUps && tabTempleAsc) {
   tabTempleUps.addEventListener('click', () => {
     templeTabUps.style.display = 'block';
@@ -3546,8 +3560,9 @@ if (tabTempleUps && tabTempleAsc) {
     tabTempleUps.style.filter = 'brightness(0.8)';
     tabTempleAsc.style.filter = 'brightness(1.2)';
     document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
+    updateTempleAscensionInfo();
   });
-  }
+}
 
 // CELESTIAL GAMES LOGIC
 
