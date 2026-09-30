@@ -229,6 +229,7 @@ function load() {
         activeWorldId = world.id;
         S = legacyState;
       }
+  if (!S.custom.flappyResetV4) { S.games['flappy'] = []; S.custom.flappyResetV4 = true; }
       S.custom = Object.assign({}, DEFAULT_CUSTOM, S.custom);
       S.fz = Object.assign(freshState().fz, S.fz);
       S.casino = Object.assign(freshState().casino, S.casino);
@@ -668,7 +669,7 @@ function allowClick() {
   const diff = now - lastRawClick;
   lastRawClick = now;
   
-  if (diff < 30) {
+  if (diff < 10) {
     fastClickWarnings++;
     if (fastClickWarnings >= 8) {
       clickBlockedUntil = now + 5000;
@@ -683,7 +684,7 @@ function allowClick() {
   }
   
   clickTimes = clickTimes.filter((time) => now - time < 1000);
-  if (clickTimes.length >= 20) {
+  if (clickTimes.length >= 35) {
     clickBlockedUntil = now + 20000;
     clickTimes = [];
     toast('🛡️', 'Protection anti-spam', 'Trop de clics ! Blocage de 20 secondes.');
@@ -1113,37 +1114,89 @@ function updateFrenzy(now) {
 const golden = $('#golden');
 const goldenDelay = () => rand(60, 150) * Math.pow(0.8, countUps('gold')) * 1000;
 let goldenNext = Date.now() + rand(30, 90) * 1000, goldenEnd = 0;
+let activeGoldenCookies = [];
+
+function clearGoldenRain() {
+  activeGoldenCookies.forEach(c => c.remove());
+  activeGoldenCookies = [];
+  golden.style.display = 'none'; // Fallback legacy
+}
+
 function updateGolden(now) {
-  if (golden.style.display === 'block' && now > goldenEnd) golden.style.display = 'none';
-  if (golden.style.display !== 'block' && now > goldenNext) {
-    golden.style.left = rand(5, 85) + 'vw';
-    golden.style.top = rand(10, 75) + 'vh';
-    golden.style.display = 'block';
-    goldenEnd = now + 13000;
+  if (now > goldenEnd && activeGoldenCookies.length > 0) {
+    clearGoldenRain();
+  }
+  if (activeGoldenCookies.length === 0 && now > goldenNext) {
+    goldenEnd = now + 3000;
     goldenNext = now + goldenDelay();
+    spawnGoldenRain();
   }
 }
-golden.addEventListener('click', (e) => {
-  golden.style.display = 'none';
-  S.golden++;
-  const now = Date.now(), r = Math.random();
-  if (r < 0.4) {
-    const bonus = Math.min(S.cookies * 0.15, steadyCps() * 900) + 13;
-    gain(bonus);
-    floatText(e.clientX, e.clientY, '+' + fmt(bonus));
-    toast('🍀', 'Cookie doré', 'Chanceux ! +' + fmt(bonus) + ' cookies');
-  } else if (r < 0.7) {
-    clickFrenzyMult = rollFrenzyPower();
-    clickFrenzyUntil = now + 10000 * (1 + 0.25 * countUps('fzdur'));
-    toast('👆', 'Cookie doré', 'Clic frénétique ! Clics ×' + clickFrenzyMult + ' pendant 10 s');
-  } else if (now < S.fz.until) {
-    S.fz.until += 10000; S.fz.dur += 10; S.fz.start = S.fz.until; S.fz.next += 10000;
-    toast('⚡', 'Cookie doré', 'Frénésie prolongée de 10 s !');
-  } else {
-    startFrenzy();
-  }
-  checkAchievements();
-});
+
+function spawnGoldenRain() {
+  const spawn = (type) => {
+    const el = document.createElement('button');
+    el.className = 'golden-cookie-rain';
+    el.style.position = 'fixed';
+    el.style.zIndex = '999999';
+    el.style.left = rand(5, 85) + 'vw';
+    el.style.top = rand(10, 75) + 'vh';
+    el.style.background = 'none';
+    el.style.border = 'none';
+    el.style.cursor = 'pointer';
+    el.style.fontSize = '40px';
+    el.style.animation = 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    
+    if (type === 'gold') {
+      el.innerHTML = '<div class="golden-rays"></div><div class="golden-cookie-img">🍪</div>';
+      el.style.filter = 'drop-shadow(0 0 10px gold)';
+    } else if (type === 'silver') {
+      el.innerHTML = '🍪';
+      el.style.filter = 'grayscale(100%) brightness(1.5) drop-shadow(0 0 10px silver)';
+    } else {
+      el.innerHTML = '🍪';
+      el.style.filter = 'sepia(100%) hue-rotate(330deg) saturate(300%) drop-shadow(0 0 10px #cd7f32)';
+    }
+    
+    el.addEventListener('click', (e) => {
+      clearGoldenRain();
+      S.golden++;
+      checkAchievements();
+      
+      if (type === 'gold') {
+        const now = Date.now(), r = Math.random();
+        if (r < 0.4) {
+          const bonus = Math.min(S.cookies * 0.15, steadyCps() * 900) + 13;
+          gain(bonus);
+          floatText(e.clientX, e.clientY, '+' + fmt(bonus));
+          toast('🍀', 'Cookie doré', 'Chanceux ! +' + fmt(bonus) + ' cookies');
+        } else if (r < 0.7) {
+          clickFrenzyMult = rollFrenzyPower();
+          clickFrenzyUntil = now + 10000 * (1 + 0.25 * countUps('fzdur'));
+          toast('👆', 'Cookie doré', 'Clic frénétique ! Clics ×' + clickFrenzyMult + ' pendant 10 s');
+        } else if (now < S.fz.until) {
+          S.fz.until += 10000; S.fz.dur += 10; S.fz.start = S.fz.until; S.fz.next += 10000;
+          toast('⚡', 'Cookie doré', 'Frénésie prolongée de 10 s !');
+        } else {
+          startFrenzy();
+        }
+      } else if (type === 'silver') {
+        S.cookies = Math.floor(S.cookies / 2);
+        toast('🥈', 'Cookie d\'argent', 'Aïe ! Vous perdez la moitié de vos cookies.');
+      } else if (type === 'bronze') {
+        S.cookies = 0;
+        toast('🥉', 'Cookie de bronze', 'CATASTROPHE ! Vous avez perdu tous vos cookies.');
+      }
+    });
+    
+    document.body.appendChild(el);
+    activeGoldenCookies.push(el);
+  };
+  
+  spawn('gold');
+  for(let i=0; i<5; i++) spawn('silver');
+  for(let i=0; i<10; i++) spawn('bronze');
+}
 
 /* =====================================================================
    ÉVÉNEMENTS DE BÂTIMENTS
@@ -1959,8 +2012,8 @@ function gameMemory(api) {
 /* --- 6. Roue de la fortune --- */
 function gameWheel(api) {
   const max = gameMax();
-  const SEG = [{ f: 0.2 }, { f: 0.6 }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }];
-  const COLORS = ['#c2702e', '#8a4c1c', '#d9954a', '#ffb347', '#a5602a', '#e0a458', '#ffd166', '#7a3e1d'];
+  const SEG = [{ f: 0.2 }, { f: 0.6 }, { death: true }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { life: true }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }];
+  const COLORS = ['#c2702e', '#8a4c1c', '#000000', '#d9954a', '#ffb347', '#a5602a', '#ff00ff', '#e0a458', '#ffd166', '#7a3e1d'];
   api.body.innerHTML = '<p class="game-hint">Tentez votre chance ! Un seul tour de roue, un lot garanti.</p>' +
     '<div class="wheel-wrap"><div class="wheel-pointer">▼</div><canvas width="320" height="320"></canvas></div>' +
     '<div class="center"><button class="big-btn w-btn">Tourner la roue !</button></div>';
@@ -1978,7 +2031,13 @@ function gameWheel(api) {
       g.moveTo(0, 0);
       g.arc(0, 0, 152, i * arc, (i + 1) * arc);
       g.closePath();
-      g.fillStyle = COLORS[i];
+      if (SEG[i].life) {
+        const grad = g.createLinearGradient(0, -152, 0, 152);
+        grad.addColorStop(0, 'red'); grad.addColorStop(0.5, 'lime'); grad.addColorStop(1, 'blue');
+        g.fillStyle = grad;
+      } else {
+        g.fillStyle = COLORS[i];
+      }
       g.fill();
       g.strokeStyle = '#2a170c';
       g.lineWidth = 3;
@@ -1990,7 +2049,7 @@ function gameWheel(api) {
       g.fillStyle = '#1b0f09';
       g.font = 'bold 14px Fredoka, sans-serif';
       const s = SEG[i];
-      g.fillText(s.fz ? '⚡ Frénésie' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * s.f), 140, 0);
+      g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.fz ? '⚡ Frénésie' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * s.f), 140, 0);
       g.restore();
     }
     g.beginPath();
@@ -2017,7 +2076,23 @@ function gameWheel(api) {
       draw(final * (1 - Math.pow(1 - k, 4)));
       if (k < 1) { raf = requestAnimationFrame(frame); return; }
       if (s.fz && Date.now() >= S.fz.until) startFrenzy();
-      setTimeout(() => api.end(s.f, s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
+      if (s.death) {
+        for (const b of BUILDINGS) {
+          if (S.owned[b.id] > 0) {
+            S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
+          }
+        }
+        recalc();
+      }
+      if (s.life) {
+        const ownedBlds = BUILDINGS.filter(b => S.owned[b.id] > 0);
+        const lastTwo = ownedBlds.slice(-2);
+        for (const b of lastTwo) {
+          S.owned[b.id] *= 2;
+        }
+        recalc();
+      }
+      setTimeout(() => api.end(s.f || 0, s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
     }
     raf = requestAnimationFrame(frame);
   });
