@@ -280,11 +280,11 @@ function freshState() {
     owned: {}, ups: [], ach: [], playTime: 0, last: now,
     frenzies: 0, fz: { start: now, next: now + 150000, until: 0, mult: 1, dur: 1 },
     evTotal: 0, evSeen: {}, evNext: now + rand(60, 120) * 1000, evViewed: 0,
-    gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
+    gamesPlayed: 0, games: {}, gameBest: {}, gameRecords: {}, perfect: 0, daily: 0, dailyCount: 0,
     mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0, mysteryHistory: [],
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
-    mysteryGift: { next: now + rand(900, 1800) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
+    mysteryGift: { next: now + rand(600, 1200) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
@@ -542,6 +542,19 @@ function updateCasinoLimit() {
   limit.classList.remove('locked');
   if (spin) spin.disabled = false;
 }
+function updateCasinoWheel(now = Date.now()) {
+  const btn = document.querySelector('#casinoPane .w-btn');
+  if (!btn) return;
+  const frenzyActive = now < S.fz.until || now < clickFrenzyUntil;
+  const ready = (S.hdyMode || now >= (S.casino.wheelNext || 0) || casinoUnlimited()) && !frenzyActive;
+  btn.disabled = !ready;
+  btn.textContent = frenzyActive ? 'Frénésie en cours...' : 'Tourner la roue !';
+  const next = document.getElementById('cwNext');
+  if (next) next.textContent = ready ? 'PRÊT !' : frenzyActive ? 'EN COURS' : Math.ceil(Math.max(0, S.casino.wheelNext - now) / 60000) + ' min';
+  const result = document.getElementById('wheelResult');
+  if (result && !frenzyActive && !ready && result.textContent === 'La roue est prête à tourner !') result.textContent = 'Revenez plus tard...';
+  if (result && ready && result.textContent === 'Revenez plus tard...') result.textContent = 'La roue est prête à tourner !';
+}
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const codeValue = input.value.trim().toUpperCase();
@@ -737,8 +750,10 @@ function renderCasinoPane() {
     draw(0);
     
   btn.addEventListener('click', () => {
-      const isFrenzyActive = Date.now() < S.fz.until || Date.now() < clickFrenzyUntil;
-      if (!isReady || isFrenzyActive) return;
+      const now = Date.now();
+      const isFrenzyActive = now < S.fz.until || now < clickFrenzyUntil;
+      const canSpin = (S.hdyMode || now >= (S.casino.wheelNext || 0) || casinoUnlimited()) && !isFrenzyActive;
+      if (!canSpin) return;
       btn.disabled = true;
       S.casino.wheelNext = S.hdyMode ? 0 : Date.now() + 30 * 60 * 1000;
       save();
@@ -1283,7 +1298,7 @@ function toast(icon, small, text) {
 
 function mysteryGiftDelay() {
   const companionBonus = typeof compHas === 'function' ? compHas('mystery_freq') : 0;
-  return rand(900, 1800) * Math.pow(0.9, countUps('mystery')) / (1 + companionBonus) * 1000;
+  return rand(600, 1200) * Math.pow(0.9, countUps('mystery')) / (1 + companionBonus) * 1000;
 }
 const MYSTERY_EFFECTS = [
   { id: 'click150', icon: '👆', title: 'Pouvoir des clics', text: 'Vos clics valent ×150 pendant 20 secondes.', apply: (gift, now) => { gift.clickUntil = now + 20000; } },
@@ -1414,21 +1429,18 @@ function closeMysteryGift(accepted) {
     popup.remove();
   }
   
-  // Show large revelation popup if accepted
-  if (accepted) {
-    showMysteryGiftReveal(effect);
-  }
+  showMysteryGiftReveal(effect, accepted);
   
   save();
 }
 
-function showMysteryGiftReveal(effect) {
+function showMysteryGiftReveal(effect, accepted = true) {
   const previous = document.getElementById('mysteryGiftRevealPopup');
   if (previous) previous.remove();
   
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftRevealPopup';
-  popup.className = 'mystery-gift-reveal-popup';
+  popup.className = 'mystery-gift-reveal-popup' + (accepted ? '' : ' refused');
   
   // Build effect details
   let effectDetails = '';
@@ -1440,7 +1452,7 @@ function showMysteryGiftReveal(effect) {
     }
   }
   
-  popup.innerHTML = '<button class="mystery-reveal-close" type="button" data-reveal-close aria-label="Fermer">×</button><div class="reveal-icon">' + effect.icon + '</div><div class="reveal-kicker">🎁 CADEAU MYSTÉRIEUX</div><h2>Vous avez obtenu :</h2><div class="reveal-effect">' + effect.title + '</div><p class="reveal-description">' + effect.text + '</p>' + effectDetails + '<div class="reveal-flavor"><em>' + MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] + '</em></div>';
+  popup.innerHTML = '<button class="mystery-reveal-close" type="button" data-reveal-close aria-label="Fermer">×</button><div class="reveal-icon">' + effect.icon + '</div><div class="reveal-kicker">' + (accepted ? '🎁 CADEAU MYSTÉRIEUX' : '↩️ CADEAU REFUSÉ') + '</div><h2>' + (accepted ? 'Vous avez obtenu :' : 'Vous êtes passé à côté de :') + '</h2><div class="reveal-effect">' + effect.title + '</div><p class="reveal-description">' + effect.text + '</p>' + effectDetails + '<div class="reveal-flavor"><em>' + (accepted ? MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] : 'Vous n’avez pas reçu cet effet : le cadeau a été refusé.') + '</em></div>';
   
   popup.addEventListener('click', (event) => {
     if (event.target.closest('[data-reveal-close]')) {
@@ -2041,11 +2053,73 @@ const gameReady = (g) => S.hdyMode || window.__adminMode || (Date.now() >= (S.my
 const gameMax = () => Math.max(steadyCps() * 300, multiplier('cursor') * 200 + 100) * Math.pow(1.4, countUps('ticket'));
 const dailyReward = () => Math.max(steadyCps() * 600, 500);
 
+function saveGameRecord(id, value, metric, order = 'max') {
+  if (!Number.isFinite(value)) return false;
+  if (!S.gameRecords) S.gameRecords = {};
+  const previous = S.gameRecords[id];
+  const isBetter = !previous || (order === 'min' ? value < previous.value : value > previous.value);
+  if (!isBetter) return false;
+  S.gameRecords[id] = { value, metric, order };
+  return true;
+}
+function updateGameRecordFromResult(g, detail, frac) {
+  const number = (pattern) => {
+    const match = detail.match(pattern);
+    return match ? Number(match[1].replace(',', '.')) : null;
+  };
+  let value = null, metric = 'Meilleur score', order = 'max';
+  switch (g.id) {
+    case 'reaction': {
+      const remaining = number(/avec ([\d.,]+) s restantes/);
+      if (remaining !== null) { value = Math.max(0, 18 - remaining); metric = 'Meilleur temps'; order = 'min'; }
+      break;
+    }
+    case 'simon': value = number(/(?:après |\()([\d]+) étapes/); if (/Séquence parfaite/.test(detail)) value = 5; metric = 'Étapes réussies'; break;
+    case 'find': value = number(/en ([\d.,]+)s/); metric = 'Meilleur temps'; order = 'min'; break;
+    case 'rush': value = number(/([\d]+) clics/); metric = 'Clics'; break;
+    case 'oven': value = number(/([\d]+) points sur/); metric = 'Points'; break;
+    case 'shop': value = number(/([\d]+) client/); metric = 'Clients servis'; break;
+    case 'catch': value = number(/([\d]+) points attrapés/); metric = 'Points'; break;
+    case 'memory': {
+      const moves = number(/en ([\d]+) coups/), remaining = number(/([\d]+) s restantes/);
+      if (moves !== null && remaining !== null) { value = Math.max(0, 60 - remaining); metric = 'Meilleur temps'; order = 'min'; }
+      else { value = number(/([\d]+) paires?/); metric = 'Paires trouvées'; }
+      break;
+    }
+    case 'sort': value = number(/([\d]+) ingrédient/); metric = 'Ingrédients triés'; break;
+    case 'celestial_bowling': value = number(/([\d]+) quilles/); if (/Strike/.test(detail)) value = 10; metric = 'Quilles renversées'; break;
+    case 'cook': value = Math.round(frac * 100); metric = 'Réussite'; break;
+    case 'celestial_basketball': case 'celestial_football': value = Math.round(frac * 100); metric = 'Réussite'; break;
+    default: value = Math.round(frac * 100); metric = 'Meilleur score';
+  }
+  if (value === null || !Number.isFinite(value)) return;
+  saveGameRecord(g.id, value, metric, order);
+}
+function showGameRecords() {
+  const games = [...GAMES, ...CELESTIAL_GAMES, { id: 'flappy', icon: '🕊️', name: 'Esquive Laser' }];
+  const rows = games.map((game) => {
+    const savedRecord = S.gameRecords && S.gameRecords[game.id];
+    const oldScore = S.gameBest && S.gameBest[game.id];
+    const record = savedRecord || (oldScore !== undefined ? { metric: 'Score précédent', value: Math.round(oldScore * 100), order: 'max' } : null);
+    const shown = record
+      ? record.metric + ' : ' + record.value.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + (record.order === 'min' || record.metric === 'Temps survécu' ? ' s' : record.metric === 'Réussite' || record.metric === 'Score précédent' ? ' %' : '')
+      : 'Aucun record';
+    return '<div class="record-row"><span class="record-game"><i>' + game.icon + '</i>' + game.name + '</span><b class="' + (record ? 'record-value' : 'record-empty') + '">' + shown + '</b></div>';
+  }).join('');
+  $('#mTitle').textContent = '🏆 Records des mini-jeux';
+  mInfo.textContent = 'Meilleurs résultats de ce monde';
+  mBody.innerHTML = '<div class="records-panel"><p>Chaque jeu conserve son meilleur score ou son meilleur temps.</p><div class="records-list">' + rows + '</div><button class="big-btn" id="recordsClose">Fermer</button></div>';
+  current = { ended: true, api: { frac: 0 } };
+  modal.classList.add('on');
+  mBody.querySelector('#recordsClose').addEventListener('click', closeModal);
+}
+
 const modal = $('#modal'), mBody = $('#mBody'), mInfo = $('#mInfo');
 let current = null;
 
 function buildPlayPane() {
   const grid = $('#playGrid');
+  $('#playRecordsButton').addEventListener('click', showGameRecords);
   const gift = document.createElement('div');
   gift.className = 'game-card gift';
   gift.innerHTML = '<div class="gi">🎁</div><h4>Cadeau du jour</h4><p>Un cadeau gratuit à récupérer une fois par jour : 10 minutes de production !</p>' +
@@ -2174,6 +2248,7 @@ function finishGame(state, frac, detail) {
   gain(reward);
   S.gamesPlayed++;
   S.gameBest[g.id] = Math.max(S.gameBest[g.id] || 0, frac);
+  updateGameRecordFromResult(g, detail || '', frac);
   if (frac >= 1) S.perfect++;
   const t = frac >= 1 ? ['🏆', 'Parfait !'] : frac >= 0.6 ? ['🎉', 'Bien joué !'] : frac >= 0.25 ? ['👍', 'Pas mal !'] : ['🍪', 'Ce sera mieux la prochaine fois'];
   mInfo.textContent = '';
@@ -2335,7 +2410,8 @@ function gameSimon(api) {
 
 
 function gameFind(api) {
-  let time = 7, timer = 0, alive = true;
+  let time = 8, timer = 0, alive = true;
+  const startAt = Date.now();
   const count = 40;
   let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps.</p><div style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
   const goldenIdx = Math.floor(Math.random() * count);
@@ -2351,13 +2427,13 @@ function gameFind(api) {
     if (b.dataset.find === "1") {
       b.style.transform = 'scale(2)';
       api.frac = 1;
-      api.end(1, 'Cookie doré trouvé en ' + (10 - time) + 's !');
+      api.end(1, 'Cookie doré trouvé en ' + ((Date.now() - startAt) / 1000).toFixed(1) + 's !');
     } else {
       b.style.opacity = '0.2';
     }
   }));
   timer = setInterval(() => { time--; api.info('Cherchez... ' + time + ' s'); if (time <= 0) api.end(0, 'Temps écoulé, introuvable'); }, 1000);
-  api.info('Cherchez... 10 s');
+  api.info('Cherchez... 8 s');
   return () => { alive = false; clearInterval(timer); };
 }
 
@@ -2366,7 +2442,7 @@ function gameRush(api) {
   let score = 0, time = 8, timer = 0, alive = true;
   api.body.innerHTML = '<p class="game-hint">Touchez le cookie aussi vite que possible. Objectif : ' + goal + ' clics en huit secondes.</p><div class="rush"><button class="rush-cookie">🍪</button><strong class="rush-score">0</strong></div>';
   const button = api.body.querySelector('.rush-cookie'), counter = api.body.querySelector('.rush-score');
-  button.addEventListener('pointerdown', (e) => { e.preventDefault(); if (!alive) return; score++; counter.textContent = score; api.frac = Math.min(1, score / goal); if(score >= goal) api.end(1, score + ' clics réalisés'); if(score >= goal) api.end(1, score + ' clics réalisés'); });
+  button.addEventListener('pointerdown', (e) => { e.preventDefault(); if (!alive) return; score++; counter.textContent = score; api.frac = Math.min(1, score / goal); if(score >= goal) api.end(1, score + ' clics réalisés'); });
   timer = setInterval(() => { time--; api.info(score + ' clics · ' + time + ' s'); if (time <= 0) api.end(Math.min(1, score / goal), score + ' clics réalisés'); }, 1000);
   api.info('0 clic · 8 s');
   return () => { alive = false; clearInterval(timer); };
@@ -3005,7 +3081,7 @@ function performAscension(g, keptCompId = null) {
     keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   }
 
-  ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount', 'mysterySeen', 'mysteryAccepted', 'mysteryRefused',
+  ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'gameRecords', 'perfect', 'daily', 'dailyCount', 'mysterySeen', 'mysteryAccepted', 'mysteryRefused',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
   keep.chips = (keep.chips || 0) + g;
@@ -3483,6 +3559,7 @@ function renderNumbers(now) {
   $('#msFill').style.width = Math.min(100, frac * 100) + '%';
 }
 function everySecond() {
+  updateCasinoWheel();
   document.title = fmt(S.cookies) + ' cookies · Cookie Clicker';
   const lvl = msLevel();
   if (lvl > S.milestone) {
@@ -3595,6 +3672,7 @@ function initFlappy() {
   const btnH = document.getElementById('flappyStartH');
   const disabledMsg = document.getElementById('flappyDisabledMsg');
   const flappyMenu = document.getElementById('flappyMenu');
+  const flappyProgress = document.getElementById('flappyProgress');
   
   let raf;
   let playing = false, startTime = 0;
@@ -3602,6 +3680,7 @@ function initFlappy() {
   let lasers = []; 
   let currentTargetTime = 10;
   let currentTargetMult = 50;
+  let lastSpawnAt = 0, lastFrameAt = 0;
   
   if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
   let buyBtn = document.getElementById('flappyBuyBtn');
@@ -3654,13 +3733,11 @@ function initFlappy() {
   
   const move = (e) => {
     const rect = cv.getBoundingClientRect();
-    if(e.touches) {
-      mouseX = e.touches[0].clientX - rect.left;
-      mouseY = e.touches[0].clientY - rect.top;
-    } else {
-      mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
-    }
+    const point = e.touches ? e.touches[0] : e;
+    mouseX = (point.clientX - rect.left) * (cv.width / rect.width);
+    mouseY = (point.clientY - rect.top) * (cv.height / rect.height);
+    mouseX = Math.max(22, Math.min(cv.width - 22, mouseX));
+    mouseY = Math.max(22, Math.min(cv.height - 22, mouseY));
   };
   cv.addEventListener('mousemove', move);
   cv.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, {passive:false});
@@ -3670,7 +3747,10 @@ function initFlappy() {
     currentTargetMult = mult;
     playing = true;
     lasers = [];
-    mouseX = 200; mouseY = 200;
+    mouseX = cv.width / 2; mouseY = cv.height * 0.72;
+    trail = [];
+    lastSpawnAt = 0;
+    lastFrameAt = 0;
     startTime = Date.now();
     
     if (!S.hdyMode) S.games['flappy'].push(Date.now());
@@ -3680,8 +3760,9 @@ function initFlappy() {
     overlay.style.display = 'none'; 
     if (buyBtn) buyBtn.style.display = 'none';
     status.textContent = `Survivez ${time} secondes !`;
-    status.style.color = '#fff';
-    runGame();
+    status.classList.remove('is-danger');
+    if (flappyProgress) flappyProgress.style.width = '0%';
+    raf = requestAnimationFrame(runGame);
   };
 
   if (btnE) btnE.addEventListener('click', () => startGame(10, 50));
@@ -3689,84 +3770,158 @@ function initFlappy() {
   if (btnH) btnH.addEventListener('click', () => startGame(60, 300));
   
   let trail = [];
-  let stars = Array.from({length: 60}, () => ({ x: Math.random()*400, y: Math.random()*400, r: Math.random()*1.5+0.5, t: Math.random()*Math.PI*2 }));
+  let stars = Array.from({length: 74}, () => ({ x: Math.random()*900, y: Math.random()*300, r: Math.random()*1.8+0.45, t: Math.random()*Math.PI*2 }));
 
-  function runGame() {
+  function runGame(frameNow) {
     if (!playing) return;
+    frameNow = frameNow || performance.now();
+    const dt = lastFrameAt ? Math.min(0.05, (frameNow - lastFrameAt) / 1000) : 1 / 60;
+    lastFrameAt = frameNow;
     const elapsed = (Date.now() - startTime) / 1000;
-    const difficulty = Math.min(1, elapsed / currentTargetTime); 
-    
-    const spawnChance = 0.015 + difficulty * 0.030;
-    const laserWidth = Math.max(16, 45 - difficulty * 25);
-    const warnTime = Math.max(40, 80 - difficulty * 25);
-    if (Math.random() < spawnChance) {
-      lasers.push({ axis: Math.random() > 0.5 ? 'x' : 'y', pos: Math.random() * 380 + 10, state: 'warn', timer: warnTime, width: laserWidth });
-    }
-    
-    ctx.fillStyle = '#0a0a1a';
-    ctx.fillRect(0, 0, 400, 400);
+    const difficulty = Math.min(1, elapsed / currentTargetTime);
+    const W = cv.width, H = cv.height, horizon = H * 0.43;
+
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#071426'); sky.addColorStop(.48, '#142d43'); sky.addColorStop(1, '#101a28');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W*.5, horizon, 8, W*.5, horizon, W*.6);
+    glow.addColorStop(0, '#2ca8c944'); glow.addColorStop(1, '#12324c00');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
     stars.forEach(s => {
-      s.t += 0.04;
-      const alpha = 0.4 + 0.4 * Math.sin(s.t);
+      s.t += dt * 1.8;
+      const alpha = 0.28 + 0.5 * (0.5 + 0.5 * Math.sin(s.t));
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillStyle = `rgba(196,235,255,${alpha})`;
       ctx.fill();
     });
+
+    // Perspective arena floor, rails and receding grid create a 3D tunnel.
+    ctx.beginPath(); ctx.moveTo(W*.22, horizon); ctx.lineTo(W*.78, horizon); ctx.lineTo(W*1.02, H); ctx.lineTo(-W*.02, H); ctx.closePath();
+    const floor = ctx.createLinearGradient(0, horizon, 0, H);
+    floor.addColorStop(0, '#254458'); floor.addColorStop(.42, '#193244'); floor.addColorStop(1, '#0b1725');
+    ctx.fillStyle = floor; ctx.fill();
+    ctx.strokeStyle = '#54d9ed77'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(W*.22, horizon); ctx.lineTo(-W*.02, H); ctx.moveTo(W*.78, horizon); ctx.lineTo(W*1.02, H); ctx.stroke();
+    ctx.strokeStyle = '#8feaff24'; ctx.lineWidth = 1;
+    for (let i = 1; i <= 13; i++) {
+      const x = W*.22 + (W*.56) * i / 14;
+      ctx.beginPath(); ctx.moveTo(W*.5 + (x-W*.5)*.08, horizon); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let i = 1; i <= 8; i++) {
+      const p = i / 9, y = horizon + (H-horizon) * p * p;
+      ctx.beginPath(); ctx.moveTo(W*.22-(W*.24)*p, y); ctx.lineTo(W*.78+(W*.24)*p, y); ctx.stroke();
+    }
+    // Distant reactor gates and illuminated side columns add depth.
+    ctx.save(); ctx.strokeStyle = '#64e4f277'; ctx.lineWidth = 3; ctx.shadowColor = '#39d9ff'; ctx.shadowBlur = 18;
+    for (let i = 0; i < 4; i++) {
+      const scale = 1 - i*.17, y = horizon - 12 - i*23, half = W*.24*scale;
+      ctx.strokeRect(W*.5-half, y, half*2, 8*scale);
+    }
+    ctx.restore();
+    for (const side of [0, 1]) {
+      const x = side ? W*.94 : W*.06;
+      ctx.fillStyle = '#09121e'; ctx.fillRect(x-15, horizon-45, 30, H-horizon+45);
+      ctx.fillStyle = '#48d8ee'; ctx.shadowColor = '#48d8ee'; ctx.shadowBlur = 16;
+      ctx.fillRect(x-2, horizon-36, 4, H-horizon+36); ctx.shadowBlur = 0;
+      for (let i=0;i<5;i++) { ctx.fillStyle = i%2 ? '#ff5377' : '#72f4ff'; ctx.fillRect(x-5, horizon+20+i*45, 10, 5); }
+    }
+
+    if (lasers.length < 4 && frameNow - lastSpawnAt > (760 - difficulty * 280)) {
+      const drone = Math.random() < .27;
+      if (drone) {
+        const direction = Math.random() < .5 ? 1 : -1;
+        lasers.push({ axis: 'drone', x: direction > 0 ? -34 : W + 34, y: H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .72 - difficulty*.1, phase: Math.random()*Math.PI*2 });
+      } else {
+        const axis = Math.random() > 0.5 ? 'x' : 'y';
+        const span = axis === 'x' ? W : H;
+        lasers.push({ axis, pos: span * (0.14 + Math.random()*.72), state: 'warn', timer: .78 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
+      }
+      lastSpawnAt = frameNow;
+    }
     
     trail.push({x: mouseX, y: mouseY});
-    if (trail.length > 12) trail.shift();
+    if (trail.length > 18) trail.shift();
     trail.forEach((p, i) => {
-      const a = i / trail.length * 0.4;
+      const a = i / trail.length * 0.36;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 8 * (i / trail.length), 0, Math.PI*2);
-      ctx.fillStyle = `rgba(194,112,46,${a})`;
+      ctx.arc(p.x, p.y, 20 * (i / trail.length), 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,185,93,${a})`;
       ctx.fill();
     });
     
     for (let i = lasers.length - 1; i >= 0; i--) {
-      let l = lasers[i];
-      l.timer--;
+      const l = lasers[i];
+      l.timer -= dt;
+      l.phase += dt * 8;
       ctx.save();
       if (l.state === 'warn') {
-        ctx.fillStyle = 'rgba(255,80,80,0.18)';
-        ctx.shadowColor = 'rgba(255,0,0,0.3)';
-        ctx.shadowBlur = 8;
-        if (l.timer <= 0) { l.state = 'fire'; l.timer = Math.max(20, 35 - difficulty * 15); }
+        if (l.axis === 'drone') {
+          const pulse = .16 + .1 * (0.5 + .5*Math.sin(l.phase));
+          ctx.fillStyle = `rgba(255,193,74,${pulse})`; ctx.fillRect(0,l.y,W,3);
+          ctx.setLineDash([9,10]); ctx.strokeStyle = '#ffd16699'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0,l.y); ctx.lineTo(W,l.y); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = '#ffe49b'; ctx.font = '700 13px Fredoka, sans-serif'; ctx.textAlign = l.direction > 0 ? 'left' : 'right';
+          ctx.fillText('DRONE EN APPROCHE', l.direction > 0 ? 18 : W-18, l.y-16);
+          const warningX = l.direction > 0 ? 30 : W-30;
+          ctx.beginPath(); ctx.arc(warningX,l.y,14+Math.sin(l.phase)*2,0,Math.PI*2); ctx.fillStyle = '#ffd16655'; ctx.fill();
+          ctx.beginPath(); ctx.arc(warningX,l.y,5,0,Math.PI*2); ctx.fillStyle = '#fff0bd'; ctx.fill();
+          if (l.timer <= 0) { l.state = 'fire'; l.timer = (W+68)/l.speed; }
+        } else {
+          const pulse = .1 + .1 * (0.5 + 0.5*Math.sin(l.phase));
+          ctx.fillStyle = `rgba(255,55,94,${pulse})`;
+          ctx.strokeStyle = '#ff547688'; ctx.lineWidth = 2; ctx.setLineDash([12, 10]);
+          ctx.shadowColor = '#ff315c'; ctx.shadowBlur = 12;
+          if (l.axis === 'x') { ctx.fillRect(l.pos-l.width/2, 0, l.width, H); ctx.strokeRect(l.pos-l.width/2, 0, l.width, H); }
+          else { ctx.fillRect(0, l.pos-l.width/2, W, l.width); ctx.strokeRect(0, l.pos-l.width/2, W, l.width); }
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#fff'; ctx.font = '700 13px Fredoka, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('TIR IMMINENT', l.axis === 'x' ? l.pos : W*.5, l.axis === 'x' ? 36 : l.pos-14);
+          if (l.timer <= 0) { l.state = 'fire'; l.timer = .46 - difficulty*.08; }
+        }
       } else {
-        ctx.fillStyle = 'rgba(255,40,40,0.92)';
-        ctx.shadowColor = '#ff0044';
-        ctx.shadowBlur = 22;
         if (l.timer <= 0) { lasers.splice(i, 1); ctx.restore(); continue; }
-        const cookieR = 15;
-        if (l.axis === 'x') { if (Math.abs(mouseX - l.pos) < cookieR + l.width/2) { ctx.restore(); die('💥 Un laser vous a touché !'); return; } }
-        else { if (Math.abs(mouseY - l.pos) < cookieR + l.width/2) { ctx.restore(); die('💥 Un laser vous a touché !'); return; } }
+        if (l.axis === 'drone') {
+          l.x += l.direction * l.speed * dt;
+          ctx.globalAlpha = .45; ctx.strokeStyle = '#ffbf4d'; ctx.lineWidth = 5; ctx.shadowColor = '#ff9f1c'; ctx.shadowBlur = 24;
+          ctx.beginPath(); ctx.moveTo(l.x-l.direction*34,l.y); ctx.lineTo(l.x+l.direction*4,l.y); ctx.stroke(); ctx.globalAlpha = 1;
+          const orb = ctx.createRadialGradient(l.x-5,l.y-6,1,l.x,l.y,17);
+          orb.addColorStop(0,'#fff8cd'); orb.addColorStop(.32,'#ffcf5c'); orb.addColorStop(1,'#bf4e28');
+          ctx.fillStyle = orb; ctx.beginPath(); ctx.arc(l.x,l.y,14,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#fff2b9'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(l.x,l.y,19+Math.sin(l.phase)*2,0,Math.PI*2); ctx.stroke();
+          if (Math.hypot(mouseX-l.x,mouseY-l.y) < 36) { ctx.restore(); die('💥 Un drone de sécurité vous a touché !'); return; }
+        } else {
+          const beam = ctx.createLinearGradient(l.axis === 'x' ? l.pos-l.width/2 : 0, l.axis === 'x' ? 0 : l.pos-l.width/2, l.axis === 'x' ? l.pos+l.width/2 : 0, l.axis === 'x' ? 0 : l.pos+l.width/2);
+          beam.addColorStop(0, '#ff154f22'); beam.addColorStop(.38, '#ff365c'); beam.addColorStop(.5, '#fff1ed'); beam.addColorStop(.62, '#ff365c'); beam.addColorStop(1, '#ff154f22');
+          ctx.fillStyle = beam; ctx.shadowColor = '#ff2453'; ctx.shadowBlur = 32;
+          if (l.axis === 'x') { ctx.fillRect(l.pos-l.width/2, 0, l.width, H); if (Math.abs(mouseX-l.pos) < 23+l.width/2) { ctx.restore(); die('💥 Touché par un faisceau !'); return; } }
+          else { ctx.fillRect(0, l.pos-l.width/2, W, l.width); if (Math.abs(mouseY-l.pos) < 23+l.width/2) { ctx.restore(); die('💥 Touché par un faisceau !'); return; } }
+        }
       }
-      if (l.axis === 'x') ctx.fillRect(l.pos - l.width/2, 0, l.width, 400);
-      else ctx.fillRect(0, l.pos - l.width/2, 400, l.width);
       ctx.restore();
     }
     
+    // A shaded cookie with a cast shadow and embossed chocolate chips reads as a 3D player piece.
     ctx.save();
-    ctx.shadowColor = '#ffb347';
-    ctx.shadowBlur = 18;
+    ctx.fillStyle = '#0009'; ctx.beginPath(); ctx.ellipse(mouseX+7, mouseY+16, 25, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowColor = '#ffb347'; ctx.shadowBlur = 28;
     ctx.beginPath();
-    ctx.arc(mouseX, mouseY, 15, 0, Math.PI*2);
-    ctx.fillStyle = '#c2702e';
+    ctx.arc(mouseX, mouseY, 21, 0, Math.PI*2);
+    const dough = ctx.createRadialGradient(mouseX-8, mouseY-10, 2, mouseX, mouseY, 25);
+    dough.addColorStop(0, '#ffe6a7'); dough.addColorStop(.55, '#d8893e'); dough.addColorStop(1, '#713714');
+    ctx.fillStyle = dough;
     ctx.fill();
-    ctx.strokeStyle = '#8a4c1c';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    ctx.shadowBlur = 0; ctx.strokeStyle = '#ffd88b'; ctx.lineWidth = 2; ctx.stroke();
+    [[-8,-7,3.5],[8,-10,3],[-2,4,3.8],[10,7,3],[-11,10,2.4]].forEach(([dx,dy,r]) => {
+      ctx.beginPath(); ctx.ellipse(mouseX+dx, mouseY+dy, r, r*.72, -.3, 0, Math.PI*2); ctx.fillStyle = '#4b2411'; ctx.fill();
+      ctx.beginPath(); ctx.arc(mouseX+dx-1, mouseY+dy-1, r*.34, 0, Math.PI*2); ctx.fillStyle = '#a46a3d'; ctx.fill();
+    });
+    ctx.beginPath(); ctx.ellipse(mouseX, mouseY, 29, 12, 0, 0, Math.PI*2); ctx.strokeStyle = '#ffe6a788'; ctx.lineWidth = 2; ctx.stroke();
     ctx.restore();
     
     const progress = Math.min(1, elapsed / currentTargetTime);
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(10, 385, 380, 10);
-    const barColor = `hsl(${120 - progress*120},90%,55%)`;
-    ctx.fillStyle = barColor;
-    ctx.fillRect(10, 385, 380 * progress, 10);
-    
-    status.textContent = 'Temps survécu : ' + elapsed.toFixed(1) + ' s / ' + currentTargetTime + ' s';
+    if (flappyProgress) flappyProgress.style.width = (progress * 100) + '%';
+    status.textContent = 'Survis encore ' + Math.max(0, currentTargetTime-elapsed).toFixed(1) + ' s';
     
     if (elapsed >= currentTargetTime) {
       winGame(currentTargetMult);
@@ -3777,18 +3932,21 @@ function initFlappy() {
   
   function die(msg) {
     playing = false;
+    if (saveGameRecord('flappy', Math.min(currentTargetTime, (Date.now()-startTime)/1000), 'Temps survécu', 'max')) save();
     overlay.style.display = 'flex';
     updateBtn();
     status.textContent = msg;
-    status.style.color = '#ff4d4d';
+    status.classList.add('is-danger');
+    updateDots();
   }
   
   function winGame(mult) {
     playing = false;
     overlay.style.display = 'flex';
     status.textContent = 'VICTOIRE ! POUVOIR DE LA TOUCHE ENTRÉE DÉBLOQUÉ !';
-    status.style.color = '#ffeb3b';
+    status.classList.remove('is-danger');
     const now = Date.now();
+    saveGameRecord('flappy', currentTargetTime, 'Temps survécu', 'max');
     const maxAttempts = 3 + templeExtraAttempts();
     while (S.games['flappy'].length < maxAttempts) S.games['flappy'].push(now);
     save();
