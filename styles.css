@@ -567,6 +567,11 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .celestial-bowling-stage { background: linear-gradient(180deg, #171d3b 0 25%, #684321 25% 100%) !important; box-shadow: inset 0 28px 35px #070917aa, 0 18px 28px #0009; }
 .celestial-bowling-stage::before { content: ''; position: absolute; left: 12%; right: 12%; top: 25%; bottom: 0; z-index: -1; transform: perspective(420px) rotateX(16deg); transform-origin: top; background: repeating-linear-gradient(90deg, #f3c782 0 3px, transparent 3px 27px), repeating-linear-gradient(0deg, rgba(65,34,17,.5) 0 3px, transparent 3px 28px); opacity: .55; }
 .celestial-bowling-stage #cBowlingPins { transform: translateZ(34px) scale(.82); transform-origin: center top; }
+.bowling-pin-formation { position: absolute; top: 26px; left: 50%; width: 190px; transform: translateX(-50%) translateZ(34px); display: grid; gap: 2px; z-index: 2; }
+.bowling-pin-row { display: flex; justify-content: center; gap: 4px; }
+.bowling-pin { display: grid; place-items: center; width: 34px; height: 38px; font-size: 30px; filter: drop-shadow(0 5px 2px rgba(0,0,0,.55)); transform-origin: 50% 90%; transition: transform .42s cubic-bezier(.2,.8,.3,1), opacity .42s ease; }
+.bowling-pin.fallen { opacity: .2; transform: translate3d(var(--fall-x), 48px, 20px) rotate(var(--fall-rotate)); }
+.bowling-result { position: absolute; inset: 115px 0 auto; z-index: 12; text-align: center; font-size: 28px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 12px #000, 0 0 14px currentColor; pointer-events: none; }
 .celestial-bowling-stage #cBowlingBall { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
 .celestial-basketball-stage { perspective: 520px; background: radial-gradient(circle at 50% 5%, #ffcf76, transparent 22%), linear-gradient(180deg, #15284d, #101318 58%, #37200f) !important; box-shadow: inset 0 -30px 40px #000a, 0 18px 28px #0009; }
 .celestial-basketball-stage::before { content: ''; position: absolute; left: 8%; right: 8%; bottom: -8%; height: 62%; z-index: -1; transform: rotateX(57deg); transform-origin: bottom; background: repeating-linear-gradient(90deg, transparent 0 28px, #f2b86155 29px 31px), repeating-linear-gradient(0deg, transparent 0 22px, #f2b86144 23px 25px); }
@@ -576,6 +581,13 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .celestial-football-stage::before { content: ''; position: absolute; left: 10%; right: 10%; bottom: -12%; height: 65%; z-index: -1; transform: rotateX(58deg); transform-origin: bottom; background: repeating-linear-gradient(90deg, transparent 0 38px, #d8ffd744 39px 41px), repeating-linear-gradient(0deg, transparent 0 28px, #d8ffd733 29px 31px); }
 .celestial-football-stage #cGk { transform: translateZ(48px) scale(1.15); transform-origin: center bottom; filter: drop-shadow(0 10px 4px #0009); }
 .celestial-football-stage #cBallFoo { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
+.football-goal-target { position: absolute; top: 8px; left: 10%; width: 80%; height: 72px; z-index: 6; border: 2px dashed #fff9; border-radius: 4px 4px 12px 12px; background: repeating-linear-gradient(90deg, transparent 0 28px, #fff3 29px 30px), repeating-linear-gradient(0deg, transparent 0 20px, #fff3 21px 22px); cursor: crosshair; transform: translateZ(30px); }
+.football-goal-target:hover { background-color: #fff2; }
+.football-aim { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; border: 3px solid #ffd166; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4px #0005, 0 0 16px #ffd166; pointer-events: none; }
+.football-aim::before, .football-aim::after { content: ''; position: absolute; background: #ffd166; }
+.football-aim::before { left: 50%; top: -9px; width: 2px; height: 40px; transform: translateX(-50%); }
+.football-aim::after { top: 50%; left: -9px; width: 40px; height: 2px; transform: translateY(-50%); }
+.football-target-label { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: #ffd166; font-size: 11px; font-weight: 700; text-shadow: 0 1px 3px #000; }
 .arena {
   position: relative;
   height: 340px;

@@ -3718,6 +3718,7 @@ if (tabTempleUps && tabTempleAsc) {
 function gameCelestialBowling(api, g) {
   let playing = false, angle = -90, dir = 1, speed = 2.5;
   let raf, animRaf;
+  const pinMarkup = [4, 3, 2, 1].map((count, row) => '<div class="bowling-pin-row">' + Array.from({ length: count }, (_, index) => '<span class="bowling-pin" data-pin="' + (row * 4 + index) + '">🥛</span>').join('') + '</div>').join('');
   
   api.body.innerHTML = `<div class="game-bowling" style="background:#1a0f14; border-radius:12px; padding:20px; overflow:hidden;">
     <p class="game-hint" style="color:#ddd; margin-bottom:15px;">Arrêtez la flèche bien au centre pour un <b>Strike</b> !</p>
@@ -3727,11 +3728,8 @@ function gameCelestialBowling(api, g) {
       <div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px);"></div>
       
       <!-- Quilles -->
-      <div id="cBowlingPins" style="position:absolute; top:30px; left:0; width:100%; height:60px; display:flex; justify-content:center; gap:8px; transition: 0.5s;">
-        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5));">🥛</span>
-        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5)); margin-top:-15px;">🥛</span>
-        <span class="b-pin" style="font-size:32px; filter:drop-shadow(0 5px 2px rgba(0,0,0,0.5));">🥛</span>
-      </div>
+      <div id="cBowlingPins" class="bowling-pin-formation">${pinMarkup}</div>
+      <div id="cBowlingResult" class="bowling-result"></div>
       
       <!-- Boule (Cookie) -->
       <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1); transform:translateZ(0);">🍪</div>
@@ -3751,6 +3749,8 @@ function gameCelestialBowling(api, g) {
   const btn = api.body.querySelector('#cBowlingBtn');
   const ball = api.body.querySelector('#cBowlingBall');
   const pinsArea = api.body.querySelector('#cBowlingPins');
+  const pinElements = Array.from(api.body.querySelectorAll('.bowling-pin'));
+  const result = api.body.querySelector('#cBowlingResult');
   
   function runBowling() {
     angle += speed * dir;
@@ -3784,15 +3784,23 @@ function gameCelestialBowling(api, g) {
       ball.style.transform = `translate3d(${targetX}px, -260px, 130px) scale(0.5)`;
       
       setTimeout(() => {
+        const knocked = Math.min(10, pins);
+        pinElements.slice(0, knocked).forEach((pin, index) => {
+          setTimeout(() => {
+            pin.style.setProperty('--fall-x', ((index % 2 ? 1 : -1) * (12 + index * 3)) + 'px');
+            pin.style.setProperty('--fall-rotate', ((index % 2 ? 1 : -1) * (55 + index * 8)) + 'deg');
+            pin.classList.add('fallen');
+          }, index * 75);
+        });
         if (pins === 10) {
-          pinsArea.innerHTML = '<div style="font-size:36px; color:#f1c40f; font-weight:bold; text-shadow:0 0 10px #f1c40f; animation: pulse 0.5s infinite;">STRIKE !</div>';
-          setTimeout(() => api.end(1, "Strike Céleste !"), 1500);
+          result.textContent = 'STRIKE !';
+          setTimeout(() => api.end(1, "Strike Céleste !"), 1800);
         } else if (pins > 0) {
-          pinsArea.style.opacity = '0.5';
-          pinsArea.style.transform = 'translateY(-20px) rotate(' + (angle) + 'deg)';
-          setTimeout(() => api.end(pins/10, `${pins} quilles renversées`), 1500);
+          result.textContent = pins + ' quilles renversées';
+          setTimeout(() => api.end(pins / 10, `${pins} quilles renversées`), 1800);
         } else {
-          pinsArea.innerHTML = '<div style="font-size:24px; color:#aaa; margin-top:10px;">Gouttière...</div>';
+          result.style.color = '#aaa';
+          result.textContent = 'GOUTTIÈRE...';
           setTimeout(() => api.end(0, "Gouttière, la boule est tombée sur le côté."), 1500);
         }
       }, 1000);
@@ -3881,15 +3889,16 @@ function gameCelestialBasketball(api, g) {
 
 function gameCelestialFootball(api, g) {
   let playing = false, gkX = 0, gkDir = 1, gkSpeed = 5.2;
-  let cookieY = 0;
+  let cookieY = 0, targetX = 0, targetSelected = false;
   let raf, shootRaf;
   let tries = 3;
   let shooting = false;
   
   api.body.innerHTML = `<div class="game-football">
-    <p class="game-hint">Marquez le penalty en évitant le verre de lait. <span id="cFooTries">${tries}</span> essais.</p>
-    <div class="celestial-3d-stage celestial-football-stage" style="position:relative;width:100%;height:150px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
+    <p class="game-hint">Cliquez dans la cage pour choisir votre zone de tir, puis lancez. Le gardien peut arrêter le ballon. <span id="cFooTries">${tries}</span> essais.</p>
+    <div class="celestial-3d-stage celestial-football-stage" style="position:relative;width:100%;height:190px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
       <div style="position:absolute;top:0;left:10%;width:80%;height:20px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-right:3px solid #fff;box-sizing:border-box;"></div>
+      <div id="cFooGoal" class="football-goal-target"><span class="football-target-label">Choisir la zone</span><span id="cFooAim" class="football-aim"></span></div>
       <div id="cGk" style="position:absolute;top:20px;left:0;width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;">🥛</div>
       <div id="cBallFoo" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
@@ -3902,7 +3911,23 @@ function gameCelestialFootball(api, g) {
   const ball = api.body.querySelector('#cBallFoo');
   const btn = api.body.querySelector('#cFooBtn');
   const triesTxt = api.body.querySelector('#cFooTries');
-  const areaW = api.body.querySelector('#cFooArea').clientWidth;
+  const area = api.body.querySelector('#cFooArea');
+  const goal = api.body.querySelector('#cFooGoal');
+  const aim = api.body.querySelector('#cFooAim');
+  const areaW = area.clientWidth;
+  targetX = areaW / 2;
+
+  function selectTarget(event) {
+    if (shooting || !playing) return;
+    const rect = goal.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+    targetX = rect.left + localX - area.getBoundingClientRect().left;
+    targetSelected = true;
+    aim.style.left = (localX / rect.width * 100) + '%';
+    goal.querySelector('.football-target-label').textContent = 'Zone visée';
+    btn.textContent = 'Tirer ici';
+  }
+  goal.addEventListener('pointerdown', selectTarget);
   
   function runGk() {
     gkX += gkSpeed * gkDir;
@@ -3916,21 +3941,27 @@ function gameCelestialFootball(api, g) {
   runGk();
   
   btn.addEventListener('click', () => {
-    if (!playing || shooting || tries <= 0) return;
+    if (!playing || shooting || tries <= 0 || !targetSelected) return;
     shooting = true;
     cookieY = 0;
+    let keeperChecked = false;
     
     function animateShoot() {
       cookieY += 8;
       const shotDepth = Math.min(110, cookieY * 0.85);
       const shotScale = Math.max(0.45, 1 - cookieY / 300);
+      const progress = Math.min(1, cookieY / 130);
+      const currentX = areaW / 2 + (targetX - areaW / 2) * progress;
+      ball.style.left = currentX + 'px';
       ball.style.bottom = (10 + cookieY) + 'px';
       ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
       
-      if (cookieY > 80 && cookieY < 120) { // ball reaching GK level
-        const ballCenter = areaW / 2;
+      if (cookieY >= 80 && !keeperChecked) {
+        keeperChecked = true;
         const gkCenter = gkX + 15;
-        if (Math.abs(ballCenter - gkCenter) < 26) { // the larger keeper has a real save zone
+        if (Math.abs(targetX - gkCenter) < 34) {
+          gk.style.transform = 'translateZ(75px) scale(1.35)';
+          ball.innerHTML = '🧤';
           tries--;
           triesTxt.textContent = tries;
           if (tries <= 0) {
@@ -3940,12 +3971,19 @@ function gameCelestialFootball(api, g) {
             setTimeout(() => api.end(0, "Arrêt du gardien !"), 1500);
           } else {
             shooting = false;
+            targetSelected = false;
+            goal.querySelector('.football-target-label').textContent = 'Choisir une nouvelle zone';
+            btn.textContent = 'Viser puis tirer';
+            gk.style.transform = '';
+            ball.style.left = '50%';
+            ball.innerHTML = '🍪';
             ball.style.bottom = '10px';
             ball.style.transform = 'translateZ(0) scale(1)';
           }
           return;
         }
-      } else if (cookieY > 120) { // scored!
+      }
+      if (cookieY > 130) {
           playing = false;
           ball.innerHTML = '✨';
           setTimeout(() => api.end(1, 'Buuut !'), 1500);
