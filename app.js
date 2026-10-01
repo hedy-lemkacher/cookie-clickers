@@ -4353,8 +4353,6 @@ function compHasSpecial(powerType) {
   }
   return false;
 }
-  return total;
-}
 
 function maxCompanionSlots() {
   return (S.temple && S.temple.includes('comp_trio')) ? 3 : 2;
