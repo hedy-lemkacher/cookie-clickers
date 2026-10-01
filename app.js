@@ -1293,44 +1293,33 @@ const MYSTERY_EFFECTS = [
   { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } }
 ];
 const MYSTERY_PROMPTS = [
-  // Mystérieuses
   'Je ne sais pas ce qu\'il y a dedans. Et je préfère ne pas savoir.',
   'Un cadeau enveloppé de secrets et de questions sans réponses.',
   'Le destin a laissé ça ici. Pourquoi ? Nul ne le sait.',
   'Quelque chose dans cette boîte défie toute logique.',
   'Le mystère est la seule chose dont nous sommes certains.',
-  
-  // Suspectes
   'On m\'a dit de ne surtout pas l\'ouvrir. Donc évidemment...',
   'Ce cadeau a été trouvé dans un endroit où je ne regarderais pas à ta place...',
   'Je ne sais pas ce qu\'il y a dedans. Mais franchement, ça bouge.',
   'Un cadeau trouvé dans une boîte qui n\'avait clairement pas besoin d\'être ouverte...',
   'L\'odeur est... intéressante. Disons ça comme ça.',
-  
-  // Chanceuses
   'Ça pourrait être incroyable. Ou complètement inutile.',
   'La chance sourit aux audacieux. Ou aux imprudents.',
   'Peut-être que ça vaut le coup. Peut-être pas.',
   'Un pari sur l\'incertain. Comme toute la vie, non ?',
   'Les étoiles sont alignées. Probablement pour vous tromper.',
-  
-  // Menace humoristique
   'Tu peux l\'accepter. Mais viens pas te plaindre après.',
   'Avertissement : effets secondaires possibles. Très possibles.',
   'Ce cadeau ne prend pas la responsabilité de vos décisions.',
   'Vous avez été prévenu. Enfin, presque.',
   'Le seul conseil que je peux donner : c\'est à vos risques.',
-  
-  // Absurdes
   'Ce cadeau a été retrouvé derrière le bâtiment des cookies. Personne ne sait pourquoi.',
   'Un grelot retentit. Personne ne sait pourquoi.',
   'Le cadeau vous regarde. Enfin... probablement.',
   'Une voix murmure : « Allez, ça va bien se passer. »',
   'Le facteur cookie jure que tout est parfaitement légal.',
-  'Le cadeau tremble. Ou alors c'est le jeu qui tremble.',
+  'Le cadeau tremble. Ou alors c\'est le jeu qui tremble.',
   'Une enveloppe apparaît avec une odeur suspecte de beurre.',
-  
-  // Très rares
   '✨ Ce cadeau semble... spécial. Très spécial.',
   '🌟 L\'univers a conspiré pour créer ce moment précis.',
   '💎 Quelque chose d\'unique vous attend. Espérons-le.',
