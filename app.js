@@ -1560,7 +1560,15 @@ function buyBuilding(b) {
     toast('🔒', 'Boutique scellée', 'Les achats de bâtiments sont temporairement bloqués.');
     return;
   }
-  if (isMystery(b) || (previous && owned(previous.id) < 5)) return;
+  if (previous && owned(previous.id) < 5) {
+    const remaining = 5 - owned(previous.id);
+    toast('🔒', 'Bâtiment verrouillé', 'Il vous manque ' + remaining + ' exemplaire(s) du bâtiment « ' + previous.name + ' » pour débloquer celui-ci.');
+    return;
+  }
+  if (isMystery(b)) {
+    toast('🔒', 'Bâtiment verrouillé', 'Cuisez encore ' + fmt(Math.max(0, b.base * 0.6 - S.baked)) + ' cookies pour le débloquer.');
+    return;
+  }
   const n = buyCount(b), cost = price(b, n);
   if (S.cookies < cost) return;
   S.cookies -= cost;
@@ -3133,7 +3141,7 @@ function buildStylePane() {
   c.ckType = c.ckType || (c.cookie === 'custom' ? 'solid' : 'theme');
   c.bgGrad1 = c.bgGrad1 || '#2a1a10';
   c.bgGrad2 = c.bgGrad2 || '#100a06';
-  c.bgAngle = c.bgAngle || 135;
+  c.bgAngle = c.bgAngle ?? 135;
   c.ckGrad1 = c.ckGrad1 || '#f6cd86';
   c.ckGrad2 = c.ckGrad2 || '#a5602a';
   c.chipType = c.chipType || 'auto';
@@ -3192,23 +3200,23 @@ function buildStylePane() {
   $('#optFmt').value = c.numfmt;
 
   // Listeners
-  $('#bgTypeSelect').addEventListener('change', e => { c.bgType = e.target.value; styled(); });
-  $('#bgSolidPicker').addEventListener('input', e => { c.bgCustom = e.target.value; styled(); });
-  $('#bgGrad1').addEventListener('input', e => { c.bgGrad1 = e.target.value; styled(); });
-  $('#bgGrad2').addEventListener('input', e => { c.bgGrad2 = e.target.value; styled(); });
-  $('#bgAngle').addEventListener('input', e => { c.bgAngle = e.target.value; $('#bgAngleVal').textContent = e.target.value + '°'; styled(); });
+  $('#bgTypeSelect').addEventListener('change', e => { S.custom.bgType = e.target.value; styled(); });
+  $('#bgSolidPicker').addEventListener('input', e => { S.custom.bgCustom = e.target.value; styled(); });
+  $('#bgGrad1').addEventListener('input', e => { S.custom.bgGrad1 = e.target.value; styled(); });
+  $('#bgGrad2').addEventListener('input', e => { S.custom.bgGrad2 = e.target.value; styled(); });
+  $('#bgAngle').addEventListener('input', e => { S.custom.bgAngle = e.target.value; $('#bgAngleVal').textContent = e.target.value + '°'; styled(); });
 
-  $('#ckTypeSelect').addEventListener('change', e => { c.ckType = e.target.value; styled(); });
-  $('#ckSolidPicker').addEventListener('input', e => { c.cookieCustom = e.target.value; styled(); });
-  $('#ckGrad1').addEventListener('input', e => { c.ckGrad1 = e.target.value; styled(); });
-  $('#ckGrad2').addEventListener('input', e => { c.ckGrad2 = e.target.value; styled(); });
+  $('#ckTypeSelect').addEventListener('change', e => { S.custom.ckType = e.target.value; styled(); });
+  $('#ckSolidPicker').addEventListener('input', e => { S.custom.cookieCustom = e.target.value; styled(); });
+  $('#ckGrad1').addEventListener('input', e => { S.custom.ckGrad1 = e.target.value; styled(); });
+  $('#ckGrad2').addEventListener('input', e => { S.custom.ckGrad2 = e.target.value; styled(); });
 
-  $('#chipTypeSelect').addEventListener('change', e => { c.chipType = e.target.value; styled(); });
-  $('#chipPicker').addEventListener('input', e => { c.chipCustom = e.target.value; styled(); });
+  $('#chipTypeSelect').addEventListener('change', e => { S.custom.chipType = e.target.value; styled(); });
+  $('#chipPicker').addEventListener('input', e => { S.custom.chipCustom = e.target.value; styled(); });
 
-  $('#nameInput').addEventListener('input', (e) => { c.name = e.target.value.trim(); styled(); });
-  $('#optRain').addEventListener('change', (e) => { c.rain = e.target.checked; styled(); });
-  $('#optFmt').addEventListener('change', (e) => { c.numfmt = e.target.value; styled(); refreshAll(); });
+  $('#nameInput').addEventListener('input', (e) => { S.custom.name = e.target.value; styled(); });
+  $('#optRain').addEventListener('change', (e) => { S.custom.rain = e.target.checked; styled(); });
+  $('#optFmt').addEventListener('change', (e) => { S.custom.numfmt = e.target.value; styled(); refreshAll(); });
 }
 function styled() {
   S.styled = true;
@@ -3234,10 +3242,34 @@ function applyStyle() {
   if (chipsHi) chipsHi.setAttribute('fill', shade(ck.chip, lum(ck.chip) > 0.5 ? -0.25 : 0.3));
   drawSprite(ck);
   
-  $('#bakery').textContent = S.custom.name || DEFAULT_CUSTOM.name;
+  $('#bakery').textContent = String(S.custom.name || '').trim() || DEFAULT_CUSTOM.name;
   
   // Toggle UI visibility in the style pane
   const c = S.custom;
+  c.bgType = c.bgType || (c.bg === 'custom' ? 'solid' : 'theme');
+  c.ckType = c.ckType || (c.cookie === 'custom' ? 'solid' : 'theme');
+  c.bgGrad1 = c.bgGrad1 || '#2a1a10';
+  c.bgGrad2 = c.bgGrad2 || '#100a06';
+  c.bgAngle = c.bgAngle ?? 135;
+  c.ckGrad1 = c.ckGrad1 || '#f6cd86';
+  c.ckGrad2 = c.ckGrad2 || '#a5602a';
+  c.chipType = c.chipType || 'auto';
+  c.chipCustom = c.chipCustom || '#4b2411';
+  $('#bgTypeSelect').value = c.bgType;
+  $('#bgSolidPicker').value = c.bgCustom;
+  $('#bgGrad1').value = c.bgGrad1;
+  $('#bgGrad2').value = c.bgGrad2;
+  $('#bgAngle').value = c.bgAngle;
+  $('#bgAngleVal').textContent = c.bgAngle + '°';
+  $('#ckTypeSelect').value = c.ckType;
+  $('#ckSolidPicker').value = c.cookieCustom;
+  $('#ckGrad1').value = c.ckGrad1;
+  $('#ckGrad2').value = c.ckGrad2;
+  $('#chipTypeSelect').value = c.chipType;
+  $('#chipPicker').value = c.chipCustom;
+  $('#nameInput').value = c.name;
+  $('#optRain').checked = c.rain;
+  $('#optFmt').value = c.numfmt;
   $('#bgThemeGroup').style.display = c.bgType === 'theme' ? 'block' : 'none';
   $('#bgSolidGroup').style.display = c.bgType === 'solid' ? 'block' : 'none';
   $('#bgGradGroup').style.display = c.bgType === 'gradient' ? 'flex' : 'none';
@@ -5134,7 +5166,7 @@ function renderGachaPane() {
     pane.innerHTML = `
       <div class="gacha-locked">
         <div class="lock-icon">🔒</div>
-        <h2>MACHINE À SOUS VERROUILLÉE</h2>
+        <h2>SALLE DES COMPAGNONS VERROUILLÉE</h2>
         <p>Effectuez votre première Ascension pour débloquer la Machine à sous et recruter vos compagnons.</p>
       </div>
     `;
