@@ -2133,12 +2133,12 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 #mBody[data-game] .result .reward { display:inline-block; padding:8px 18px; border:1px solid #ffd16666; border-radius:999px; background:#ffd16612; }
 .game-bowling { padding:12px; }
 .bowling-instruction { margin-bottom:8px; font-size:12px; }
-.celestial-bowling-stage { height:390px; margin-bottom:10px; border-width:6px; }
-.celestial-bowling-stage #cBowlingPins { top:30px; transform:translateX(-50%) translateZ(65px) scale(.88); }
-.bowling-pin-row { gap:6px; }
-.bowling-pin { width:46px; height:46px; font-size:36px; }
-.game-bowling .bowling-precision-gauge { width:min(60%,280px); height:92px; }
-.game-bowling .bowling-aim-arrow { bottom:30px; height:90px; }
+.celestial-bowling-stage { height:min(480px,52vh); margin-bottom:10px; border-width:6px; }
+.celestial-bowling-stage #cBowlingPins { top:12px; transform:translateX(-50%) translateZ(65px) scale(1); }
+.bowling-pin-row { gap:8px; }
+.bowling-pin { width:52px; height:54px; font-size:42px; }
+.game-bowling .bowling-precision-gauge { width:min(66%,320px); height:clamp(82px,13vh,110px); }
+.game-bowling .bowling-aim-arrow { bottom:30px; height:clamp(90px,14vh,112px); }
 .bowling-controls .big-btn { padding:10px 18px; }
 .flappy-room { padding:clamp(12px,1.8vw,20px); }
 .flappy-heading { margin-bottom:10px; }
@@ -2160,15 +2160,38 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   .flappy-hud { margin-bottom:6px; }
   .flappy-footer { padding-top:5px; font-size:10px; }
   .flappy-difficulty { min-height:76px; padding:9px; }
-  .game-bowling .celestial-bowling-stage,.celestial-bowling-stage { height:min(390px,42vh); }
+  .game-bowling .celestial-bowling-stage,.celestial-bowling-stage { height:min(480px,52vh); }
 }
 @media (max-width:520px) {
-  .celestial-bowling-stage { height:350px; }
-  .celestial-bowling-stage #cBowlingPins { top:25px; transform:translateX(-50%) translateZ(55px) scale(.76); }
-  .game-bowling .bowling-precision-gauge { height:80px; }
+  .celestial-bowling-stage { height:min(400px,49vh); }
+  .celestial-bowling-stage #cBowlingPins { top:18px; transform:translateX(-50%) translateZ(55px) scale(.86); }
+  .game-bowling .bowling-precision-gauge { height:clamp(72px,12vh,92px); }
   #mBody[data-game] .game-hint { padding:8px 10px; font-size:12px; }
   .game-card { min-height:180px; }
 }
 @keyframes cookieBeacon { to { filter:drop-shadow(0 0 12px #ffd166); } }
 @keyframes cookieBob { 50% { transform:translateY(-5px) rotate(-3deg); } }
 @keyframes resultBounce { 0% { transform:scale(.5) rotate(-12deg); opacity:0; } 75% { transform:scale(1.12) rotate(4deg); } 100% { transform:scale(1); opacity:1; } }
+
+.asc-progress-card { margin:12px 0; padding:12px; border:1px solid #55efc455; border-radius:14px; background:linear-gradient(145deg,#09231fbb,#101b1bcc); }
+.asc-progress-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:6px 14px; margin-bottom:8px; color:#e4f7ee; }
+.asc-progress-head>div { display:grid; gap:3px; }
+.asc-progress-head>div strong { color:#90f0c2; font-size:14px; }
+.asc-progress-head>div span { color:#c6d5cf; font-size:12px; }
+.asc-progress-head>b { color:#ffe29a; font-size:12px; font-variant-numeric:tabular-nums; }
+.asc-next-track,.asc-chip-goals i { display:block; height:8px; overflow:hidden; border-radius:999px; background:#070d0c; box-shadow:inset 0 1px 3px #000a; }
+.asc-next-track { height:10px; border:1px solid #ffffff22; }
+.asc-next-track i,.asc-chip-goals i b { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#31b783,#9fffd2); box-shadow:0 0 10px #55efc477; transition:width .25s ease; }
+.asc-progress-card>p { margin:7px 0 10px; color:#a9bbb1; font-size:11px; }
+.asc-chip-goals { display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:6px; }
+.asc-chip-goal { min-width:0; padding:6px 7px; border:1px solid #ffffff14; border-radius:8px; background:#080f0e99; }
+.asc-chip-goal>div { display:flex; justify-content:space-between; gap:4px; margin-bottom:5px; }
+.asc-chip-goal span { color:#b8c8bf; font-size:10px; white-space:nowrap; }
+.asc-chip-goal>div>b { overflow:hidden; color:#84958b; font-size:9px; font-weight:600; text-align:right; text-overflow:ellipsis; white-space:nowrap; }
+.asc-chip-goal.ready { border-color:#55efc455; background:#164b3733; }
+.asc-chip-goal.ready span,.asc-chip-goal.ready>div>b { color:#8bf0bc; }
+.asc-chip-goal.next { border-color:#ffd166aa; box-shadow:0 0 12px #ffd1661e; }
+.asc-chip-goal.next span,.asc-chip-goal.next>div>b { color:#ffe09a; }
+.asc-chip-goal.next i b { background:linear-gradient(90deg,#e19a34,#ffe17b); box-shadow:0 0 10px #ffd16688; }
+.selector-comp-card.effect-conflict { border-color:#ff6b6b88; background:linear-gradient(160deg,#542a2a,#241c21); opacity:.72; }
+.selector-comp-card.effect-conflict:hover { border-color:#ff6b6b; background:linear-gradient(160deg,#542a2a,#241c21); }

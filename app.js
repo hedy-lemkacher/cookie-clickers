@@ -190,6 +190,57 @@ const COMPANIONS = [
   { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } }
 ];
 
+const COMPANION_SLOT_COOLDOWN_MS = 30 * 60 * 1000;
+function companionEffectGroups(id) {
+  const companion = COMPANIONS.find((entry) => entry.id === id);
+  if (!companion) return new Set();
+  const type = companion.powerType;
+  const groups = new Set([type]);
+  if (type.startsWith('building_') || ['cps', 'cps_master', 'cps_brain', 'speed', 'all_buildings'].includes(type)) groups.add('production');
+  if (['click', 'click_master', 'cps_click_hybrid', 'double_edged'].includes(type)) groups.add('click_power');
+  if (['cps_click_hybrid', 'double_edged'].includes(type)) groups.add('production');
+  if (['frenzy_dur', 'golden_vision', 'chrono_master'].includes(type)) groups.add('frenzy_duration');
+  if (['arcade_speed', 'chrono_master'].includes(type)) groups.add('arcade_speed');
+  if (['discount', 'building_discount'].includes(type)) groups.add('building_discount');
+  if (['casino_free', 'casino_discount', 'casino_cost_reduce'].includes(type)) groups.add('casino_cost');
+  if (['golden_reward', 'jackpot_luck'].includes(type)) groups.add('casino_reward');
+  return groups;
+}
+function companionEffectConflict(id, slotIndex) {
+  const candidateGroups = companionEffectGroups(id);
+  if (!candidateGroups.size || !S.compData || !Array.isArray(S.compData.equipped)) return null;
+  for (let otherSlot = 0; otherSlot < S.compData.equipped.length; otherSlot++) {
+    const otherId = S.compData.equipped[otherSlot];
+    if (otherSlot === slotIndex || !otherId || otherId === id) continue;
+    const otherGroups = companionEffectGroups(otherId);
+    if ([...candidateGroups].some((group) => otherGroups.has(group))) return { id: otherId, slot: otherSlot };
+  }
+  return null;
+}
+function repairEquippedCompanions() {
+  if (!S.compData || !Array.isArray(S.compData.equipped)) return false;
+  const accepted = [];
+  let changed = false;
+  S.compData.equipped.forEach((id, index) => {
+    if (!id) return;
+    const conflict = accepted.find((entry) => entry.id === id || [...companionEffectGroups(id)].some((group) => companionEffectGroups(entry.id).has(group)));
+    if (conflict) { S.compData.equipped[index] = null; changed = true; }
+    else accepted.push({ id, index });
+  });
+  return changed;
+}
+function companionSlotCooldownLeft(slotIndex) {
+  if (S.hdyMode) return 0;
+  const until = Number(S.compData && S.compData.slotCooldowns && S.compData.slotCooldowns[slotIndex]) || 0;
+  return Math.max(0, until - Date.now());
+}
+function blockCompanionSlotIfCooling(slotIndex) {
+  const left = companionSlotCooldownLeft(slotIndex);
+  if (!left) return false;
+  toast('⏳', 'Emplacement en recharge', 'Vous pourrez le modifier dans ' + fmtTime(left / 1000) + '.');
+  return true;
+}
+
 /* --- Succès (on ajoute toujours les nouveaux À LA FIN : la sauvegarde retient leur position) --- */
 const ACHIEVEMENTS = [
   { icon: '🍪', name: 'Réveil gourmand',      desc: 'Cuire 1 cookie.',                         test: () => S.baked >= 1 },
@@ -285,7 +336,7 @@ function freshState() {
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
     mysteryGift: { next: now + rand(600, 1200) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
-    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
+    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0, slotCooldowns: {} },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
@@ -348,12 +399,11 @@ function load() {
       if (S.ascensions > 0 && S.chips === 0 && S.bakedAll > 1e12) {
           S.chips = 70; // Emergency compensation
       }
-      if (!S.cheat) {
-        S.chips = Math.min(70, Math.max(0, S.chips));
-      }
+      if (!S.cheat) S.chips = Math.max(0, S.chips || 0);
       S.casino = Object.assign(freshState().casino, S.casino);
       S.mysteryGift = Object.assign(freshState().mysteryGift, S.mysteryGift);
       S.compData = Object.assign(freshState().compData, S.compData);
+      S.compData.slotCooldowns = Object.assign({}, S.compData.slotCooldowns);
       if (hadPersistentAdmin) {
         S.temple = S.temple.filter((id) => !id.startsWith('celestial_'));
         S.ups = S.ups.filter((id) => !['celestial_cd1', 'celestial_cd2', 'celestial_cd3'].includes(id));
@@ -1023,7 +1073,7 @@ function recalc() {
 }
 const countUps = (prefix) => upCount[prefix] || 0;
 const multiplier = (id) => Math.pow(2, countUps(id));
-const prestigeMult = () => 1 + S.chips * 0.02 * (1 + (typeof compHas === 'function' ? compHas('ascension_boost') : 0));
+const prestigeMult = () => 1 + S.chips * 0.01 * (1 + (typeof compHas === 'function' ? compHas('ascension_boost') : 0));
 
 let activeEvent = null;
 function eventBoost(id) {
@@ -1474,7 +1524,7 @@ function showMysteryGift() {
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftPopup';
   popup.className = 'mystery-gift-popup';
-  const preview = canPreview ? '<div class="mystery-preview"><b>🔮 Vision du Visionnaire</b><span>' + effect.icon + ' ' + effect.title + '</span><small>' + effect.text + '</small></div>' : '<div class="mystery-preview"><b>❓ EFFETS CACHÉS</b><small>Équipez le Visionnaire pour révéler le contenu avant de choisir...</small></div>';
+  const preview = canPreview ? '<div class="mystery-preview"><b>🔮 Vision d’Ayoub au tableau</b><span>' + effect.icon + ' ' + effect.title + '</span><small>' + effect.text + '</small></div>' : '<div class="mystery-preview"><b>❓ EFFETS CACHÉS</b><small>Équipez Ayoub au tableau pour révéler le contenu avant de choisir...</small></div>';
   popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>' + MYSTERY_PROMPTS[Math.floor(Math.random() * MYSTERY_PROMPTS.length)] + '</p>' + preview + '<div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
   popup.addEventListener('click', (event) => {
     if (event.target.closest('[data-mystery-close]')) {
@@ -3034,6 +3084,23 @@ function gameCook(api) {
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
 const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1.5e12 * Math.pow(2, S.ascensions))) * 0.5));
+const chipsTarget = (chipNumber) => Math.pow(chipNumber * 2, 3) * 1.5e12 * Math.pow(2, S.ascensions);
+function ascensionProgressMarkup() {
+  const potential = chipsPotential();
+  const nextTarget = potential < 70 ? chipsTarget(potential + 1) : null;
+  const progress = nextTarget ? Math.min(100, S.baked / nextTarget * 100) : 100;
+  const goals = Array.from({ length: 70 }, (_, index) => {
+    const chipNumber = index + 1;
+    const target = chipsTarget(chipNumber);
+    const percent = Math.min(100, S.baked / target * 100);
+    const ready = chipNumber <= potential;
+    return '<div class="asc-chip-goal' + (ready ? ' ready' : chipNumber === potential + 1 ? ' next' : '') + '" title="Pépite ' + chipNumber + ' : ' + fmt(S.baked) + ' / ' + fmt(target) + ' cookies cuits">' +
+      '<div><span>✨ Pépite ' + String(chipNumber).padStart(2, '0') + '</span><b>' + fmt(target) + '</b></div><i><b style="width:' + percent.toFixed(2) + '%"></b></i></div>';
+  }).join('');
+  return '<section class="asc-progress-card"><div class="asc-progress-head"><div><strong>Progression de cette ascension</strong><span>' + potential + ' / 70 pépite' + (potential > 1 ? 's' : '') + ' prête' + (potential > 1 ? 's' : '') + '</span></div><b>' + fmt(S.baked) + (nextTarget ? ' / ' + fmt(nextTarget) : ' · maximum atteint') + ' cookies cuits</b></div>' +
+    '<div class="asc-next-track"><i style="width:' + progress.toFixed(2) + '%"></i></div><p>Chaque barre correspond à une pépite. Les pépites gagnées s’ajoutent à celles déjà conservées : jusqu’à +70 à chaque ascension.</p>' +
+    '<div class="asc-chip-goals">' + goals + '</div></section>';
+}
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -3053,13 +3120,12 @@ function renderAchPane() {
     ['Temps de jeu', fmtTime(S.playTime)],
   ];
   $('#statsGrid').innerHTML = rows.map(([k, v]) => '<div><span>' + k + '</span><b>' + v + '</b></div>').join('');
-  const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(2, S.ascensions);
+  const pot = chipsPotential(), g = pot;
   $('#ascInfo').innerHTML =
-    '<p>Pépites célestes : <b>' + S.chips + '</b> (+' + S.chips * 2 + ' % de production)</p>' +
+    '<p>Pépites célestes conservées : <b>' + S.chips + '</b> (+' + S.chips + ' % de production).</p>' +
     (g > 0
-      ? '<p>Une ascension maintenant vous rapporterait <b>' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g * 2 + ' %).</p>'
-      : '<p>Prochaine pépite quand vous aurez cuit <b>' + fmt(nextTarget) + '</b> cookies.</p>');
+      ? '<p>Une ascension maintenant vous rapporterait <b>+' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g + ' % de production).</p>'
+      : '<p>Fais cuire des cookies pour commencer à remplir les objectifs ci-dessous.</p>') + ascensionProgressMarkup();
   $('#ascBtn').disabled = g < 1;
   if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
 }
@@ -3135,7 +3201,7 @@ $('#ascBtn').addEventListener('click', () => {
         <div style="font-size:44px; margin-bottom:6px;">😇</div>
         <h2 style="color:#f1c40f; margin-bottom:6px;">Ascension Céleste</h2>
         <p style="font-size:13px; color:#ced6e0; margin-bottom:12px;">
-          Vous allez gagner <b style="color:#ffeb3b;">+${g} pépite(s) céleste(s)</b> (+${g * 2}% prod).<br>
+          Vous allez gagner <b style="color:#ffeb3b;">+${g} pépite(s) céleste(s)</b> (+${g}% prod).<br>
           Grâce à <b>« Conserver mes amis »</b>, choisissez <b>1 compagnon</b> à emmener avec vous :
         </p>
         <div class="selector-comp-grid" style="max-height:300px; overflow-y:auto;">
@@ -3151,8 +3217,8 @@ $('#ascBtn').addEventListener('click', () => {
     return;
   }
 
-  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations repartent de zéro, mais vous gagnez ' + g +
-    ' pépite(s) céleste(s) : +' + g * 2 + ' % de production pour toujours.')) return;
+  if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations classiques repartent de zéro. Vous conservez ' + S.chips +
+    ' pépite(s) céleste(s) et en gagnez ' + g + ' de plus, soit +' + g + ' % de production supplémentaire.')) return;
   performAscension(g, null);
 });
 $('#reset').addEventListener('click', () => {
@@ -3637,6 +3703,7 @@ function loop() {
    DÉMARRAGE
    ===================================================================== */
 load();
+if (repairEquippedCompanions()) save();
 updateHdyMenu();
 recalc();
 renderWorldUI();
@@ -3836,7 +3903,8 @@ function initFlappy() {
       const drone = Math.random() < .27;
       if (drone) {
         const direction = Math.random() < .5 ? 1 : -1;
-        lasers.push({ axis: 'drone', x: direction > 0 ? -34 : W + 34, y: H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
+        const vertical = Math.random() < .5;
+        lasers.push({ axis: vertical ? 'droneV' : 'drone', x: vertical ? W * (.12 + Math.random()*.76) : direction > 0 ? -34 : W + 34, y: vertical ? direction > 0 ? -34 : H + 34 : H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
       } else {
         const axis = Math.random() > 0.5 ? 'x' : 'y';
         const span = axis === 'x' ? W : H;
@@ -3861,17 +3929,22 @@ function initFlappy() {
       l.phase += dt * 8;
       ctx.save();
       if (l.state === 'warn') {
-        if (l.axis === 'drone') {
-          const pulse = .16 + .1 * (0.5 + .5*Math.sin(l.phase));
-          ctx.fillStyle = `rgba(255,193,74,${pulse})`; ctx.fillRect(0,l.y,W,3);
-          ctx.setLineDash([9,10]); ctx.strokeStyle = '#ffd16699'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0,l.y); ctx.lineTo(W,l.y); ctx.stroke(); ctx.setLineDash([]);
-          ctx.fillStyle = '#ffe49b'; ctx.font = '700 13px Fredoka, sans-serif'; ctx.textAlign = l.direction > 0 ? 'left' : 'right';
-          ctx.fillText('DRONE EN APPROCHE', l.direction > 0 ? 18 : W-18, l.y-16);
-          const warningX = l.direction > 0 ? 30 : W-30;
-          ctx.beginPath(); ctx.arc(warningX,l.y,14+Math.sin(l.phase)*2,0,Math.PI*2); ctx.fillStyle = '#ffd16655'; ctx.fill();
-          ctx.beginPath(); ctx.arc(warningX,l.y,5,0,Math.PI*2); ctx.fillStyle = '#fff0bd'; ctx.fill();
-          if (l.timer <= 0) { l.state = 'fire'; l.timer = (W+68)/l.speed; }
-        } else {
+        if (l.axis === 'drone' || l.axis === 'droneV') {
+          const vertical = l.axis === 'droneV';
+          const pulse = .16 + .1 * (0.5 + 0.5*Math.sin(l.phase));
+          ctx.fillStyle = `rgba(255,193,74,${pulse})`;
+          if (vertical) ctx.fillRect(l.x,0,3,H); else ctx.fillRect(0,l.y,W,3);
+          ctx.setLineDash([9,10]); ctx.strokeStyle = '#ffd16699'; ctx.lineWidth = 2; ctx.beginPath();
+          if (vertical) { ctx.moveTo(l.x,0); ctx.lineTo(l.x,H); } else { ctx.moveTo(0,l.y); ctx.lineTo(W,l.y); }
+          ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = '#ffe49b'; ctx.font = '700 13px Fredoka, sans-serif';
+          if (vertical) { ctx.textAlign = 'center'; ctx.fillText('BOULE EN APPROCHE', l.x, l.direction > 0 ? 20 : H-14); }
+          else { ctx.textAlign = l.direction > 0 ? 'left' : 'right'; ctx.fillText('BOULE EN APPROCHE', l.direction > 0 ? 18 : W-18, l.y-16); }
+          const warningX = vertical ? l.x : l.direction > 0 ? 30 : W-30;
+          const warningY = vertical ? (l.direction > 0 ? 30 : H-30) : l.y;
+          ctx.beginPath(); ctx.arc(warningX,warningY,14+Math.sin(l.phase)*2,0,Math.PI*2); ctx.fillStyle = '#ffd16655'; ctx.fill();
+          ctx.beginPath(); ctx.arc(warningX,warningY,5,0,Math.PI*2); ctx.fillStyle = '#fff0bd'; ctx.fill();
+          if (l.timer <= 0) { l.state = 'fire'; l.timer = ((vertical ? H : W)+68)/l.speed; }        } else {
           const pulse = .1 + .1 * (0.5 + 0.5*Math.sin(l.phase));
           ctx.fillStyle = `rgba(255,55,94,${pulse})`;
           ctx.strokeStyle = '#ff547688'; ctx.lineWidth = 2; ctx.setLineDash([12, 10]);
@@ -3885,16 +3958,19 @@ function initFlappy() {
         }
       } else {
         if (l.timer <= 0) { lasers.splice(i, 1); ctx.restore(); continue; }
-        if (l.axis === 'drone') {
-          l.x += l.direction * l.speed * dt;
-          ctx.globalAlpha = .45; ctx.strokeStyle = '#ffbf4d'; ctx.lineWidth = 5; ctx.shadowColor = '#ff9f1c'; ctx.shadowBlur = 24;
-          ctx.beginPath(); ctx.moveTo(l.x-l.direction*34,l.y); ctx.lineTo(l.x+l.direction*4,l.y); ctx.stroke(); ctx.globalAlpha = 1;
-          const orb = ctx.createRadialGradient(l.x-5,l.y-6,1,l.x,l.y,17);
+        if (l.axis === 'drone' || l.axis === 'droneV') {
+          const vertical = l.axis === 'droneV';
+          if (vertical) l.y += l.direction * l.speed * dt; else l.x += l.direction * l.speed * dt;
+          ctx.globalAlpha=.45; ctx.strokeStyle='#ffbf4d'; ctx.lineWidth=5; ctx.shadowColor='#ff9f1c'; ctx.shadowBlur=24;
+          ctx.beginPath();
+          if (vertical) { ctx.moveTo(l.x,l.y-l.direction*34); ctx.lineTo(l.x,l.y+l.direction*4); }
+          else { ctx.moveTo(l.x-l.direction*34,l.y); ctx.lineTo(l.x+l.direction*4,l.y); }
+          ctx.stroke(); ctx.globalAlpha=1;
+          const orb=ctx.createRadialGradient(l.x-5,l.y-6,1,l.x,l.y,17);
           orb.addColorStop(0,'#fff8cd'); orb.addColorStop(.32,'#ffcf5c'); orb.addColorStop(1,'#bf4e28');
-          ctx.fillStyle = orb; ctx.beginPath(); ctx.arc(l.x,l.y,14,0,Math.PI*2); ctx.fill();
-          ctx.strokeStyle = '#fff2b9'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(l.x,l.y,19+Math.sin(l.phase)*2,0,Math.PI*2); ctx.stroke();
-          if (Math.hypot(mouseX-l.x,mouseY-l.y) < 36) { ctx.restore(); die('💥 Un drone de sécurité vous a touché !'); return; }
-        } else {
+          ctx.fillStyle=orb; ctx.beginPath(); ctx.arc(l.x,l.y,14,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle='#fff2b9'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(l.x,l.y,19+Math.sin(l.phase)*2,0,Math.PI*2); ctx.stroke();
+          if(Math.hypot(mouseX-l.x,mouseY-l.y)<36) { ctx.restore(); die('💥 Une boule jaune vous a touché !'); return; }        } else {
           const beam = ctx.createLinearGradient(l.axis === 'x' ? l.pos-l.width/2 : 0, l.axis === 'x' ? 0 : l.pos-l.width/2, l.axis === 'x' ? l.pos+l.width/2 : 0, l.axis === 'x' ? 0 : l.pos+l.width/2);
           beam.addColorStop(0, '#ff154f22'); beam.addColorStop(.38, '#ff365c'); beam.addColorStop(.5, '#fff1ed'); beam.addColorStop(.62, '#ff365c'); beam.addColorStop(1, '#ff154f22');
           ctx.fillStyle = beam; ctx.shadowColor = '#ff2453'; ctx.shadowBlur = 32;
@@ -4090,13 +4166,12 @@ const templeTabUps = document.getElementById('templeTabUps');
 const templeTabAsc = document.getElementById('templeTabAsc');
 
 function updateTempleAscensionInfo() {
-  const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(2, S.ascensions);
+  const pot = chipsPotential(), g = pot;
   const ascInfo = document.getElementById('ascInfo');
   if (ascInfo) {
     ascInfo.innerHTML = (g > 0
-      ? '<p style="color:#2ecc71;">Une ascension maintenant vous rapporterait <b>+' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g * 2 + ' % de prod).</p>'
-      : '<p style="color:#a4b0be;">Prochaine pépite quand vous aurez cuit <b>' + fmt(nextTarget) + '</b> cookies.</p>');
+      ? '<p style="color:#2ecc71;">Cette ascension vous rapportera <b>+' + g + ' pépite' + (g > 1 ? 's' : '') + '</b>, soit +' + g + ' % de production.</p>'
+      : '<p style="color:#a4b0be;">Cuis des cookies pour remplir les objectifs de pépites ci-dessous.</p>') + ascensionProgressMarkup();
   }
   const ascBtn = document.getElementById('ascBtn');
   if (ascBtn) ascBtn.disabled = g < 1;
@@ -4762,6 +4837,8 @@ function renderCompanions() {
   
   for (let slotIdx = 0; slotIdx < maxSlots; slotIdx++) {
     const id = S.compData.equipped[slotIdx] || null;
+    const slotCooldown = companionSlotCooldownLeft(slotIdx);
+    const slotHint = slotCooldown ? '⏳ Modifiable dans ' + fmtTime(slotCooldown / 1000) : '👉 Cliquer pour modifier ou retirer';
     let slotLabel = '';
     let slotShort = '';
     let slotIcon = '🛡️';
@@ -4801,7 +4878,7 @@ function renderCompanions() {
               <div class="comp-tooltip-slot">${slotIcon} ${slotLabel}</div>
               <div class="comp-tooltip-power">⚡ ${companionEffectText(c, `<span class="comp-tooltip-val">+${val}%</span>`)}</div>
               ${c.flavor ? `<div class="comp-tooltip-flavor">"${c.flavor}"</div>` : ''}
-              <div class="comp-tooltip-hint">👉 Cliquer pour modifier ou retirer</div>
+              <div class="comp-tooltip-hint">${slotHint}</div>
             </div>
           </div>
         `;
@@ -4817,7 +4894,7 @@ function renderCompanions() {
           
           <div class="comp-hover-tooltip empty-tooltip">
             <div class="comp-tooltip-name">${slotIcon} Emplacement ${slotShort} vide</div>
-            <div class="comp-tooltip-hint">👉 Cliquer pour choisir un compagnon</div>
+            <div class="comp-tooltip-hint">${slotCooldown ? '⏳ Modifiable dans ' + fmtTime(slotCooldown / 1000) : '👉 Cliquer pour choisir un compagnon'}</div>
           </div>
         </div>
       `;
@@ -4831,6 +4908,7 @@ function renderCompanions() {
 window.openCompanionSelector = function(slotIdx) {
   slotIdx = parseInt(slotIdx, 10);
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  if (blockCompanionSlotIfCooling(slotIdx)) return;
   
   const maxSlots = maxCompanionSlots();
   let slotName = '';
@@ -4879,11 +4957,12 @@ window.openCompanionSelector = function(slotIdx) {
       const isHere = S.compData.equipped[slotIdx] === id;
       const otherSlotIndex = S.compData.equipped.findIndex((eqId, idx) => idx !== slotIdx && eqId === id);
       const isOther = otherSlotIndex !== -1;
+      const effectConflict = !isOther ? companionEffectConflict(id, slotIdx) : null;
       const val = Math.round(companionVal(id) * 100);
       const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
       
       modalHtml += `
-        <div class="selector-comp-card rarity-${c.rarity} ${isHere ? 'active-slot' : ''}" data-equip-id="${c.id}" data-equip-slot="${slotIdx}">
+        <div class="selector-comp-card rarity-${c.rarity} ${isHere ? 'active-slot' : ''} ${effectConflict ? 'effect-conflict' : ''}" data-equip-id="${c.id}" data-equip-slot="${slotIdx}" aria-disabled="${Boolean(effectConflict)}">
           <div style="width:48px; height:48px; margin-bottom:6px; pointer-events:none;" class="${friendClass}">
             ${renderCompanionVisual(c, 48)}
           </div>
@@ -4892,7 +4971,7 @@ window.openCompanionSelector = function(slotIdx) {
           <span style="font-size:10px; color:#2ed573; margin-top:3px; line-height:1.2; pointer-events:none;">+${val}%</span>
           ${c.flavor ? `<span style="font-size:9px; color:#b2bec3; margin-top:2px; font-style:italic; pointer-events:none;">"${c.flavor}"</span>` : ''}
           <span style="font-size:9px; margin-top:5px; font-weight:bold; color:${isHere ? '#2ed573' : (isOther ? '#ffa502' : '#70a1ff')}; pointer-events:none;">
-            ${isHere ? '✓ Équipé ici' : (isOther ? `⇄ Slot ${otherSlotIndex + 1}` : '👉 Choisir')}
+            ${isHere ? '✓ Équipé ici' : (isOther ? `⇄ Slot ${otherSlotIndex + 1}` : effectConflict ? '⛔ Effet similaire à l’emplacement ' + (effectConflict.slot + 1) : '👉 Choisir')}
           </span>
         </div>
       `;
@@ -5242,6 +5321,7 @@ function equipCompanionSlot(id, slotIndex) {
 
   if (!S.compData) S.compData = { equipped: [], unlocked: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   if (!Array.isArray(S.compData.equipped)) S.compData.equipped = [];
+  if (!S.compData.slotCooldowns) S.compData.slotCooldowns = {};
   while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
   
   let slotTxt = `Slot ${slotIndex + 1}`;
@@ -5251,41 +5331,52 @@ function equipCompanionSlot(id, slotIndex) {
     slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : (slotIndex === 1 ? 'Slot Centre (2)' : 'Slot Droite (3)');
   }
 
+  const sourceSlot = S.compData.equipped.findIndex((equippedId, index) => equippedId === id && index !== slotIndex);
+  const affectedSlots = sourceSlot >= 0 ? [slotIndex, sourceSlot] : [slotIndex];
+  for (const changedSlot of affectedSlots) if (blockCompanionSlotIfCooling(changedSlot)) return false;
+  if (S.compData.equipped[slotIndex] !== id) {
+    const conflict = companionEffectConflict(id, slotIndex);
+    if (conflict) {
+      const current = COMPANIONS.find((entry) => entry.id === conflict.id);
+      toast('⚠️', 'Effet déjà équipé', (current ? current.name : 'Ce compagnon') + ' a déjà un effet similaire sur l’emplacement ' + (conflict.slot + 1) + '.');
+      return false;
+    }
+  }
+
   if (S.compData.equipped[slotIndex] === id) {
-    // Si déjà équipé sur ce slot -> déséquiper
     S.compData.equipped[slotIndex] = null;
     toast('🛡️', 'Compagnon retiré', `Emplacement ${slotTxt} libéré.`);
   } else {
-    // Si le compagnon était dans un autre slot, le déplacer
-    for (let i = 0; i < maxSlots; i++) {
-      if (i !== slotIndex && S.compData.equipped[i] === id) {
-        S.compData.equipped[i] = null;
-      }
-    }
+    if (sourceSlot >= 0) S.compData.equipped[sourceSlot] = null;
     S.compData.equipped[slotIndex] = id;
     const c = COMPANIONS.find(x => x.id === id);
     const name = c ? c.name : id;
     toast('🛡️', 'Compagnon équipé !', `${name} placé au ${slotTxt}.`);
   }
+  if (!S.hdyMode) affectedSlots.forEach((changedSlot) => { S.compData.slotCooldowns[changedSlot] = Date.now() + COMPANION_SLOT_COOLDOWN_MS; });
   
   save();
   recalc();
   renderCompanions();
   renderGachaPane();
+  return true;
 }
 window.equipCompanionSlot = equipCompanionSlot;
 
 function unequipCompanionSlot(slotIndex) {
   slotIndex = parseInt(slotIndex, 10);
   if (!S.compData || !S.compData.equipped) return;
-  if (Array.isArray(S.compData.equipped) && S.compData.equipped.length > slotIndex) {
-    S.compData.equipped[slotIndex] = null;
-  }
+  if (!Array.isArray(S.compData.equipped) || slotIndex < 0 || slotIndex >= S.compData.equipped.length || !S.compData.equipped[slotIndex]) return false;
+  if (blockCompanionSlotIfCooling(slotIndex)) return false;
+  if (!S.compData.slotCooldowns) S.compData.slotCooldowns = {};
+  S.compData.equipped[slotIndex] = null;
+  if (!S.hdyMode) S.compData.slotCooldowns[slotIndex] = Date.now() + COMPANION_SLOT_COOLDOWN_MS;
   toast('🛡️', 'Compagnon retiré', 'Emplacement libéré.');
   save();
   recalc();
   renderCompanions();
   renderGachaPane();
+  return true;
 }
 window.unequipCompanionSlot = unequipCompanionSlot;
 
@@ -5442,7 +5533,7 @@ function renderGachaPane() {
       <div class="active-duo-title">
         <span>⚔️ Vos ${maxSlots} Compagnons Actifs (${maxSlots === 3 ? 'Trio Équipé' : 'Duo Équipé'})</span>
         <small style="color:#a4b0be; font-size:12px; font-weight:normal;">
-          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : 'Les 3 bonus se cumulent !'}
+          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : 'Équipez trois compagnons aux effets différents.'}
         </small>
       </div>
       <div class="active-duo-grid">
@@ -5725,7 +5816,7 @@ document.addEventListener('click', (e) => {
   const ascKeepBtn = e.target.closest('[data-asc-keep]');
   if (ascKeepBtn) {
     const keepId = ascKeepBtn.dataset.ascKeep;
-    const g = chipsPotential() - S.chips;
+    const g = chipsPotential();
     closeModal();
     performAscension(g, keepId === 'none' ? null : keepId);
     return;
@@ -5743,8 +5834,8 @@ document.addEventListener('click', (e) => {
   if (equipBtn) {
     const id = equipBtn.dataset.equipId;
     const slot = parseInt(equipBtn.dataset.equipSlot, 10);
-    equipCompanionSlot(id, slot);
-    if (modal && modal.classList.contains('on') && !e.target.closest('.companion-grid')) {
+    const equipped = equipCompanionSlot(id, slot);
+    if (equipped && modal && modal.classList.contains('on') && !e.target.closest('.companion-grid')) {
       closeModal();
     }
     return;
@@ -5753,8 +5844,8 @@ document.addEventListener('click', (e) => {
   const unequipBtn = e.target.closest('[data-unequip-slot]');
   if (unequipBtn) {
     const slot = parseInt(unequipBtn.dataset.unequipSlot, 10);
-    unequipCompanionSlot(slot);
-    if (modal && modal.classList.contains('on')) {
+    const unequipped = unequipCompanionSlot(slot);
+    if (unequipped && modal && modal.classList.contains('on')) {
       closeModal();
     }
     return;
