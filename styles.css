@@ -43,10 +43,17 @@ input, select { user-select: text; -webkit-user-select: text; }
 .side-menu-links button:first-letter { font-size: 21px; }
 
 .app {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.5fr) 300px;
   height: 100vh;
 }
+.app.store-collapsed { grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.5fr) 0; }
+.app.store-collapsed .store { display: none; }
+.store-toggle { position: fixed; top: 50%; right: 300px; z-index: 75; display: grid; place-items: center; width: 30px; height: 64px; border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; background: linear-gradient(180deg, #6b4521, #321b0b); color: var(--gold); font-size: 28px; line-height: 1; box-shadow: 0 8px 24px #0008; transform: translateY(-50%); transition: right .2s ease, background .2s ease; }
+.store-toggle:hover { background: linear-gradient(180deg, #8c5e2c, #4a2b14); }
+.app.store-collapsed .store-toggle { right: 0; }
+.app.store-collapsed .store-toggle span { transform: rotate(180deg); }
 
 /* ================= Colonne gauche : le cookie ================= */
 .left {
@@ -817,6 +824,7 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 @media (max-width: 1000px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; height: auto; }
+  .app.store-collapsed { grid-template-columns: 1fr; }
   .left { border-right: 0; min-height: 90vh; }
   .middle { border-top: 6px solid rgba(0, 0, 0, .35); min-height: 70vh; }
   .pane { max-height: 75vh; }
@@ -824,6 +832,8 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   .store-list { overflow: visible; }
   #tip { display: none !important; }
   .menu-toggle { top: 50%; left: 0; }
+  .store-toggle { position: fixed; top: auto; right: 12px; bottom: 12px; width: 48px; height: 42px; border: 1px solid var(--line); border-radius: 12px; transform: none; }
+  .app.store-collapsed .store-toggle { right: 12px; }
   .roulette-layout { grid-template-columns: 1fr; }
   .wheel-game-layout { grid-template-columns: 1fr; }
   .roulette-stage { min-height: 270px; }

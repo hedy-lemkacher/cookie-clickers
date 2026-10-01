@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<button class="menu-toggle" id="menuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sideMenu">›</button>
+<button class="menu-toggle" id="menuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sideMenu">☰</button>
 <div class="menu-backdrop" id="menuBackdrop"></div>
 <aside class="side-menu" id="sideMenu" aria-hidden="true">
   <div class="side-menu-head"><h2>Menu</h2><button id="menuClose" type="button" aria-label="Fermer le menu">✕</button></div>
@@ -308,7 +308,7 @@
   </section>
 
   <!-- ============ Colonne droite : la boutique ============ -->
-  <aside class="store">
+  <aside class="store" id="store">
     <div class="store-head">
       <h2>Boutique</h2>
       <div class="amount" id="amount">
@@ -323,6 +323,7 @@
     <div class="section-title">Bâtiments</div>
     <div class="store-list" id="buildings"></div>
   </aside>
+  <button class="store-toggle" id="storeToggle" type="button" aria-label="Masquer la boutique" aria-expanded="true" aria-controls="store"><span>›</span></button>
 </div>
 
 <button id="golden" aria-label="Cookie doré">

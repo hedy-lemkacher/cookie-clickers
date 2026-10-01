@@ -607,7 +607,7 @@ function renderCasinoPane() {
     const n = SEG.length;
     const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
     const odds = (predicate) => (SEG.reduce((sum, segment) => sum + (predicate(segment) ? segment.w : 0), 0) / totalW * 100).toFixed(1);
-    const effectsMarkup = '<aside class="wheel-effects" id="wheelEffectsPanel"><button class="wheel-effects-toggle" id="wheelEffectsToggle" type="button" aria-expanded="true"><span><i>✦</i> Effets possibles</span><b>›</b></button><div class="wheel-effects-list"><div><span>☠️</span><p><strong>La Mort qui Tue</strong><small>' + odds((s) => s.death) + ' % · moitié des 3 derniers bâtiments acquis</small></p></div><div><span>📉</span><p><strong>Banqueroute</strong><small>' + odds((s) => s.halfBank) + ' % · moitié des cookies perdue</small></p></div><div><span>💸</span><p><strong>Perte de production</strong><small>' + odds((s) => s.cpsNeg) + ' % · 30 minutes de production perdues</small></p></div><div><span>💰</span><p><strong>Jackpot</strong><small>' + odds((s) => s.bank15) + ' % · +50 % de votre banque</small></p></div><div><span>🍀</span><p><strong>Heure chanceuse</strong><small>' + odds((s) => s.cps1h) + ' % · 1 heure de production gagnée</small></p></div><div><span>🌈</span><p><strong>La Vie qui Vie</strong><small>' + odds((s) => s.life) + ' % · les 2 derniers bâtiments doublent</small></p></div><div><span>👆</span><p><strong>Clic divin</strong><small>' + odds((s) => s.clickFz) + ' % · clics ×500 pendant 5 secondes</small></p></div></div></aside>';
+    const effectsMarkup = '<aside class="wheel-effects" id="wheelEffectsPanel"><button class="wheel-effects-toggle" id="wheelEffectsToggle" type="button" aria-expanded="true"><span><i>✦</i> Effets possibles</span></button><div class="wheel-effects-list"><div><span>☠️</span><p><strong>La Mort qui Tue</strong><small>' + odds((s) => s.death) + ' % · moitié des 3 derniers bâtiments acquis</small></p></div><div><span>📉</span><p><strong>Banqueroute</strong><small>' + odds((s) => s.halfBank) + ' % · moitié des cookies perdue</small></p></div><div><span>💸</span><p><strong>Perte de production</strong><small>' + odds((s) => s.cpsNeg) + ' % · 30 minutes de production perdues</small></p></div><div><span>💰</span><p><strong>Jackpot</strong><small>' + odds((s) => s.bank15) + ' % · +50 % de votre banque</small></p></div><div><span>🍀</span><p><strong>Heure chanceuse</strong><small>' + odds((s) => s.cps1h) + ' % · 1 heure de production gagnée</small></p></div><div><span>🌈</span><p><strong>La Vie qui Vie</strong><small>' + odds((s) => s.life) + ' % · les 2 derniers bâtiments doublent</small></p></div><div><span>👆</span><p><strong>Clic divin</strong><small>' + odds((s) => s.clickFz) + ' % · clics ×500 pendant 5 secondes</small></p></div></div></aside>';
     
     box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 30 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
       '<div class="wheel-game-layout"><div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
@@ -3056,13 +3056,19 @@ function setMenu(open) {
   sideMenu.classList.toggle('on', open);
   menuBackdrop.classList.toggle('on', open);
   menuToggle.setAttribute('aria-expanded', String(open));
-  menuToggle.textContent = open ? '‹' : '›';
+  menuToggle.textContent = '☰';
   menuToggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
   sideMenu.setAttribute('aria-hidden', String(!open));
 }
 menuToggle.addEventListener('click', () => setMenu(true));
 menuClose.addEventListener('click', () => setMenu(false));
 menuBackdrop.addEventListener('click', () => setMenu(false));
+const appShell = document.querySelector('.app'), storeToggle = $('#storeToggle');
+storeToggle.addEventListener('click', () => {
+  const collapsed = appShell.classList.toggle('store-collapsed');
+  storeToggle.setAttribute('aria-expanded', String(!collapsed));
+  storeToggle.setAttribute('aria-label', collapsed ? 'Afficher la boutique' : 'Masquer la boutique');
+});
 sideMenu.addEventListener('click', (e) => {
   const button = e.target.closest('[data-menu-tab]');
   if (!button) return;
