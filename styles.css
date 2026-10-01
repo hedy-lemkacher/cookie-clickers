@@ -543,6 +543,20 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 #mClose:hover { background: rgba(255, 120, 100, .25); }
 .modal-body { padding: 16px; }
 .game-hint { font-size: 14px; color: var(--muted); margin-bottom: 12px; line-height: 1.45; }
+.celestial-3d-stage { position: relative; isolation: isolate; transform-style: preserve-3d; }
+.celestial-3d-stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 8; background: linear-gradient(180deg, rgba(255,255,255,.12), transparent 28%, rgba(0,0,0,.22)); mix-blend-mode: screen; }
+.celestial-bowling-stage { background: linear-gradient(180deg, #171d3b 0 25%, #684321 25% 100%) !important; box-shadow: inset 0 28px 35px #070917aa, 0 18px 28px #0009; }
+.celestial-bowling-stage::before { content: ''; position: absolute; left: 12%; right: 12%; top: 25%; bottom: 0; z-index: -1; transform: perspective(420px) rotateX(16deg); transform-origin: top; background: repeating-linear-gradient(90deg, #f3c782 0 3px, transparent 3px 27px), repeating-linear-gradient(0deg, rgba(65,34,17,.5) 0 3px, transparent 3px 28px); opacity: .55; }
+.celestial-bowling-stage #cBowlingPins { transform: translateZ(34px) scale(.82); transform-origin: center top; }
+.celestial-bowling-stage #cBowlingBall { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
+.celestial-basketball-stage { perspective: 520px; background: radial-gradient(circle at 50% 5%, #ffcf76, transparent 22%), linear-gradient(180deg, #15284d, #101318 58%, #37200f) !important; box-shadow: inset 0 -30px 40px #000a, 0 18px 28px #0009; }
+.celestial-basketball-stage::before { content: ''; position: absolute; left: 8%; right: 8%; bottom: -8%; height: 62%; z-index: -1; transform: rotateX(57deg); transform-origin: bottom; background: repeating-linear-gradient(90deg, transparent 0 28px, #f2b86155 29px 31px), repeating-linear-gradient(0deg, transparent 0 22px, #f2b86144 23px 25px); }
+.celestial-basketball-stage #cHoop { transform: translateZ(40px) rotateX(-8deg); transform-origin: center; box-shadow: 0 10px 0 rgba(231,76,60,.3), 0 0 22px #ffb34799 !important; }
+.celestial-basketball-stage #cBall { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
+.celestial-football-stage { perspective: 560px; background: radial-gradient(circle at 50% 0, #8ee8a0, transparent 34%), linear-gradient(180deg, #238d54, #12633b 60%, #092c20) !important; box-shadow: inset 0 -35px 40px #0008, 0 18px 28px #0009; }
+.celestial-football-stage::before { content: ''; position: absolute; left: 10%; right: 10%; bottom: -12%; height: 65%; z-index: -1; transform: rotateX(58deg); transform-origin: bottom; background: repeating-linear-gradient(90deg, transparent 0 38px, #d8ffd744 39px 41px), repeating-linear-gradient(0deg, transparent 0 28px, #d8ffd733 29px 31px); }
+.celestial-football-stage #cGk { transform: translateZ(48px) scale(1.15); transform-origin: center bottom; filter: drop-shadow(0 10px 4px #0009); }
+.celestial-football-stage #cBallFoo { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
 .arena {
   position: relative;
   height: 340px;

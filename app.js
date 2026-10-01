@@ -328,7 +328,7 @@ function load() {
           S.chips = 70; // Emergency compensation
       }
       if (!S.cheat) {
-          S.chips = Math.min(50, Math.max(0, S.chips));
+        S.chips = Math.min(70, Math.max(0, S.chips));
       }
       S.casino = Object.assign(freshState().casino, S.casino);
       S.compData = Object.assign(freshState().compData, S.compData);
@@ -2617,7 +2617,7 @@ function gameCook(api) {
 /* =====================================================================
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
-const chipsPotential = () => Math.min(50, Math.floor(Math.cbrt(S.baked / (1.5e12 * Math.pow(3, S.ascensions))) * 0.5));
+const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1.5e12 * Math.pow(2, S.ascensions))) * 0.5));
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -2638,7 +2638,7 @@ function renderAchPane() {
   ];
   $('#statsGrid').innerHTML = rows.map(([k, v]) => '<div><span>' + k + '</span><b>' + v + '</b></div>').join('');
   const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(3, S.ascensions);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(2, S.ascensions);
   $('#ascInfo').innerHTML =
     '<p>Pépites célestes : <b>' + S.chips + '</b> (+' + S.chips * 2 + ' % de production)</p>' +
     (g > 0
@@ -3545,7 +3545,7 @@ const templeTabAsc = document.getElementById('templeTabAsc');
 
 function updateTempleAscensionInfo() {
   const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(3, S.ascensions);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(2, S.ascensions);
   const ascInfo = document.getElementById('ascInfo');
   if (ascInfo) {
     ascInfo.innerHTML = (g > 0
@@ -3582,7 +3582,7 @@ function gameCelestialBowling(api, g) {
   api.body.innerHTML = `<div class="game-bowling" style="background:#1a0f14; border-radius:12px; padding:20px; overflow:hidden;">
     <p class="game-hint" style="color:#ddd; margin-bottom:15px;">Arrêtez la flèche bien au centre pour un <b>Strike</b> !</p>
     
-    <div style="position:relative; width:280px; height:350px; margin:0 auto 20px auto; background:linear-gradient(#2c1e16, #5c3a21); border-left:10px solid #111; border-right:10px solid #111; border-radius:5px; perspective:600px; overflow:hidden;" id="cBowlingAlley">
+    <div class="celestial-3d-stage celestial-bowling-stage" style="position:relative; width:280px; height:350px; margin:0 auto 20px auto; background:linear-gradient(#2c1e16, #5c3a21); border-left:10px solid #111; border-right:10px solid #111; border-radius:5px; perspective:600px; overflow:hidden;" id="cBowlingAlley">
       <!-- Piste -->
       <div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px);"></div>
       
@@ -3594,7 +3594,7 @@ function gameCelestialBowling(api, g) {
       </div>
       
       <!-- Boule (Cookie) -->
-      <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1);">🍪</div>
+      <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1); transform:translateZ(0);">🍪</div>
       
       <!-- Flèche de visée -->
       <div style="position:absolute; bottom:40px; left:50%; width:4px; height:80px; background:rgba(241, 196, 15, 0.8); transform-origin:bottom center; transform:translateX(-50%) rotate(-90deg); z-index:10;" id="cBowlingArrow">
@@ -3641,7 +3641,7 @@ function gameCelestialBowling(api, g) {
       else pins = 0;
       
       const targetX = (angle / 90) * 120;
-      ball.style.transform = `translate(${targetX}px, -260px) scale(0.5)`;
+      ball.style.transform = `translate3d(${targetX}px, -260px, 130px) scale(0.5)`;
       
       setTimeout(() => {
         if (pins === 10) {
@@ -3670,7 +3670,7 @@ function gameCelestialBasketball(api, g) {
   
   api.body.innerHTML = `<div class="game-basketball">
     <p class="game-hint">Tirez quand le panier est aligné avec le cookie. <span id="cBaskTries">${tries}</span> essais.</p>
-    <div style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
+    <div class="celestial-3d-stage celestial-basketball-stage" style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
       <div id="cHoop" style="position:absolute;top:10px;left:0;width:50px;height:15px;border:3px solid #e74c3c;border-radius:50%;box-shadow:0 10px 0 rgba(231,76,60,0.3);"></div>
       <div id="cBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
@@ -3703,7 +3703,10 @@ function gameCelestialBasketball(api, g) {
     
     function animateShoot() {
       cookieY += 8;
+      const shotDepth = Math.min(90, cookieY * 0.65);
+      const shotScale = Math.max(0.55, 1 - cookieY / 330);
       ball.style.bottom = (10 + cookieY) + 'px';
+      ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
       
       if (cookieY > 110) { // reached hoop level
         const ballCenter = (areaW / 2);
@@ -3724,6 +3727,7 @@ function gameCelestialBasketball(api, g) {
           } else {
             shooting = false;
             ball.style.bottom = '10px';
+            ball.style.transform = 'translateZ(0) scale(1)';
           }
           return;
         }
@@ -3736,7 +3740,7 @@ function gameCelestialBasketball(api, g) {
 }
 
 function gameCelestialFootball(api, g) {
-  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 3.5;
+  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 5.2;
   let cookieY = 0;
   let raf, shootRaf;
   let tries = 3;
@@ -3744,7 +3748,7 @@ function gameCelestialFootball(api, g) {
   
   api.body.innerHTML = `<div class="game-football">
     <p class="game-hint">Marquez le penalty en évitant le verre de lait. <span id="cFooTries">${tries}</span> essais.</p>
-    <div style="position:relative;width:100%;height:150px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
+    <div class="celestial-3d-stage celestial-football-stage" style="position:relative;width:100%;height:150px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
       <div style="position:absolute;top:0;left:10%;width:80%;height:20px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-right:3px solid #fff;box-sizing:border-box;"></div>
       <div id="cGk" style="position:absolute;top:20px;left:0;width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;">🥛</div>
       <div id="cBallFoo" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
@@ -3778,12 +3782,15 @@ function gameCelestialFootball(api, g) {
     
     function animateShoot() {
       cookieY += 8;
+      const shotDepth = Math.min(110, cookieY * 0.85);
+      const shotScale = Math.max(0.45, 1 - cookieY / 300);
       ball.style.bottom = (10 + cookieY) + 'px';
+      ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
       
       if (cookieY > 80 && cookieY < 120) { // ball reaching GK level
         const ballCenter = areaW / 2;
         const gkCenter = gkX + 15;
-        if (Math.abs(ballCenter - gkCenter) < 15) { // harder for GK to save!
+        if (Math.abs(ballCenter - gkCenter) < 26) { // the larger keeper has a real save zone
           tries--;
           triesTxt.textContent = tries;
           if (tries <= 0) {
@@ -3794,6 +3801,7 @@ function gameCelestialFootball(api, g) {
           } else {
             shooting = false;
             ball.style.bottom = '10px';
+            ball.style.transform = 'translateZ(0) scale(1)';
           }
           return;
         }
@@ -4190,9 +4198,9 @@ function gachaCost(count = 1) {
   const pulls = (S.compData && S.compData.pulls) || 0;
   let total = 0;
   for (let i = 0; i < count; i++) {
-    total += Math.max(5000, cps() * 40) * Math.pow(1.025, pulls + i);
+    total += Math.max(7500, cps() * 55) * Math.pow(1.035, pulls + i);
   }
-  if (count >= 10) total *= 0.9;
+  if (count >= 10) total *= 0.88;
   return Math.ceil(total);
 }
 
