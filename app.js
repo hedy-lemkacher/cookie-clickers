@@ -334,6 +334,10 @@ function load() {
       S.casino = Object.assign(freshState().casino, S.casino);
       S.mysteryGift = Object.assign(freshState().mysteryGift, S.mysteryGift);
       S.compData = Object.assign(freshState().compData, S.compData);
+      if (S.booMode) {
+        S.booMode = false;
+        S.cheat = false;
+      }
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
   if (S.bakedAll < S.baked) S.bakedAll = S.baked;
@@ -502,18 +506,17 @@ function updateCasinoLimit() {
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const codeValue = input.value.trim().toUpperCase();
-  const isBoo = codeValue === 'BOO';
 
-  if (codeValue !== 'LMK' && !isBoo) {
+  if (codeValue !== 'LMK') {
     status.textContent = 'Code incorrect.';
     status.classList.remove('on');
     return;
   }
   S.cheat = true;
-  S.booMode = isBoo;
-  S.cookies = isBoo ? 999e21 : Number.MAX_VALUE;
-  S.baked = isBoo ? Math.max(S.baked, 999e21) : Number.MAX_VALUE;
-  S.bakedAll = isBoo ? Math.max(S.bakedAll, 999e21) : Number.MAX_VALUE;
+  S.booMode = false;
+  S.cookies = Number.MAX_VALUE;
+  S.baked = Number.MAX_VALUE;
+  S.bakedAll = Number.MAX_VALUE;
   S.chips = 9999;
   if (!S.temple) S.temple = [];
   BUILDINGS.forEach((building) => { S.owned[building.id] = 1000; });
@@ -524,12 +527,10 @@ function activateSecretCode() {
   // Override allowClick to never block admin
   window.__adminMode = true;
   recalc();
-  status.textContent = isBoo
-    ? '👑 Code BOO activé : 999 trilliards par clic, 9 999 pépites et tous les jeux disponibles.'
-    : '👑 Mode ADMIN activé : aucune limite, tout débloqué.';
+  status.textContent = '👑 Mode ADMIN activé : aucune limite, tout débloqué.';
   status.classList.add('on');
   input.value = '';
-  toast('👑', isBoo ? 'Code BOO' : 'Mode ADMIN', isBoo ? 'Pouvoir absolu activé !' : 'Toutes les restrictions sont levées. Amusez-vous !');
+  toast('👑', 'Mode ADMIN', 'Toutes les restrictions sont levées. Amusez-vous !');
   refreshAll();
   save();
 }
