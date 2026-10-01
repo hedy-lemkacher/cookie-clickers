@@ -142,30 +142,30 @@ const COMPANIONS = [
 
   // Rares (Cookies CSS/SVG)
   { id: 'c_knight', name: 'Cookie chevalier', rarity: 'rare', powerType: 'click', powerBase: 0.22, powerStep: 0.05, desc: 'Puissance des clics +{val}%', style: { c: ['#dfe4ea', '#a4b0be', '#57606f'], chip: '#2f3542', edge: '#2f3542', isKnight: true } },
-  { id: 'c_astro', name: 'Cookie astronaute', rarity: 'rare', powerType: 'building_ship', powerBase: 0.30, powerStep: 0.08, desc: 'Les fusées produisent +{val}%', style: { c: ['#341f97', '#1e272e', '#010a15'], chip: '#f1c40f', edge: '#54a0ff', isSpace: true } },
+  { id: 'c_astro', name: 'Cookie astronaute', rarity: 'rare', powerType: 'building_rocket', powerBase: 0.30, powerStep: 0.08, desc: 'Les fusées produisent +{val}%', style: { c: ['#341f97', '#1e272e', '#010a15'], chip: '#f1c40f', edge: '#54a0ff', isSpace: true } },
   { id: 'c_mage', name: 'Cookie magicien', rarity: 'rare', powerType: 'golden_freq', powerBase: 0.18, powerStep: 0.04, desc: 'Apparition des cookies dorés +{val}%', style: { c: ['#8854d0', '#5f27cd', '#341f97'], chip: '#ffd32a', edge: '#ff5e57', isMagic: true } },
   { id: 'c_dragon', name: 'Cookie dragon', rarity: 'rare', powerType: 'cps', powerBase: 0.25, powerStep: 0.06, desc: 'Production globale +{val}%', style: { c: ['#eb3b5a', '#b71540', '#4b1218'], chip: '#fed330', edge: '#fc5c65', isDragon: true } },
   { id: 'c_mineur', name: 'Cookie nain mineur', rarity: 'rare', powerType: 'building_mine', powerBase: 0.40, powerStep: 0.10, desc: 'Les mines produisent +{val}%', style: { c: ['#95a5a6', '#7f8c8d', '#34495e'], chip: '#f1c40f', edge: '#2c3e50', isMiner: true } },
   { id: 'c_banquier', name: 'Cookie banquier d\'or', rarity: 'rare', powerType: 'building_bank', powerBase: 0.40, powerStep: 0.10, desc: 'Les banques produisent +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#d6a014'], chip: '#27ae60', edge: '#b7860b', isBanker: true } },
-  { id: 'c_alchimiste', name: 'Cookie alchimiste', rarity: 'rare', powerType: 'building_lab', powerBase: 0.40, powerStep: 0.10, desc: 'Les labos produisent +{val}%', style: { c: ['#9b59b6', '#8e44ad', '#4a154b'], chip: '#2ecc71', edge: '#6c3483', isAlchemist: true } },
+  { id: 'c_alchimiste', name: 'Cookie alchimiste', rarity: 'rare', powerType: 'building_wizard', powerBase: 0.40, powerStep: 0.10, desc: 'Les tours de sorcier produisent +{val}%', style: { c: ['#9b59b6', '#8e44ad', '#4a154b'], chip: '#2ecc71', edge: '#6c3483', isAlchemist: true } },
   { id: 'c_templier', name: 'Cookie templier sacré', rarity: 'rare', powerType: 'building_temple', powerBase: 0.40, powerStep: 0.10, desc: 'Les temples produisent +{val}%', style: { c: ['#f5f6fa', '#dcdde1', '#718093'], chip: '#e74c3c', edge: '#e74c3c', isTemplar: true } },
   { id: 'c_arcade', name: 'Cookie 8-bit rétro', rarity: 'rare', powerType: 'arcade_speed', powerBase: 0.25, powerStep: 0.06, desc: 'Vitesse de recharge des mini-jeux +{val}%', style: { c: ['#1e3799', '#0c2461', '#041033'], chip: '#e74c3c', edge: '#4a69bd', isArcade: true } },
   { id: 'c_glace', name: 'Cookie givré polaire', rarity: 'rare', powerType: 'frenzy_dur', powerBase: 0.25, powerStep: 0.06, desc: 'Durée des frénésies +{val}%', style: { c: ['#dff9fb', '#c7ecee', '#7ed6df'], chip: '#22a6b3', edge: '#22a6b3', isIce: true } },
 
   // Épiques (Cookies CSS/SVG)
   { id: 'c_demon', name: 'Cookie démon infernal', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
-  { id: 'c_ange', name: 'Cookie séraphin céleste', rarity: 'epique', powerType: 'golden_dur', powerBase: 0.25, powerStep: 0.05, desc: 'Durée des frénésies +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
+  { id: 'c_ange', name: 'Cookie séraphin céleste', rarity: 'epique', powerType: 'frenzy_dur', powerBase: 0.25, powerStep: 0.05, desc: 'Durée des frénésies +{val}%', style: { c: ['#ffffff', '#fdfbf7', '#f6e58d'], chip: '#f9ca24', edge: '#f6e58d', isAngel: true } },
   { id: 'c_roi', name: 'Cookie souverain impérial', rarity: 'epique', powerType: 'all_buildings', powerBase: 0.20, powerStep: 0.05, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#f9ca24', '#f0932b', '#eb4d4b'], chip: '#6ab04c', edge: '#f0932b', isKing: true } },
-  { id: 'c_gold', name: 'Cookie lingot suprême', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.40, powerStep: 0.10, desc: 'Gains des cookies dorés +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
+  { id: 'c_gold', name: 'Cookie lingot suprême', rarity: 'epique', powerType: 'golden_reward', powerBase: 0.40, powerStep: 0.10, desc: 'Gain du jackpot Cookie d’Or +{val}%', style: { c: ['#ffeaa7', '#fdcb6e', '#e17055'], chip: '#d63031', edge: '#e17055', isGold: true } },
   { id: 'c_diamant', name: 'Cookie de diamant pur', rarity: 'epique', powerType: 'building_discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments de {val}%', style: { c: ['#e0f7fa', '#80deea', '#26c6da'], chip: '#ffffff', edge: '#00acc1', isDiamond: true } },
   { id: 'c_vortex', name: 'Cookie vortex astral', rarity: 'epique', powerType: 'building_prism', powerBase: 0.50, powerStep: 0.12, desc: 'Les prismes produisent +{val}%', style: { c: ['#6c5ce7', '#341f97', '#1b0a40'], chip: '#fd79a8', edge: '#a29bfe', isVortex: true } },
-  { id: 'c_cyber', name: 'Cookie cybernétique', rarity: 'epique', powerType: 'building_matrix', powerBase: 0.50, powerStep: 0.12, desc: 'Les matrix produisent +{val}%', style: { c: ['#10ac84', '#01a3a4', '#1e272e'], chip: '#00d2d3', edge: '#10ac84', isCyber: true } },
+  { id: 'c_cyber', name: 'Cookie cybernétique', rarity: 'epique', powerType: 'building_antimatter', powerBase: 0.50, powerStep: 0.12, desc: 'Les antimatières produisent +{val}%', style: { c: ['#10ac84', '#01a3a4', '#1e272e'], chip: '#00d2d3', edge: '#10ac84', isCyber: true } },
   { id: 'c_nebuleuse', name: 'Cookie nébuleuse stellaire', rarity: 'epique', powerType: 'cps', powerBase: 0.35, powerStep: 0.08, desc: 'Production globale +{val}%', style: { c: ['#301b5c', '#5e2a84', '#a445b2'], chip: '#f78fb3', edge: '#e056fd', isNebula: true } },
 
   // Légendaires (Amis avec photo OU thématiques)
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
-  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût de tous les achats de {val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
   { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
   { id: 'c_empereur', name: 'Cookie Empereur Stellaire', rarity: 'legendaire', powerType: 'all_buildings', powerBase: 0.45, powerStep: 0.10, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#2c3e50', '#8e44ad', '#f1c40f'], chip: '#f39c12', edge: '#f1c40f', isEmperor: true } },
@@ -4857,20 +4857,24 @@ window.openCompanionDetail = function(cid) {
   const isEquipped = S.compData?.equipped.includes(c.id);
   
   let explanation = '';
-  if (c.powerType.includes('cps') || c.powerType === 'all_buildings') {
+  if (c.powerType === 'cps_click_hybrid') {
+    explanation = `Augmente à la fois la production automatique et la puissance des clics de ${val}%.`;
+  } else if (c.powerType.includes('cps') || c.powerType === 'all_buildings') {
     explanation = `Multiplie de manière globale votre production automatique (CPS) par ${1 + (val/100)}.`;
   } else if (c.powerType.includes('click')) {
     explanation = `Rend vos clics manuels ${1 + (val/100)} fois plus puissants.`;
-  } else if (c.powerType === 'building_matrix' || c.powerType === 'building_prism' || c.powerType.startsWith('building_')) {
+  } else if (c.powerType === 'building_discount') {
+    explanation = `Réduit le prix des bâtiments de ${val}%.`;
+  } else if (c.powerType === 'building_prism' || (c.powerType.startsWith('building_') && c.powerType !== 'building_discount')) {
     explanation = `Cible un bâtiment spécifique (ici : ${c.powerType.split('_')[1]}) pour démultiplier sa production.`;
   } else if (c.powerType === 'golden_freq') {
     explanation = `Les cookies dorés apparaissent ${val}% plus souvent.`;
-  } else if (c.powerType === 'golden_dur') {
+  } else if (c.powerType === 'frenzy_dur' || c.powerType === 'golden_vision') {
     explanation = `Toutes vos frénésies durent ${val}% plus longtemps.`;
   } else if (c.powerType === 'events') {
     explanation = `Augmente la puissance et les gains lors des événements aléatoires de ${val}%.`;
   } else if (c.powerType === 'discount') {
-    explanation = `Réduit le coût en cookies de tous les achats de ${val}%.`;
+    explanation = `Réduit le coût en cookies des bâtiments et améliorations de ${val}%.`;
   } else if (c.powerType === 'double_edged') {
     explanation = `Double tranchant : vous offre un énorme bonus, mais un malus équivalent sur un autre aspect du jeu.`;
   } else if (c.powerType === 'luck_mult') {
@@ -4879,6 +4883,14 @@ window.openCompanionDetail = function(cid) {
     explanation = `Accélère drastiquement la cadence de jeu de ${val}%.`;
   } else if (c.powerType === 'minigame_god') {
     explanation = `Vos récompenses lors des mini-jeux sont augmentées de ${val}%.`;
+  } else if (c.powerType === 'golden_reward') {
+    explanation = `Augmente le jackpot du Cookie d'Or de ${val}%.`;
+  } else if (c.powerType === 'arcade_speed') {
+    explanation = `Réduit le temps de recharge des mini-jeux de ${val}%.`;
+  } else if (c.powerType === 'combo_power') {
+    explanation = `Augmente le plafond et l'efficacité de votre combo de ${val}%.`;
+  } else if (c.powerType === 'chrono_master') {
+    explanation = `Accélère les mini-jeux et prolonge les frénésies de ${val}%.`;
   } else {
     explanation = `Confère un puissant bonus thématique.`;
   }
