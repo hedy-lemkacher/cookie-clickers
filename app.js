@@ -1985,8 +1985,8 @@ const GAMES = [
   
 ];
 const CELESTIAL_GAMES = [
-  { id: 'celestial_bowling', icon: '🎳', name: 'Bowling Céleste', cd: 240, start: gameCelestialBowling, desc: 'Faites tomber les quilles avec un lancer parfaitement droit.', weight: 20 },
-  { id: 'celestial_basketball', icon: '🏀', name: 'Panier Céleste', cd: 240, start: gameCelestialBasketball, desc: 'Marquez un panier en mouvement. 3 essais.', weight: 20 },
+  { id: 'celestial_bowling', icon: '🎳', name: 'Bowling Céleste', cd: 240, start: gameCelestialBowling, desc: 'Arrêtez la jauge au bon moment pour faire tomber les quilles.', weight: 20 },
+  { id: 'celestial_basketball', icon: '🏀', name: 'Panier Céleste', cd: 240, start: gameCelestialBasketball, desc: 'Tracez la trajectoire du cookie-ballon et marquez. 3 essais.', weight: 20 },
   { id: 'celestial_football',  icon: '⚽', name: 'Tir au But', cd: 240, start: gameCelestialFootball, desc: 'Trompez le gardien et marquez le penalty. 3 essais.', weight: 20 }
 ];
 const celestialCooldown = (g) => { 
@@ -3890,34 +3890,22 @@ if (tabTempleUps && tabTempleAsc) {
 function gameCelestialBowling(api, g) {
   let playing = false, angle = -90, dir = 1, speed = 2.5;
   let raf, animRaf;
-  const pinMarkup = [4, 3, 2, 1].map((count, row) => '<div class="bowling-pin-row">' + Array.from({ length: count }, (_, index) => '<span class="bowling-pin" data-pin="' + (row * 4 + index) + '">🥛</span>').join('') + '</div>').join('');
+  const pinMarkup = [1, 2, 3, 4].map((count, row) => '<div class="bowling-pin-row">' + Array.from({ length: count }, (_, index) => '<span class="bowling-pin" data-pin="' + (row * 4 + index) + '">🥛</span>').join('') + '</div>').join('');
   
-  api.body.innerHTML = `<div class="game-bowling" style="background:#1a0f14; border-radius:12px; padding:20px; overflow:hidden;">
-    <p class="game-hint" style="color:#ddd; margin-bottom:15px;">Arrêtez la flèche bien au centre pour un <b>Strike</b> !</p>
-    
-    <div class="celestial-3d-stage celestial-bowling-stage" style="position:relative; width:280px; height:350px; margin:0 auto 20px auto; background:linear-gradient(#2c1e16, #5c3a21); border-left:10px solid #111; border-right:10px solid #111; border-radius:5px; perspective:600px; overflow:hidden;" id="cBowlingAlley">
-      <!-- Piste -->
-      <div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px);"></div>
-      
-      <!-- Quilles -->
+  api.body.innerHTML = `<div class="game-bowling">
+    <p class="game-hint bowling-instruction">Arrêtez le curseur vert au centre, puis relâchez <b>LANCER</b> pour viser les quilles. Plus vous êtes près du centre, plus la boule renverse de quilles.</p>
+    <div class="celestial-3d-stage celestial-bowling-stage" id="cBowlingAlley">
+      <div class="bowling-lane-gloss"></div>
+      <div class="bowling-gutter bowling-gutter-left"></div><div class="bowling-gutter bowling-gutter-right"></div>
+      <div class="bowling-lane-arrow bowling-arrow-left">›</div><div class="bowling-lane-arrow bowling-arrow-right">‹</div>
       <div id="cBowlingPins" class="bowling-pin-formation">${pinMarkup}</div>
       <div id="cBowlingResult" class="bowling-result"></div>
-      
-      <!-- Boule (Cookie) -->
-      <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1); transform:translateZ(0);">🍪</div>
-      
-      <!-- Flèche de visée -->
-      <div class="bowling-precision-gauge"><span class="gauge-label gauge-left">IMPRÉCIS</span><span class="gauge-label gauge-center">PARFAIT</span><span class="gauge-label gauge-right">IMPRÉCIS</span></div>
-      <div class="bowling-aim-arrow" id="cBowlingArrow">
-        <div class="bowling-aim-tip"></div>
-      </div>
+      <div id="cBowlingBall" class="bowling-ball-cookie">🍪</div>
+      <div class="bowling-precision-gauge"><span class="gauge-label gauge-left">GOUTTIÈRE</span><span class="gauge-label gauge-center">STRIKE</span><span class="gauge-label gauge-right">GOUTTIÈRE</span></div>
+      <div class="bowling-aim-arrow" id="cBowlingArrow"><div class="bowling-aim-tip"></div></div>
     </div>
-    
-    <div style="text-align:center;">
-      <button id="cBowlingBtn" class="big-btn" style="background:linear-gradient(135deg, #e74c3c, #c0392b); width:180px; font-size:18px;">LANCER</button>
-    </div>
+    <div class="bowling-controls"><button id="cBowlingBtn" class="big-btn">LANCER</button></div>
   </div>`;
-  
   const arrow = api.body.querySelector('#cBowlingArrow');
   const btn = api.body.querySelector('#cBowlingBtn');
   const ball = api.body.querySelector('#cBowlingBall');
@@ -3953,8 +3941,8 @@ function gameCelestialBowling(api, g) {
       else if (diff < 70) pins = 1;
       else pins = 0;
       
-      const targetX = (angle / 90) * 120;
-      ball.style.transform = `translate3d(${targetX}px, -260px, 130px) scale(0.5)`;
+      const targetX = (angle / 90) * 150;
+      ball.style.transform = `translate3d(${targetX}px, -330px, 150px) scale(0.56) rotate(720deg)`;
       
       setTimeout(() => {
         const knocked = Math.min(10, pins);
@@ -3983,83 +3971,221 @@ function gameCelestialBowling(api, g) {
 }
 
 function gameCelestialBasketball(api, g) {
-  let playing = false, hoopX = 0, hoopDir = 1, hoopSpeed = 2.5;
-  let cookieY = 0;
-  let raf, shootRaf;
-  let tries = 3;
-  let shooting = false;
-  
+  const ballSize = 76;
+  const gravity = 1100;
+  let playing = false, aiming = false, shooting = false;
+  let tries = 3, raf = 0, hoopRaf = 0, shootRaf = 0, hoopLastTime = 0, hoopPosition = 0, hoopDirection = 1;
+  let pointerOriginX = 0, pointerOriginY = 0, dragX = 0, dragY = 0;
+
   api.body.innerHTML = `<div class="game-basketball">
-    <p class="game-hint">Tirez quand le panier est aligné avec le cookie. <span id="cBaskTries">${tries}</span> essais.</p>
-    <div class="celestial-3d-stage celestial-basketball-stage" style="position:relative;width:100%;height:150px;background:#222;border:2px solid #e67e22;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cBaskArea">
-      <div id="cHoop" style="position:absolute;top:10px;left:0;width:50px;height:15px;border:3px solid #e74c3c;border-radius:50%;box-shadow:0 10px 0 rgba(231,76,60,0.3);"></div>
-      <div id="cBall" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
+    <p class="game-hint">Attrapez le gros cookie-ballon, tirez vers le haut et relâchez. La ligne montre sa trajectoire : dosez la force et visez le panier ! <span id="cBaskTries">${tries}</span> tirs.</p>
+    <div class="celestial-3d-stage celestial-basketball-stage" id="cBaskArea">
+      <div class="basket-court-mark basket-free-throw"></div><div class="basket-court-mark basket-center-circle"></div>
+      <div class="basket-backboard"><div class="basket-square"></div></div>
+      <div class="basket-rim" id="cHoop"><div class="basket-net" id="cBasketNet"></div></div>
+      <svg class="basket-trajectory" id="cBaskTrajectory" aria-hidden="true"><path id="cBaskPath" d=""/><circle id="cBaskAimDot" r="5" cx="0" cy="0"/></svg>
+      <div class="basket-aim-hint" id="cBaskAimHint">Tirez le ballon vers le haut ↗</div>
+      <div id="cBall" class="basket-cookie-ball" role="img" aria-label="Ballon de basket en cookie" tabindex="0">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="cookieBallGrad" cx="34%" cy="28%"><stop offset="0" stop-color="#ffcf73"/><stop offset=".62" stop-color="#d87925"/><stop offset="1" stop-color="#8a3513"/></radialGradient></defs><circle cx="50" cy="50" r="47" fill="url(#cookieBallGrad)" stroke="#54200e" stroke-width="4"/><path d="M50 3 C35 25 35 75 50 97 M50 3 C65 25 65 75 50 97 M4 37 C28 47 72 47 96 37 M4 63 C28 53 72 53 96 63" fill="none" stroke="#3a1a13" stroke-width="5"/><circle cx="27" cy="25" r="4" fill="#512312"/><circle cx="73" cy="28" r="3.5" fill="#512312"/><circle cx="22" cy="68" r="3" fill="#512312"/><circle cx="70" cy="77" r="4" fill="#512312"/><circle cx="82" cy="57" r="2.5" fill="#512312"/></svg>
+      </div>
     </div>
-    <div style="text-align:center;">
-      <button id="cBaskBtn" class="big-btn" style="background:linear-gradient(135deg, #e67e22, #d35400); width:150px;">Tirer</button>
-    </div>
+    <div class="basket-controls"><span id="cBaskStatus">Cliquez-glissez le ballon vers le haut pour viser.</span><button id="cBaskBtn" class="big-btn" type="button">Prêt à tirer</button></div>
   </div>`;
-  
+
+  const area = api.body.querySelector('#cBaskArea');
   const hoop = api.body.querySelector('#cHoop');
+  const net = api.body.querySelector('#cBasketNet');
   const ball = api.body.querySelector('#cBall');
   const btn = api.body.querySelector('#cBaskBtn');
   const triesTxt = api.body.querySelector('#cBaskTries');
-  const areaW = api.body.querySelector('#cBaskArea').clientWidth;
-  
-  function runHoop() {
-    hoopX += hoopSpeed * hoopDir;
-    if (hoopX >= areaW - 56) { hoopX = areaW - 56; hoopDir = -1; }
-    if (hoopX <= 0) { hoopX = 0; hoopDir = 1; }
-    hoop.style.left = hoopX + 'px';
-    raf = requestAnimationFrame(runHoop);
-  }
-  
-  playing = true;
-  runHoop();
-  
-  btn.addEventListener('click', () => {
-    if (!playing || shooting || tries <= 0) return;
-    shooting = true;
-    cookieY = 0;
-    
-    function animateShoot() {
-      cookieY += 8;
-      const shotDepth = Math.min(90, cookieY * 0.65);
-      const shotScale = Math.max(0.55, 1 - cookieY / 330);
-      ball.style.bottom = (10 + cookieY) + 'px';
-      ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
-      
-      if (cookieY > 110) { // reached hoop level
-        const ballCenter = (areaW / 2);
-        const hoopCenter = hoopX + 28;
-        if (Math.abs(ballCenter - hoopCenter) < 40) { // scored!
-          playing = false;
-          ball.innerHTML = '✨';
-          setTimeout(() => api.end(1, 'Bien joué !'), 1500);
-          return;
-        } else if (cookieY > 150) { // missed
-          tries--;
-          triesTxt.textContent = tries;
-          if (tries <= 0) {
-            playing = false;
-            btn.textContent = 'Terminé';
-            btn.disabled = true;
-            setTimeout(() => api.end(0, "Plus d'essais..."), 1500);
-          } else {
-            shooting = false;
-            ball.style.bottom = '10px';
-            ball.style.transform = 'translateZ(0) scale(1)';
-          }
-          return;
-        }
-      }
-      shootRaf = requestAnimationFrame(animateShoot);
-    }
-    animateShoot();
-  });
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
-}
+  const status = api.body.querySelector('#cBaskStatus');
+  const trajectory = api.body.querySelector('#cBaskTrajectory');
+  const trajectoryPath = api.body.querySelector('#cBaskPath');
+  const aimDot = api.body.querySelector('#cBaskAimDot');
+  const hint = api.body.querySelector('#cBaskAimHint');
 
+  function getGeometry() {
+    const rect = area.getBoundingClientRect();
+    return { width: rect.width, height: rect.height, hoopX: hoopPosition || rect.width / 2, hoopY: 112, ballX: rect.width / 2, ballY: rect.height - 54 };
+  }
+
+  function animateHoop(now) {
+    if (!playing || shooting) return;
+    const width = area.clientWidth;
+    if (!hoopLastTime) hoopLastTime = now;
+    const dt = Math.min(0.04, (now - hoopLastTime) / 1000);
+    hoopLastTime = now;
+    hoopPosition += hoopDirection * 92 * dt;
+    if (hoopPosition >= width * 0.78) { hoopPosition = width * 0.78; hoopDirection = -1; }
+    if (hoopPosition <= width * 0.22) { hoopPosition = width * 0.22; hoopDirection = 1; }
+    hoop.style.left = hoopPosition + 'px';
+    hoopRaf = requestAnimationFrame(animateHoop);
+  }
+  function resetBall() {
+    const p = getGeometry();
+    aiming = false;
+    shooting = false;
+    ball.style.transition = '';
+    ball.style.left = (p.ballX - ballSize / 2) + 'px';
+    ball.style.top = (p.ballY - ballSize / 2) + 'px';
+    ball.style.transform = 'translateZ(48px) scale(1)';
+    ball.classList.remove('basket-ball-in-flight');
+    trajectory.classList.remove('visible');
+    trajectoryPath.setAttribute('d', '');
+    hoop.classList.remove('basket-rim-flash');
+    net.classList.remove('basket-net-shake');
+    hint.textContent = 'Tirez le ballon vers le haut ↗';
+    btn.textContent = 'Aide au tir';
+    if (playing) { hoopLastTime = 0; hoopRaf = requestAnimationFrame(animateHoop); }
+  }
+
+  function drawTrajectory(dx, dy) {
+    const p = getGeometry();
+    const vx = dx * 3.1;
+    const vy = -dy * 4.2;
+    const discriminant = vy * vy - 2 * gravity * (p.ballY - p.hoopY);
+    const flight = discriminant > 0 ? (vy + Math.sqrt(discriminant)) / gravity : 0.72;
+    const endTime = Math.min(1.35, Math.max(0.28, flight));
+    const points = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = endTime * i / 20;
+      const x = p.ballX + vx * t;
+      const y = p.ballY - vy * t + 0.5 * gravity * t * t;
+      points.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1));
+    }
+    trajectoryPath.setAttribute('d', points.join(' '));
+    const endX = p.ballX + vx * endTime;
+    const endY = p.ballY - vy * endTime + 0.5 * gravity * endTime * endTime;
+    aimDot.setAttribute('cx', endX);
+    aimDot.setAttribute('cy', endY);
+    trajectory.classList.add('visible');
+    hint.textContent = vy * vy >= 2 * gravity * (p.ballY - p.hoopY) ? 'Relâchez pour tirer !' : 'Tirez plus fort vers le haut';
+  }
+
+  function pointerDown(event) {
+    if (!playing || shooting || tries <= 0) return;
+    event.preventDefault();
+    pointerOriginX = event.clientX;
+    pointerOriginY = event.clientY;
+    dragX = 0;
+    dragY = 0;
+    aiming = true;
+    ball.setPointerCapture(event.pointerId);
+    drawTrajectory(dragX, dragY);
+    status.textContent = 'Ajustez votre visée, puis relâchez le ballon.';
+  }
+
+  function pointerMove(event) {
+    if (!aiming || shooting) return;
+    const rect = area.getBoundingClientRect();
+    dragX = event.clientX - pointerOriginX;
+    dragY = event.clientY - pointerOriginY;
+    drawTrajectory(dragX, dragY);
+  }
+
+  function pointerUp(event) {
+    if (!aiming || shooting) return;
+    pointerMove(event);
+    aiming = false;
+    shooting = true;
+    const p = getGeometry();
+    const vx = dragX * 3.1;
+    const vy = -dragY * 4.2;
+    const hoopDelta = p.ballY - p.hoopY;
+    const discriminant = vy * vy - 2 * gravity * hoopDelta;
+    const hoopTime = discriminant >= 0 ? (vy + Math.sqrt(discriminant)) / gravity : -1;
+    const hoopCrossX = p.ballX + vx * hoopTime;
+    const scored = hoopTime > 0 && Math.abs(hoopCrossX - p.hoopX) <= 38;
+    const startTime = performance.now();
+    const flightLimit = scored ? hoopTime : 1.18;
+    btn.textContent = 'Tir en cours…';
+    status.textContent = 'Le cookie s’envole…';
+    ball.classList.add('basket-ball-in-flight');
+
+    function animateShot(now) {
+      const t = Math.min(flightLimit, (now - startTime) / 1000);
+      const x = p.ballX + vx * t;
+      const y = p.ballY - vy * t + 0.5 * gravity * t * t;
+      ball.style.left = (x - ballSize / 2) + 'px';
+      ball.style.top = (y - ballSize / 2) + 'px';
+      ball.style.transform = `translateZ(${Math.max(0, 180 - t * 105)}px) scale(${Math.max(0.5, 1 - t * 0.42)}) rotate(${t * 720}deg)`;
+
+      if (t < flightLimit) {
+        shootRaf = requestAnimationFrame(animateShot);
+        return;
+      }
+
+      if (scored) {
+        playing = false;
+        status.textContent = 'PANIER !';
+        btn.textContent = 'Panier !';
+        hoop.classList.add('basket-rim-flash');
+        net.classList.add('basket-net-shake');
+        ball.style.transition = 'left 220ms ease-in, top 220ms ease-in, transform 220ms ease-in';
+        ball.style.left = (p.hoopX - ballSize / 2) + 'px';
+        ball.style.top = (p.hoopY + 24 - ballSize / 2) + 'px';
+        ball.style.transform = 'translateZ(35px) scale(.62) rotate(900deg)';
+        setTimeout(() => api.end(1, 'Super shoot ! Le cookie traverse le filet.'), 1100);
+        return;
+      }
+
+      tries--;
+      triesTxt.textContent = tries;
+      playing = tries > 0;
+      ball.style.transition = 'transform 180ms ease-out';
+      ball.style.transform = 'translateZ(0) scale(.92) rotate(540deg)';
+      status.textContent = hoopTime < 0 ? 'Tir trop court ! Réessayez.' : 'À côté du panier ! Réessayez.';
+      if (!playing) {
+        btn.textContent = 'Terminé';
+        btn.disabled = true;
+        setTimeout(() => api.end(0, 'Plus de tirs : le panier reste vide.'), 1100);
+      } else {
+        btn.textContent = 'Tir suivant';
+        setTimeout(() => {
+          if (playing) {
+            resetBall();
+            status.textContent = 'Cliquez-glissez le ballon vers le haut pour viser.';
+          }
+        }, 850);
+      }
+    }
+    shootRaf = requestAnimationFrame(animateShot);
+  }
+
+  ball.addEventListener('pointerdown', pointerDown);
+  ball.addEventListener('pointermove', pointerMove);
+  ball.addEventListener('pointerup', pointerUp);
+  ball.addEventListener('pointercancel', () => { if (aiming) resetBall(); });
+  ball.addEventListener('keydown', event => {
+    if ((event.key === 'Enter' || event.key === ' ') && !shooting && tries > 0) {
+      event.preventDefault();
+      const p = getGeometry();
+      dragX = 0;
+      dragY = -Math.sqrt(2 * gravity * (p.ballY - p.hoopY)) / 4.2;
+      const rect = area.getBoundingClientRect();
+      pointerOriginX = rect.left + p.ballX;
+      pointerOriginY = rect.top + p.ballY;
+      aiming = true;
+      drawTrajectory(dragX, dragY);
+      pointerUp({ clientX: pointerOriginX + dragX, clientY: pointerOriginY + dragY });
+    }
+  });
+
+  playing = true;
+  resetBall();
+  raf = requestAnimationFrame(function ambient() {
+    if (!playing || aiming || shooting) return;
+    ball.classList.toggle('basket-ball-bounce', Math.sin(performance.now() / 650) > 0.92);
+    raf = requestAnimationFrame(ambient);
+  });
+  btn.addEventListener('click', () => {
+    if (!playing || shooting) return;
+    status.textContent = 'Cliquez sur le ballon et faites-le glisser vers le haut.';
+    ball.focus();
+  });
+
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(hoopRaf); cancelAnimationFrame(shootRaf); };
+}
 function gameCelestialFootball(api, g) {
   const lanes = ['Gauche', 'Centre', 'Droite'];
   let playing = false, selectedLane = 1;
@@ -4178,7 +4304,7 @@ function gameCelestialFootball(api, g) {
     shootRaf = requestAnimationFrame(animateShoot);
   });
 
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(hoopRaf); cancelAnimationFrame(shootRaf); };
 }
 
 /* =====================================================================
