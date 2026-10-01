@@ -1311,7 +1311,7 @@ function showMysteryGift() {
   gift.pending = true;
   S.mysterySeen++;
   const effect = mysteryGiftEffect();
-  const canPreview = typeof compHas === 'function' && compHas('mystery_vision') > 0;
+  const canPreview = Boolean(S.compData && Array.isArray(S.compData.equipped) && S.compData.equipped.includes('c_oracle_mystere'));
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftPopup';
   popup.className = 'mystery-gift-popup';
