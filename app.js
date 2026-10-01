@@ -166,7 +166,7 @@ const COMPANIONS = [
   { id: 'c_vortex', name: 'Cookie vortex astral', rarity: 'epique', powerType: 'building_prism', powerBase: 0.50, powerStep: 0.12, desc: 'Les Vikash Le BG produisent +{val}%', style: { c: ['#6c5ce7', '#341f97', '#1b0a40'], chip: '#fd79a8', edge: '#a29bfe', isVortex: true } },
   { id: 'c_cyber', name: 'Cookie cybernétique', rarity: 'epique', powerType: 'building_antimatter', powerBase: 0.50, powerStep: 0.12, desc: 'Les EBBY POSES produisent +{val}%', style: { c: ['#10ac84', '#01a3a4', '#1e272e'], chip: '#00d2d3', edge: '#10ac84', isCyber: true } },
   { id: 'c_nebuleuse', name: 'Cookie nébuleuse stellaire', rarity: 'epique', powerType: 'cps', powerBase: 0.35, powerStep: 0.08, desc: 'Production globale +{val}%', style: { c: ['#301b5c', '#5e2a84', '#a445b2'], chip: '#f78fb3', edge: '#e056fd', isNebula: true } },
-  { id: 'c_joueur_casino', name: 'Joueur de Casino', rarity: 'epique', powerType: 'casino_discount', powerBase: 0.50, powerStep: 0.10, desc: 'Réduit de 50% le coût des tours du casino', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoPlayer: true }, flavor: 'Un tour pour deux, c\'est toujours une bonne affaire.' },
+  { id: 'c_joueur_casino', name: 'Joueur de Casino', rarity: 'epique', powerType: 'casino_discount', powerBase: 0.50, powerStep: 0.10, desc: 'Réduit une partie du coût des tours du casino', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoPlayer: true }, flavor: 'Un tour pour deux, c\'est toujours une bonne affaire.' },
   { id: 'c_brouillard', name: 'Brouillard', rarity: 'epique', powerType: 'mystery_blind_bonus', powerBase: 0.10, powerStep: 0.03, desc: 'Petite chance d\'améliorer les cadeaux acceptés sans révélation', style: { c: ['#636e72', '#b2bec3', '#dfe6e9'], chip: '#74b9ff', edge: '#0984e3', isFog: true }, flavor: 'L\'incertitude peut parfois réserver des surprises.' },
   { id: 'c_collectionneur', name: 'Collectionneur', rarity: 'epique', powerType: 'first_discovery_bonus', powerBase: 0.20, powerStep: 0.05, desc: 'Bonus lors des premières découvertes de récompenses', style: { c: ['#fdcb6e', '#f39c12', '#e17055'], chip: '#d63031', edge: '#e17055', isCollector: true }, flavor: 'La première fois est toujours la plus précieuse.' },
 
@@ -174,7 +174,7 @@ const COMPANIONS = [
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'legendaire', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
-  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Casino gratuit et illimité quand équipé', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Pourquoi payer quand on peut simplement ne jamais arrêter ?' },
+  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Chances légèrement augmentées pour les récompenses rares du casino', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
   { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
@@ -505,13 +505,13 @@ function resetCasinoWindow() {
   }
 }
 function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
-function casinoRemaining() { resetCasinoWindow(); return Math.max(0, 5 - S.casino.bets); }
+function casinoMaxBets() { return 5 + (compHasSpecial("casino_free") ? (S.temple && S.temple.includes("companions_boost") ? 3 : 2) : 0); }
+function casinoRemaining() { resetCasinoWindow(); return Math.max(0, casinoMaxBets() - S.casino.bets); }
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
 function casinoUnlimited() { 
   const world = activeWorld(); 
   if (window.__adminMode) return true;
   if (world && world.mode === 'speedrun') return true;
-  if (compHasSpecial('casino_free')) return true; // Maître du Casino
   return false;
 }
 function showCasinoOutcome({ won, title, amount = 0, detail = '', resultColor = '' }) {
@@ -537,15 +537,7 @@ function updateCasinoLimit() {
   const limit = $('#casinoLimit');
   if (!limit) return;
   if (casinoUnlimited()) {
-    const isCasinoMaster = compHasSpecial('casino_free');
-    const world = activeWorld();
-    const isSpeedrun = world && world.mode === 'speedrun';
-    
-    if (isCasinoMaster) {
-      limit.innerHTML = '<div class="casino-limit-box speedrun"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title">CASINO GRATUIT</div><div class="cl-subtitle">Maître du Casino équipé</div></div></div>';
-    } else {
-      limit.innerHTML = '<div class="casino-limit-box speedrun"><div class="cl-icon">🔥</div><div class="cl-info"><div class="cl-title">Mode Speedrun</div><div class="cl-subtitle">Mises illimitées</div></div></div>';
-    }
+    limit.innerHTML = '<div class="casino-limit-box speedrun"><div class="cl-icon">🔥</div><div class="cl-info"><div class="cl-title">Mises illimitées</div><div class="cl-subtitle">Mode spécial actif</div></div></div>';
     limit.classList.remove('locked');
     const speedrunSpin = $('#casinoSpin');
     if (speedrunSpin) speedrunSpin.disabled = false;
@@ -588,7 +580,7 @@ function updateCasinoLimit() {
     if (spin) spin.disabled = true;
     return;
   }
-  limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / 5</span> mises restantes</div><div class="cl-subtitle">Nouvelle série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
+  limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / ' + casinoMaxBets() + '</span> mises restantes</div><div class="cl-subtitle">Nouvelle série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
   limit.classList.remove('locked');
   if (spin) spin.disabled = false;
 }
@@ -686,7 +678,7 @@ function renderCasinoPane() {
 
   if (S.casino.tab === 'roulette') {
     const result = S.casino.lastResult;
-    const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : 'Cinq mises toutes les 15 minutes.';
+    const casinoRule = casinoUnlimited() ? 'Mises illimitées dans ce monde Speedrun.' : casinoMaxBets() + ' mises toutes les 15 minutes' + (compHasSpecial('casino_free') ? ' avec Maître du Casino.' : '.');
     
     let comboHtml = '';
     if (result && result.comboCount > 1) {
@@ -1144,7 +1136,7 @@ const comboCap = () => (2 + countUps('combo')) * (1 + (typeof compHas === 'funct
 const comboMult = () => 1 + Math.min(comboCap() - 1, combo * 0.02 * (1 + (typeof compHas === 'function' ? compHas('combo_power') : 0)));
 function clickBase() {
   const compClick = (typeof compHas === 'function')
-    ? (compHas('click') + compHas('click_master') + compHas('cps_click_hybrid') - (compHas('double_edged') > 0 ? 0.5 : 0))
+    ? (compHas('click') + compHas('click_master') + compHas('cps_click_hybrid') - (compHas('double_edged') > 0 ? 0.5 * (S.temple && S.temple.includes('companions_boost') ? 1.5 : 1) : 0))
     : 0;
   const clickMult = Math.max(0.1, 1 + compClick);
   return (multiplier('cursor') + cps() * 0.01 * countUps('mouse')) * clickMult * (S.temple ? templeClickBonus() : 1);
@@ -4061,6 +4053,7 @@ const TEMPLE_UPGRADES = [
   { id: 'divine_clk', name: '✨ Clic Divin II',        cost: 150, desc: '+10% de puissance de clic permanente',                apply: () => { recalc(); } },
   { id: 'chrono',     name: '⏳ Chronomaître',         cost: 200, desc: 'Temps de recharge des jeux célestes divisé par 2',   apply: () => {} },
   { id: 'gold_luck',  name: '🍀 Chance Dorée',         cost: 250, desc: 'La pluie de cookies arrive beaucoup plus vite',              apply: () => {} },
+  { id: 'companions_boost', name: '🍪 Compagnons renforcés', cost: 70, desc: 'Multiplie par 1,5 les effets numériques des compagnons. Le Maître du Casino gagne une mise bonus supplémentaire.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); } },
 ];
 
 // Temple bonuses applied in production calc
@@ -4776,9 +4769,9 @@ function companionVal(cId) {
   if (typeof COMPANIONS === 'undefined' || !Array.isArray(COMPANIONS)) return 0;
   const c = COMPANIONS.find(x => x.id === cId);
   if (!c) return 0;
-  if (!S.compData || !S.compData.levels) return c.powerBase;
-  const lvl = S.compData.levels[cId] || 1;
-  return c.powerBase + (lvl - 1) * c.powerStep;
+  const lvl = S.compData && S.compData.levels ? (S.compData.levels[cId] || 1) : 1;
+  const templeBoost = S.temple && S.temple.includes('companions_boost') ? 1.5 : 1;
+  return (c.powerBase + (lvl - 1) * c.powerStep) * 0.6 * templeBoost;
 }
 
 function compHas(powerType) {
