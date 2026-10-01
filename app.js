@@ -323,7 +323,8 @@ function load() {
         activeWorldId = world.id;
         S = legacyState;
       }
-  if (!S.custom.flappyResetV4) { S.games['flappy'] = []; S.custom.flappyResetV4 = true; }
+      const hadPersistentAdmin = !!S.cheat || !!S.booMode;
+      if (!S.custom.flappyResetV4) { S.games['flappy'] = []; S.custom.flappyResetV4 = true; }
       if (S.temple) {
         const migrations = {
           'celestial_flappy': 'celestial_bowling',
@@ -344,10 +345,12 @@ function load() {
       S.casino = Object.assign(freshState().casino, S.casino);
       S.mysteryGift = Object.assign(freshState().mysteryGift, S.mysteryGift);
       S.compData = Object.assign(freshState().compData, S.compData);
-      if (S.booMode) {
-        S.booMode = false;
-        S.cheat = false;
+      if (hadPersistentAdmin) {
+        S.temple = S.temple.filter((id) => !id.startsWith('celestial_'));
+        S.ups = S.ups.filter((id) => !['celestial_cd1', 'celestial_cd2', 'celestial_cd3'].includes(id));
       }
+      S.booMode = false;
+      S.cheat = false;
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
   if (S.bakedAll < S.baked) S.bakedAll = S.baked;
