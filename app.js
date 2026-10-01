@@ -3736,8 +3736,9 @@ function gameCelestialBowling(api, g) {
       <div id="cBowlingBall" style="position:absolute; bottom:20px; left:50%; width:40px; height:40px; margin-left:-20px; font-size:40px; line-height:40px; text-align:center; transition: all 1s cubic-bezier(0.1, 0.8, 0.3, 1); transform:translateZ(0);">🍪</div>
       
       <!-- Flèche de visée -->
-      <div style="position:absolute; bottom:40px; left:50%; width:4px; height:80px; background:rgba(241, 196, 15, 0.8); transform-origin:bottom center; transform:translateX(-50%) rotate(-90deg); z-index:10;" id="cBowlingArrow">
-        <div style="position:absolute; top:-5px; left:-8px; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:15px solid #f1c40f;"></div>
+      <div class="bowling-precision-gauge"><span class="gauge-label gauge-left">IMPRÉCIS</span><span class="gauge-label gauge-center">PARFAIT</span><span class="gauge-label gauge-right">IMPRÉCIS</span></div>
+      <div class="bowling-aim-arrow" id="cBowlingArrow">
+        <div class="bowling-aim-tip"></div>
       </div>
     </div>
     

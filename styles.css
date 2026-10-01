@@ -572,6 +572,15 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .bowling-pin { display: grid; place-items: center; width: 34px; height: 38px; font-size: 30px; filter: drop-shadow(0 5px 2px rgba(0,0,0,.55)); transform-origin: 50% 90%; transition: transform .42s cubic-bezier(.2,.8,.3,1), opacity .42s ease; }
 .bowling-pin.fallen { opacity: .2; transform: translate3d(var(--fall-x), 48px, 20px) rotate(var(--fall-rotate)); }
 .bowling-result { position: absolute; inset: 115px 0 auto; z-index: 12; text-align: center; font-size: 28px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 12px #000, 0 0 14px currentColor; pointer-events: none; }
+.bowling-precision-gauge { position: absolute; left: 50%; bottom: 31px; width: 222px; height: 111px; transform: translateX(-50%); border: 7px solid transparent; border-bottom: 0; border-radius: 222px 222px 0 0; background: linear-gradient(90deg, #e74c3c 0%, #f39c12 23%, #2ecc71 50%, #f39c12 77%, #e74c3c 100%) border-box; box-shadow: 0 -2px 12px #0009, 0 0 14px #ffd16655; pointer-events: none; }
+.bowling-precision-gauge::before { content: ''; position: absolute; inset: 7px 7px 0; border-radius: 210px 210px 0 0; background: #24150b; box-shadow: inset 0 8px 12px #0008; }
+.bowling-precision-gauge::after { content: ''; position: absolute; left: 50%; top: 4px; width: 3px; height: 15px; background: #d9ffe0; box-shadow: 0 0 8px #55efc4; transform: translateX(-50%); }
+.gauge-label { position: absolute; z-index: 1; top: 30px; color: #fbeee0; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-shadow: 0 1px 3px #000; }
+.gauge-left { left: -11px; transform: rotate(-38deg); }
+.gauge-center { left: 50%; top: 14px; transform: translateX(-50%); color: #8ff7a2; font-size: 9px; }
+.gauge-right { right: -11px; transform: rotate(38deg); }
+.bowling-aim-arrow { position: absolute; bottom: 40px; left: 50%; z-index: 10; width: 6px; height: 92px; border-radius: 8px; background: linear-gradient(180deg, #fff6b0, #ffd166 55%, #f39c12); box-shadow: 0 0 8px #ffd166, 0 0 18px #f39c1266; transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg); }
+.bowling-aim-tip { position: absolute; top: -12px; left: 50%; width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-bottom: 17px solid #ffe69a; filter: drop-shadow(0 0 5px #ffd166); transform: translateX(-50%); }
 .celestial-bowling-stage #cBowlingBall { transform-style: preserve-3d; filter: drop-shadow(0 12px 5px #0009); }
 .celestial-basketball-stage { perspective: 520px; background: radial-gradient(circle at 50% 5%, #ffcf76, transparent 22%), linear-gradient(180deg, #15284d, #101318 58%, #37200f) !important; box-shadow: inset 0 -30px 40px #000a, 0 18px 28px #0009; }
 .celestial-basketball-stage::before { content: ''; position: absolute; left: 8%; right: 8%; bottom: -8%; height: 62%; z-index: -1; transform: rotateX(57deg); transform-origin: bottom; background: repeating-linear-gradient(90deg, transparent 0 28px, #f2b86155 29px 31px), repeating-linear-gradient(0deg, transparent 0 22px, #f2b86144 23px 25px); }
