@@ -3748,6 +3748,7 @@ const TEMPLE_UPGRADES = [
   { id: 'celestial_bowling', name: '🎳 Bowling Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Bowling', apply: () => {} },
   { id: 'celestial_basketball', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', apply: () => {} },
   { id: 'celestial_football', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', apply: () => {} },
+  { id: 'vision_absolue', name: '👁️ Vision Absolue', cost: 5, desc: 'Voir tous les compagnons et leurs effets, même non débloqués (en noir et blanc)', apply: () => { if (typeof renderGachaPane === 'function') renderGachaPane(); } },
   { id: 'comp_trio',  name: '🛡️ Trio Légendaire',      cost: 15,  desc: 'Débloque un 3ème emplacement de compagnon actif (3 compagnons équipés)', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); recalc(); } },
   { id: 'keep_friend', name: '🤝 Conserver mes amis',   cost: 20,  desc: 'Permet de conserver au choix 1 compagnon lors de chaque Ascension', apply: () => {} },
   { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
@@ -4246,6 +4247,8 @@ function renderCompanionVisual(c, size = 50) {
     extraSvg += `<rect x="32" y="42" width="36" height="20" rx="4" fill="#2c3e50"/><circle cx="42" cy="52" r="4" fill="#e74c3c"/><rect x="54" y="48" width="8" height="8" fill="#3498db"/>`;
   } else if (s.isIce) {
     extraSvg += `<line x1="50" y1="20" x2="50" y2="80" stroke="#74b9ff" stroke-width="3"/><line x1="20" y1="50" x2="80" y2="50" stroke="#74b9ff" stroke-width="3"/><line x1="28" y1="28" x2="72" y2="72" stroke="#74b9ff" stroke-width="2"/><line x1="28" y1="72" x2="72" y2="28" stroke="#74b9ff" stroke-width="2"/>`;
+  } else if (s.isMysteryScout) {
+    extraSvg += `<circle cx="50" cy="50" r="25" fill="none" stroke="#f1c40f" stroke-width="3" stroke-dasharray="5 3"/><circle cx="50" cy="50" r="12" fill="#f1c40f" opacity="0.3"/><text x="50" y="56" font-size="18" font-weight="bold" fill="#f1c40f" text-anchor="middle" font-family="Arial">?</text>`;
   } else if (s.isDiamond) {
     extraSvg += `<polygon points="50,18 72,45 50,75 28,45" fill="#70a1ff" opacity="0.8" stroke="#ffffff" stroke-width="2"/>`;
   } else if (s.isVortex) {
@@ -4262,6 +4265,24 @@ function renderCompanionVisual(c, size = 50) {
     extraSvg += `<path d="M25 40 L50 20 L75 40 L65 75 L35 75 Z" fill="#2d3436" stroke="#e17055" stroke-width="3"/><circle cx="50" cy="45" r="8" fill="#e17055" filter="drop-shadow(0 0 5px #d63031)"/>`;
   } else if (s.isBlackHole) {
     extraSvg += `<circle cx="50" cy="50" r="28" fill="#050505" stroke="#ff4757" stroke-width="4" filter="drop-shadow(0 0 10px #ff4757)"/><circle cx="50" cy="50" r="16" fill="#000" stroke="#a55eea" stroke-width="2"/>`;
+  } else if (s.isVisionnaire) {
+    extraSvg += `<circle cx="50" cy="50" r="28" fill="none" stroke="#70a1ff" stroke-width="3" filter="drop-shadow(0 0 8px #70a1ff)"/><circle cx="50" cy="50" r="8" fill="#ffd32a"/><circle cx="38" cy="42" r="4" fill="#70a1ff"/><circle cx="62" cy="42" r="4" fill="#70a1ff"/><path d="M35 65 Q50 75 65 65" fill="none" stroke="#70a1ff" stroke-width="2"/>`;
+  } else if (s.isCasinoMaster) {
+    extraSvg += `<rect x="25" y="30" width="50" height="40" rx="8" fill="none" stroke="#e74c3c" stroke-width="3"/><circle cx="50" cy="50" r="12" fill="#e74c3c" opacity="0.3"/><text x="50" y="58" font-size="24" font-weight="bold" fill="#e74c3c" text-anchor="middle" font-family="Arial">🎰</text>`;
+  } else if (s.isJackpotHunter) {
+    extraSvg += `<polygon points="50,15 55,35 75,35 60,50 65,70 50,60 35,70 40,50 25,35 45,35" fill="#ff6b6b" stroke="#ee5a24" stroke-width="2"/><circle cx="50" cy="42" r="6" fill="#f1c40f"/>`;
+  } else if (s.isCasinoPlayer) {
+    extraSvg += `<rect x="28" y="35" width="44" height="30" rx="5" fill="none" stroke="#2d3436" stroke-width="3"/><circle cx="50" cy="50" r="10" fill="#e74c3c" opacity="0.4"/><text x="50" y="56" font-size="18" font-weight="bold" fill="#e74c3c" text-anchor="middle" font-family="Arial">♠</text>`;
+  } else if (s.isFog) {
+    extraSvg += `<ellipse cx="50" cy="50" rx="32" ry="22" fill="#636e72" opacity="0.6"/><circle cx="38" cy="45" r="5" fill="#b2bec3"/><circle cx="62" cy="45" r="5" fill="#b2bec3"/><path d="M40 62 Q50 68 60 62" fill="none" stroke="#b2bec3" stroke-width="2"/>`;
+  } else if (s.isCollector) {
+    extraSvg += `<rect x="30" y="30" width="40" height="40" rx="5" fill="none" stroke="#e17055" stroke-width="3"/><circle cx="40" cy="40" r="4" fill="#fdcb6e"/><circle cx="60" cy="40" r="4" fill="#fdcb6e"/><circle cx="40" cy="60" r="4" fill="#fdcb6e"/><circle cx="60" cy="60" r="4" fill="#fdcb6e"/>`;
+  } else if (s.isLucky) {
+    extraSvg += `<polygon points="50,12 54,26 68,26 57,35 61,49 50,42 39,49 43,35 32,26 46,26" fill="#f39c12" stroke="#e17055" stroke-width="2" filter="drop-shadow(0 0 6px #f39c12)"/>`;
+  } else if (s.isBankerCasino) {
+    extraSvg += `<rect x="28" y="35" width="44" height="30" rx="5" fill="none" stroke="#27ae60" stroke-width="3"/><text x="50" y="56" font-size="22" font-weight="bold" fill="#27ae60" text-anchor="middle" font-family="Arial">€</text>`;
+  } else if (s.isArchivist) {
+    extraSvg += `<rect x="30" y="25" width="40" height="50" rx="3" fill="none" stroke="#0984e3" stroke-width="3"/><line x1="35" y1="35" x2="65" y2="35" stroke="#0984e3" stroke-width="2"/><line x1="35" y1="45" x2="65" y2="45" stroke="#0984e3" stroke-width="2"/><line x1="35" y1="55" x2="65" y2="55" stroke="#0984e3" stroke-width="2"/>`;
   } else if (s.isDivine) {
     extraSvg += `<circle cx="50" cy="50" r="30" fill="none" stroke="#f1c40f" stroke-width="3" filter="drop-shadow(0 0 8px #f1c40f)"/><polygon points="50,15 54,26 65,27 57,34 59,45 50,40 41,45 43,34 35,27 46,26" fill="#ffffff" filter="drop-shadow(0 0 5px #fff)"/><circle cx="50" cy="50" r="8" fill="#ffd32a"/>`;
   }
@@ -5106,20 +5127,41 @@ function renderGachaPane() {
         </div>
       `;
     } else {
-      html += `
-        <div class="companion-card locked">
-          <div class="comp-card-top">
-            <div class="comp-card-visual" style="background:#111; font-size:20px;">
-              🔒
+      const hasVisionAbsolue = S.temple && S.temple.includes('vision_absolue');
+      
+      if (hasVisionAbsolue) {
+        // Vision Absolue: show companion in black and white with details
+        html += `
+          <div class="companion-card locked vision-revealed">
+            <div class="comp-card-top" data-comp-detail="${c.id}" style="cursor:pointer;" title="Cliquez pour les détails">
+              <div class="comp-card-visual vision-locked">
+                ${renderCompanionVisual(c, 44)}
+              </div>
+              <div class="comp-card-details">
+                <div class="comp-card-name" title="${c.name}">${c.name}</div>
+                <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name}</div>
+              </div>
             </div>
-            <div class="comp-card-details">
-              <div class="comp-card-name">???</div>
-              <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name}</div>
-            </div>
+            <div class="comp-card-power" style="color:#b2bec3;">⚡ ${c.desc.replace('{val}', Math.round(c.powerBase * 100))}</div>
+            <div class="comp-card-hint" style="color:#636e72; font-size:11px; margin-top:8px;">🔒 Non débloqué - Débloquez via la Machine à sous</div>
           </div>
-          <div class="comp-card-power" style="color:#747d8c;">Débloquez ce compagnon dans l'onglet Compagnons.</div>
-        </div>
-      `;
+        `;
+      } else {
+        html += `
+          <div class="companion-card locked">
+            <div class="comp-card-top">
+              <div class="comp-card-visual" style="background:#111; font-size:20px;">
+                🔒
+              </div>
+              <div class="comp-card-details">
+                <div class="comp-card-name">???</div>
+                <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name}</div>
+              </div>
+            </div>
+            <div class="comp-card-power" style="color:#747d8c;">Débloquez ce compagnon dans l'onglet Compagnons.</div>
+          </div>
+        `;
+      }
     }
   }
   
