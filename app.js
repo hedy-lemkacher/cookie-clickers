@@ -3946,6 +3946,7 @@ function gameCelestialFootball(api, g) {
     shooting = true;
     cookieY = 0;
     let keeperChecked = false;
+    const keeperStartX = gkX;
     
     function animateShoot() {
       cookieY += 8;
@@ -3953,6 +3954,12 @@ function gameCelestialFootball(api, g) {
       const shotScale = Math.max(0.45, 1 - cookieY / 300);
       const progress = Math.min(1, cookieY / 130);
       const currentX = areaW / 2 + (targetX - areaW / 2) * progress;
+      if (cookieY > 35) {
+        const diveProgress = Math.min(0.72, (cookieY - 35) / 80);
+        const diveTarget = Math.max(0, Math.min(areaW - 30, targetX - 15));
+        gkX = keeperStartX + (diveTarget - keeperStartX) * diveProgress;
+        gk.style.left = gkX + 'px';
+      }
       ball.style.left = currentX + 'px';
       ball.style.bottom = (10 + cookieY) + 'px';
       ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
@@ -3960,7 +3967,7 @@ function gameCelestialFootball(api, g) {
       if (cookieY >= 80 && !keeperChecked) {
         keeperChecked = true;
         const gkCenter = gkX + 15;
-        if (Math.abs(targetX - gkCenter) < 34) {
+        if (Math.abs(targetX - gkCenter) < 46) {
           gk.style.transform = 'translateZ(75px) scale(1.35)';
           ball.innerHTML = '🧤';
           tries--;
