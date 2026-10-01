@@ -1249,11 +1249,27 @@ const MYSTERY_EFFECTS = [
   { id: 'buildingLock', icon: '🔒', title: 'Boutique scellée', text: 'Les achats de bâtiments sont bloqués pendant 45 minutes.', apply: (gift, now) => { gift.buildingLockUntil = now + 2700000; } },
   { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } }
 ];
+const MYSTERY_PROMPTS = [
+  'Le cadeau tremble. Ou alors c’est le jeu qui tremble.',
+  'Une enveloppe apparaît avec une odeur suspecte de beurre.',
+  'Le facteur cookie jure que tout est parfaitement légal.',
+  'Un petit grelot retentit. Personne ne sait pourquoi.',
+  'Le cadeau vous regarde. Enfin... probablement.',
+  'Une voix murmure : « Allez, ça va bien se passer. »'
+];
+const MYSTERY_REVEALS = [
+  'Le destin avait visiblement envie de jouer avec votre boulangerie.',
+  'Même les cookies applaudissent. Enfin, ceux qui ont encore des mains.',
+  'La boîte était petite, mais son ego était immense.',
+  'Le cadeau refuse de donner une explication supplémentaire.',
+  'La boulangerie prend note de cet événement très officiel.'
+];
 function mysteryGiftEffect() {
   return MYSTERY_EFFECTS.find((effect) => effect.id === S.mysteryGift.effectId) || MYSTERY_EFFECTS[Math.floor(Math.random() * MYSTERY_EFFECTS.length)];
 }
 function closeMysteryGift(accepted) {
   const gift = S.mysteryGift, effect = mysteryGiftEffect(), now = Date.now();
+  const popup = document.getElementById('mysteryGiftPopup');
   if (accepted) {
     effect.apply(gift, now);
     toast(effect.icon, 'Cadeau mystérieux', effect.title);
@@ -1263,7 +1279,11 @@ function closeMysteryGift(accepted) {
   gift.pending = false;
   gift.effectId = '';
   gift.next = now + rand(900, 1800) * 1000;
-  document.getElementById('mysteryGiftPopup')?.remove();
+  if (popup) {
+    popup.className = 'mystery-gift-popup resolved ' + (accepted ? 'accepted' : 'refused');
+    popup.innerHTML = '<div class="mystery-gift-icon">' + effect.icon + '</div><div class="mystery-gift-kicker">CADEAU ' + (accepted ? 'ACCEPTÉ' : 'REFUSÉ') + '</div><h2>' + effect.title + '</h2><p>' + effect.text + '<br><em>' + MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] + '</em></p>';
+    setTimeout(() => popup.remove(), 4200);
+  }
   save();
 }
 function showMysteryGift() {
@@ -1274,7 +1294,7 @@ function showMysteryGift() {
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftPopup';
   popup.className = 'mystery-gift-popup';
-  popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p><div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
+  popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>' + MYSTERY_PROMPTS[Math.floor(Math.random() * MYSTERY_PROMPTS.length)] + '<br>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p><div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
   popup.addEventListener('click', (event) => {
     const action = event.target.closest('[data-mystery]');
     if (action) closeMysteryGift(action.dataset.mystery === 'accept');

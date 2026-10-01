@@ -523,6 +523,10 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 #toasts { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .mystery-gift-popup { position: fixed; left: 50%; top: 50%; z-index: 145; width: min(460px, calc(100vw - 30px)); padding: 26px 24px 22px; border: 1px solid #e0a84f; border-radius: 22px; background: radial-gradient(circle at 50% 0, #71461d, transparent 48%), linear-gradient(145deg, #38200f, #170b05); box-shadow: 0 24px 80px #000d, 0 0 32px #e0a84f55; text-align: center; opacity: 0; transform: translate(-50%, -44%) scale(.82); transition: opacity .25s ease, transform .25s cubic-bezier(.2, .9, .25, 1); }
 .mystery-gift-popup.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.mystery-gift-popup.resolved { border-color: #55efc4; background: radial-gradient(circle at 50% 0, #21604f, transparent 48%), linear-gradient(145deg, #173b31, #0c211b); }
+.mystery-gift-popup.resolved.refused { border-color: #a4b0be; background: radial-gradient(circle at 50% 0, #46505c, transparent 48%), linear-gradient(145deg, #252d35, #11161b); }
+.mystery-gift-popup.resolved .mystery-gift-icon { animation: none; }
+.mystery-gift-popup.resolved p em { color: #ffd166; font-size: 13px; }
 .mystery-gift-icon { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 10px; border: 2px solid #ffd166; border-radius: 18px; background: #ffd16622; color: #ffd166; font-size: 34px; box-shadow: 0 0 24px #ffd16666; animation: mysteryPulse 1.8s ease-in-out infinite; }
 .mystery-gift-kicker { color: #ffd166; font-size: 13px; font-weight: 800; letter-spacing: .16em; }
 .mystery-gift-popup h2 { margin: 7px 0; font-size: clamp(21px, 5vw, 29px); }
@@ -1002,6 +1006,13 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .world-card-mode.speedrun { background: #4a1515; color: #ff6b6b; border: 1px solid #702020; }
 .world-card-mode.zen { background: #153a15; color: #6bff6b; border: 1px solid #206020; }
 .world-card-mode.classique { background: #1a2a4a; color: #6baaff; border: 1px solid #203a70; }
+
+/* Keep the precision guide subtle and behind the cookie. */
+.celestial-bowling-stage #cBowlingBall { z-index: 11; }
+.bowling-precision-gauge { bottom: 7px; width: 184px; height: 92px; z-index: 1; opacity: .58; border-width: 5px; border-radius: 184px 184px 0 0; box-shadow: 0 -2px 9px #0008, 0 0 10px #ffd16644; }
+.bowling-precision-gauge::before { inset: 5px 5px 0; border-radius: 174px 174px 0 0; box-shadow: inset 0 6px 9px #0008; }
+.gauge-label { top: 25px; font-size: 7px; letter-spacing: .06em; }
+.gauge-center { top: 11px; font-size: 8px; }
 
 .world-card-stats {
   background: rgba(0,0,0,0.25);
