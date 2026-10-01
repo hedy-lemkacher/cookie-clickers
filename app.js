@@ -108,6 +108,12 @@ special('combo',  '👐', 'Doigts agiles',           'Le combo de clics peut mon
 special('arcade', '🕹️', 'Salle d\'arcade',         'Les mini-jeux se rechargent <b>20 %</b> plus vite.',             [2e4, 2e8],        () => S.gamesPlayed, [1, 5]);
 special('ticket', '🎫', 'Ticket d\'or',            'Les mini-jeux rapportent <b>40 %</b> de cookies en plus.',       [1e5, 1e9],        () => S.gamesPlayed, [3, 10]);
 
+UPGRADES.push(
+  { id: 'companion_cd1', icon: '⏳', tier: 'I', cost: 3e17, name: 'Rotation des compagnons I', desc: 'Réduit le délai de changement des compagnons de 30 à 20 minutes.', unlocked: () => isUnlocked(BUILDINGS.find(b => b.id === 'fractal'), BUILDINGS.findIndex(b => b.id === 'fractal')) },
+  { id: 'companion_cd2', icon: '⏳', tier: 'II', cost: 1.5e19, name: 'Rotation des compagnons II', desc: 'Réduit le délai de changement de 20 à 15 minutes.', unlocked: () => owned('fractal') >= 25 },
+  { id: 'companion_cd3', icon: '⏳', tier: 'III', cost: 2e20, name: 'Rotation des compagnons III', desc: 'Réduit le délai de changement de 15 à 10 minutes.', unlocked: () => owned('javascript') >= 25 }
+);
+
 /* --- Raretés & Compagnons --- */
 const RARITIES = {
   commun: { name: 'Commun', prob: 53.25, color: '#bdc3c7' },
@@ -191,6 +197,22 @@ const COMPANIONS = [
 ];
 
 const COMPANION_SLOT_COOLDOWN_MS = 30 * 60 * 1000;
+function companionSlotCooldownMs() {
+  let duration = COMPANION_SLOT_COOLDOWN_MS;
+  if (S.ups && S.ups.includes('companion_cd1')) duration -= 10 * 60 * 1000;
+  if (S.ups && S.ups.includes('companion_cd2')) duration -= 5 * 60 * 1000;
+  if (S.ups && S.ups.includes('companion_cd3')) duration -= 5 * 60 * 1000;
+  return Math.max(5 * 60 * 1000, duration);
+}
+function rescaleCompanionCooldowns(oldDuration, newDuration) {
+  const cooldowns = S.compData && S.compData.slotCooldowns;
+  if (!cooldowns || !oldDuration || newDuration >= oldDuration) return;
+  const now = Date.now();
+  Object.keys(cooldowns).forEach((slot) => {
+    const remaining = Math.max(0, Number(cooldowns[slot]) - now);
+    if (remaining > 0) cooldowns[slot] = now + Math.ceil(remaining * newDuration / oldDuration);
+  });
+}
 function companionEffectGroups(id) {
   const companion = COMPANIONS.find((entry) => entry.id === id);
   if (!companion) return new Set();
@@ -1633,8 +1655,10 @@ function buyBuilding(b) {
 function buyUpgrade(u) {
   const finalCost = Math.floor(u.cost * Math.max(0.1, 1 - compHas('discount') - compHas('upgrade_discount')));
   if (S.cookies < finalCost || hasUp(u.id)) return;
+  const oldCompanionCooldown = u.id.startsWith('companion_cd') ? companionSlotCooldownMs() : 0;
   S.cookies -= finalCost;
   S.ups.push(u.id);
+  if (oldCompanionCooldown) rescaleCompanionCooldowns(oldCompanionCooldown, companionSlotCooldownMs());
   recalc();
   hideTip();
   refreshAll();
@@ -5346,7 +5370,7 @@ function equipCompanionSlot(id, slotIndex) {
     const name = c ? c.name : id;
     toast('🛡️', 'Compagnon équipé !', `${name} placé au ${slotTxt}.`);
   }
-  if (!S.hdyMode) affectedSlots.forEach((changedSlot) => { S.compData.slotCooldowns[changedSlot] = Date.now() + COMPANION_SLOT_COOLDOWN_MS; });
+  if (!S.hdyMode) affectedSlots.forEach((changedSlot) => { S.compData.slotCooldowns[changedSlot] = Date.now() + companionSlotCooldownMs(); });
   
   save();
   recalc();
@@ -5363,7 +5387,7 @@ function unequipCompanionSlot(slotIndex) {
   if (blockCompanionSlotIfCooling(slotIndex)) return false;
   if (!S.compData.slotCooldowns) S.compData.slotCooldowns = {};
   S.compData.equipped[slotIndex] = null;
-  if (!S.hdyMode) S.compData.slotCooldowns[slotIndex] = Date.now() + COMPANION_SLOT_COOLDOWN_MS;
+  if (!S.hdyMode) S.compData.slotCooldowns[slotIndex] = Date.now() + companionSlotCooldownMs();
   toast('🛡️', 'Compagnon retiré', 'Emplacement libéré.');
   save();
   recalc();
