@@ -430,7 +430,7 @@ function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
 function casinoRemaining() { resetCasinoWindow(); return Math.max(0, 5 - S.casino.bets); }
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
 function casinoUnlimited() { const world = activeWorld(); return window.__adminMode || (world && world.mode === 'speedrun'); }
-function showCasinoOutcome({ won, title, amount = 0, detail = '' }) {
+function showCasinoOutcome({ won, title, amount = 0, detail = '', resultColor = '' }) {
   const previous = document.getElementById('casinoOutcomePopup');
   if (previous) previous.remove();
   const popup = document.createElement('div');
@@ -438,6 +438,7 @@ function showCasinoOutcome({ won, title, amount = 0, detail = '' }) {
   popup.className = 'casino-outcome-popup ' + (won ? 'won' : 'lost');
   const amountText = amount > 0 ? '+' + fmt(amount) : amount < 0 ? '-' + fmt(Math.abs(amount)) : '';
   popup.innerHTML = '<div class="casino-outcome-kicker">' + (won ? '🎉 GAGNÉ' : '💥 PERDU') + '</div>' +
+    (resultColor ? '<div class="casino-outcome-color ' + resultColor + '">' + resultColor.toUpperCase() + '</div>' : '') +
     '<strong>' + title + '</strong>' +
     (amountText ? '<div class="casino-outcome-amount">' + amountText + ' cookies</div>' : '') +
     (detail ? '<small>' + detail + '</small>' : '');
@@ -605,13 +606,19 @@ function renderCasinoPane() {
     const isReady = (now >= S.casino.wheelNext || casinoUnlimited()) && !isFrenzyActive;
     
     box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 30 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
-      '<div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
+      '<div class="wheel-game-layout"><div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
+      '<aside class="wheel-effects" id="wheelEffectsPanel"><button class="wheel-effects-toggle" id="wheelEffectsToggle" type="button" aria-expanded="true"><span>Effets possibles</span><b>›</b></button><div class="wheel-effects-list"><div><span>☠️</span><p><strong>La Mort qui Tue</strong><small>Moitié des bâtiments perdue</small></p></div><div><span>📉</span><p><strong>Banqueroute</strong><small>Moitié des cookies perdue</small></p></div><div><span>💸</span><p><strong>Perte de production</strong><small>30 minutes de production perdues</small></p></div><div><span>💰</span><p><strong>Jackpot</strong><small>+50 % de votre banque</small></p></div><div><span>🍀</span><p><strong>Heure chanceuse</strong><small>1 heure de production gagnée</small></p></div><div><span>🌈</span><p><strong>La Vie qui Vie</strong><small>Les deux derniers bâtiments doublent</small></p></div><div><span>👆</span><p><strong>Clic divin</strong><small>Clics ×500 pendant 5 secondes</small></p></div></div></aside></div>' +
       '<p class="casino-result" id="wheelResult">' + (isReady ? 'La roue est prête à tourner !' : 'Revenez plus tard...') + '</p>' +
       '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>' + (isFrenzyActive ? 'Frénésie en cours...' : 'Tourner la roue !') + '</button></div></div>';
       
     const cv = box.querySelector('canvas'), g = cv.getContext('2d');
     const btn = box.querySelector('.w-btn');
     const res = box.querySelector('#wheelResult');
+    const effectsPanel = box.querySelector('#wheelEffectsPanel');
+    box.querySelector('#wheelEffectsToggle').addEventListener('click', () => {
+      const collapsed = effectsPanel.classList.toggle('collapsed');
+      box.querySelector('#wheelEffectsToggle').setAttribute('aria-expanded', String(!collapsed));
+    });
     const n = SEG.length;
     const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
     
@@ -804,7 +811,8 @@ function spinCasino() {
       won,
       title: won ? 'La roulette est pour vous !' : 'La roulette vous échappe.',
       amount: won ? payout * comboMult - stake : -stake,
-      detail: 'Résultat : ' + number + ' · ' + color.toUpperCase()
+      resultColor: color,
+      detail: 'Couleur : ' + color.toUpperCase()
     });
   }, 1400);
 }
@@ -1273,7 +1281,9 @@ for (const b of BUILDINGS) {
 }
 
 function buyBuilding(b) {
-  if (isMystery(b)) return;
+  const buildingIndex = BUILDINGS.indexOf(b);
+  const previous = buildingIndex > 0 ? BUILDINGS[buildingIndex - 1] : null;
+  if (isMystery(b) || (previous && owned(previous.id) < 5)) return;
   const n = buyCount(b), cost = price(b, n);
   if (S.cookies < cost) return;
   S.cookies -= cost;
@@ -1291,7 +1301,11 @@ function buyUpgrade(u) {
   refreshAll();
 }
 
-function isUnlocked(b, i) { return i === 0 || owned(b.id) > 0 || S.baked >= b.base * 0.6; }
+function isUnlocked(b, i) {
+  if (i === 0 || owned(b.id) > 0) return true;
+  const previous = BUILDINGS[i - 1];
+  return owned(previous.id) >= 5 && S.baked >= b.base * 0.6;
+}
 function isMystery(b) { return !isUnlocked(b, BUILDINGS.indexOf(b)); }
 
 function refreshStore() {
