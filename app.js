@@ -265,6 +265,7 @@ function freshState() {
     gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
+    mysteryGift: { next: now + rand(900, 1800) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
     cheat: false, booMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
@@ -331,6 +332,7 @@ function load() {
         S.chips = Math.min(70, Math.max(0, S.chips));
       }
       S.casino = Object.assign(freshState().casino, S.casino);
+      S.mysteryGift = Object.assign(freshState().mysteryGift, S.mysteryGift);
       S.compData = Object.assign(freshState().compData, S.compData);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
@@ -962,7 +964,10 @@ function baseCps() {
 }
 function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b, true); return s; }
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
-function cps() { return baseCps() * frenzyMult(); }
+function cps() {
+  const productionFactor = S.mysteryGift && Date.now() < S.mysteryGift.productionUntil ? 0.7 : 1;
+  return baseCps() * frenzyMult() * productionFactor;
+}
 
 /* Clics : base + 1 % de la prod par souris, multiplié par le combo */
 let combo = 0, lastClick = 0, clickFrenzyUntil = 0, clickFrenzyMult = 20;
@@ -1017,7 +1022,8 @@ function clickBase() {
 }
 function clickPower() {
   if (S.booMode) return 999e21;
-  return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1);
+  const mysteryClick = S.mysteryGift && Date.now() < S.mysteryGift.clickUntil ? 150 : 1;
+  return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1) * mysteryClick;
 }
 let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
@@ -1211,6 +1217,79 @@ function toast(icon, small, text) {
   setTimeout(() => { t.classList.add('out'); t.addEventListener('animationend', () => t.remove()); }, 3800);
 }
 
+const MYSTERY_EFFECTS = [
+  { id: 'click150', icon: '👆', title: 'Pouvoir des clics', text: 'Vos clics valent ×150 pendant 20 secondes.', apply: (gift, now) => { gift.clickUntil = now + 20000; } },
+  { id: 'gain40', icon: '🎁', title: 'Réserve providentielle', text: 'Vous gagnez immédiatement 40 minutes de production.', apply: () => gain(steadyCps() * 2400) },
+  { id: 'resetCooldowns', icon: '⏱️', title: 'Temps suspendu', text: 'Tous les cooldowns en cours sont terminés.', apply: () => {
+    Object.keys(S.games).forEach((id) => { S.games[id] = Array.isArray(S.games[id]) ? [] : 0; });
+    S.daily = 0;
+    S.casino.bets = 0;
+    S.casino.windowStart = Date.now();
+    S.casino.wheelNext = 0;
+    S.fz.next = Date.now();
+    goldenNext = Date.now();
+  } },
+  { id: 'halfCooldowns', icon: '⚡', title: 'Chrono accéléré', text: 'Les cooldowns sont réduits de 50 % pendant 3 minutes.', apply: (gift, now) => {
+    Object.keys(S.games).forEach((id) => {
+      if (Array.isArray(S.games[id])) return;
+      const remaining = Math.max(0, S.games[id] - now);
+      S.games[id] = now + remaining * 0.5;
+    });
+    gift.cooldownUntil = now + 180000;
+  } },
+  { id: 'freeBuilding', icon: '🏗️', title: 'Bâtiment gratuit', text: 'Votre dernier bâtiment débloqué est offert.', apply: () => {
+    const available = BUILDINGS.filter((building, index) => isUnlocked(building, index));
+    const building = available[available.length - 1] || BUILDINGS[0];
+    S.owned[building.id] = owned(building.id) + 1;
+    toast(building.icon, 'Cadeau mystérieux', building.name + ' offert !');
+  } },
+  { id: 'productionPenalty', icon: '🕯️', title: 'Four ralenti', text: 'Votre production est réduite de 30 % pendant 1 min 30.', apply: (gift, now) => { gift.productionUntil = now + 90000; } },
+  { id: 'loss50', icon: '🌪️', title: 'Taxe mystérieuse', text: 'Vous perdez 50 minutes de production.', apply: () => { S.cookies = Math.max(0, S.cookies - steadyCps() * 3000); } },
+  { id: 'buildingLock', icon: '🔒', title: 'Boutique scellée', text: 'Les achats de bâtiments sont bloqués pendant 45 minutes.', apply: (gift, now) => { gift.buildingLockUntil = now + 2700000; } },
+  { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } }
+];
+function mysteryGiftEffect() {
+  return MYSTERY_EFFECTS.find((effect) => effect.id === S.mysteryGift.effectId) || MYSTERY_EFFECTS[Math.floor(Math.random() * MYSTERY_EFFECTS.length)];
+}
+function closeMysteryGift(accepted) {
+  const gift = S.mysteryGift, effect = mysteryGiftEffect(), now = Date.now();
+  if (accepted) {
+    effect.apply(gift, now);
+    toast(effect.icon, 'Cadeau mystérieux', effect.title);
+    recalc();
+    refreshAll();
+  }
+  gift.pending = false;
+  gift.effectId = '';
+  gift.next = now + rand(900, 1800) * 1000;
+  document.getElementById('mysteryGiftPopup')?.remove();
+  save();
+}
+function showMysteryGift() {
+  if (document.getElementById('mysteryGiftPopup')) return;
+  const gift = S.mysteryGift;
+  if (!gift.effectId) gift.effectId = MYSTERY_EFFECTS[Math.floor(Math.random() * MYSTERY_EFFECTS.length)].id;
+  gift.pending = true;
+  const popup = document.createElement('div');
+  popup.id = 'mysteryGiftPopup';
+  popup.className = 'mystery-gift-popup';
+  popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p><div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
+  popup.addEventListener('click', (event) => {
+    const action = event.target.closest('[data-mystery]');
+    if (action) closeMysteryGift(action.dataset.mystery === 'accept');
+  });
+  document.body.appendChild(popup);
+  requestAnimationFrame(() => popup.classList.add('on'));
+  save();
+}
+function updateMysteryGift(now) {
+  if (window.__adminMode || !S.mysteryGift || S.mysteryGift.pending) return;
+  if (now >= S.mysteryGift.next) showMysteryGift();
+}
+function mysteryCooldownFactor() {
+  return S.mysteryGift && Date.now() < S.mysteryGift.cooldownUntil ? 0.5 : 1;
+}
+
 /* =====================================================================
    CLIC SUR LE COOKIE (+ combo)
    ===================================================================== */
@@ -1283,6 +1362,10 @@ for (const b of BUILDINGS) {
 function buyBuilding(b) {
   const buildingIndex = BUILDINGS.indexOf(b);
   const previous = buildingIndex > 0 ? BUILDINGS[buildingIndex - 1] : null;
+  if (S.mysteryGift && Date.now() < S.mysteryGift.buildingLockUntil) {
+    toast('🔒', 'Boutique scellée', 'Les achats de bâtiments sont temporairement bloqués.');
+    return;
+  }
   if (isMystery(b) || (previous && owned(previous.id) < 5)) return;
   const n = buyCount(b), cost = price(b, n);
   if (S.cookies < cost) return;
@@ -1738,18 +1821,18 @@ const CELESTIAL_GAMES = [
 ];
 const celestialCooldown = (g) => { 
   let mult = 1; 
-  if (S.ups.includes('celestial_cd1')) mult -= 0.25; 
-  if (S.ups.includes('celestial_cd2')) mult -= 0.25; 
-  if (S.ups.includes('celestial_cd3')) mult -= 0.25; 
+  if (S.ups.includes('celestial_cd1')) mult -= 0.25;
+  if (S.ups.includes('celestial_cd2')) mult -= 0.25;
+  if (S.ups.includes('celestial_cd3')) mult -= 0.25;
   if (S.temple && S.temple.includes('chrono')) mult *= 0.5;
   const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
-  return Math.max(60000, g.cd * 60 * mult / (1 + arcadeSpeedBonus) * 1000); 
+  return Math.max(60000, g.cd * 60 * mult / (1 + arcadeSpeedBonus) * 1000 * mysteryCooldownFactor());
 };
 const gameCooldown = (g) => {
   const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
-  return g.cd * 60 * Math.pow(0.8, countUps('arcade')) / (1 + arcadeSpeedBonus) * 1000;
+  return g.cd * 60 * Math.pow(0.8, countUps('arcade')) / (1 + arcadeSpeedBonus) * 1000 * mysteryCooldownFactor();
 };
-const gameReady = (g) => window.__adminMode || Date.now() >= (S.games[g.id] || 0);
+const gameReady = (g) => window.__adminMode || (Date.now() >= (S.mysteryGift?.gamesLockUntil || 0) && Date.now() >= (S.games[g.id] || 0));
 /* Gain maximum = 5 minutes de production (avec un minimum en début de partie) */
 const gameMax = () => Math.max(steadyCps() * 300, multiplier('cursor') * 200 + 100) * Math.pow(1.4, countUps('ticket'));
 const dailyReward = () => Math.max(steadyCps() * 600, 500);
@@ -1800,6 +1883,12 @@ function updatePlayPane() {
       btn.disabled = true;
       btn.textContent = 'Verrouillé';
       document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Débloqué à <b>' + fmt(g.req) + '</b> cookies cuits.';
+      continue;
+    }
+    if (!window.__adminMode && now < (S.mysteryGift?.gamesLockUntil || 0)) {
+      btn.disabled = true;
+      btn.textContent = 'Fermé · ' + fmtTime((S.mysteryGift.gamesLockUntil - now) / 1000);
+      document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Arcade fermée par un cadeau mystérieux.';
       continue;
     }
     const ready = gameReady(g);
@@ -3179,6 +3268,7 @@ function loop() {
   updateFrenzy(now);
   updateGolden(now);
   updateEvents(now);
+  updateMysteryGift(now);
   document.body.classList.toggle('frenzy', now < S.fz.until);
   document.body.classList.toggle('clickfrenzy', now < clickFrenzyUntil);
   drawRain(Math.min(dt, 0.1));
