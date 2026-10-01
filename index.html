@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=2.12">
+<link rel="stylesheet" href="styles.css?v=2.13">
 </head>
 <body>
 
@@ -326,6 +326,9 @@
 
   <!-- ============ Colonne droite : la boutique ============ -->
   <aside class="store" id="store">
+    <div class="store-seal-overlay" id="storeSealOverlay" aria-live="polite" hidden>
+      <div class="store-seal-card"><span class="store-seal-lock" aria-hidden="true">🔒</span><strong>Boutique scellée</strong><span>Réouverture dans</span><b id="storeSealTimer">45:00</b></div>
+    </div>
     <div class="store-head">
       <h2>Boutique</h2>
       <div class="amount" id="amount">
@@ -392,7 +395,7 @@
   </div>
 </div>
 
-<script src="app.js?v=2.12"></script>
+<script src="app.js?v=2.13"></script>
 
 </body>
 </html>

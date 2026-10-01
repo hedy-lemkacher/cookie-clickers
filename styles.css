@@ -403,6 +403,7 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 
 /* ================= Colonne droite : la boutique ================= */
 .store {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -411,6 +412,14 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
     repeating-linear-gradient(0deg, rgba(70, 42, 20, .9) 0 3px, rgba(64, 38, 17, .9) 3px 7px);
   border-left: 6px solid rgba(0, 0, 0, .35);
 }
+.store.store-sealed > :not(.store-seal-overlay) { filter: grayscale(1) brightness(.42); pointer-events: none; user-select: none; }
+.store-seal-overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 20px; background: rgba(9, 7, 5, .42); backdrop-filter: blur(2px); }
+.store-seal-overlay[hidden] { display: none; }
+.store-seal-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 28px; min-width: min(250px, 85%); border: 1px solid rgba(255, 213, 128, .58); border-radius: 18px; background: linear-gradient(150deg, rgba(49, 30, 14, .97), rgba(18, 12, 8, .98)); box-shadow: 0 14px 40px #000b, inset 0 1px rgba(255,255,255,.08); color: #f8ead0; text-align: center; }
+.store-seal-lock { font-size: clamp(64px, 9vw, 112px); line-height: 1; filter: drop-shadow(0 5px 10px #0009); }
+.store-seal-card strong { color: #ffd27f; font-size: clamp(18px, 2vw, 25px); }
+.store-seal-card > span:not(.store-seal-lock) { color: #c9bca8; font-size: 13px; }
+.store-seal-card b { font-size: clamp(28px, 4vw, 42px); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
 .store-head { padding: 14px 16px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .store-head h2 { font-size: 24px; font-weight: 700; text-shadow: 0 2px 0 #000a; }
 .amount { display: flex; background: rgba(0, 0, 0, .35); border-radius: 10px; padding: 3px; border: 1px solid var(--line); }
