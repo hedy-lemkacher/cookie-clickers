@@ -192,8 +192,9 @@ const COMPANIONS = [
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'companion_no_cooldown', powerBase: 0, powerStep: 0, desc: 'Changements de compagnons sans délai tant qu’il est équipé', flavor: 'Le mercato ne ferme jamais.' },
   { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
-  { id: 'c_visionnaire', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', isFriend: true, rarity: 'mythique', powerType: 'mystery_activate', powerBase: 1, powerStep: 0, desc: 'Permet de déclencher un cadeau mystérieux toutes les 10 minutes', flavor: 'Au tableau, Ayoub connaît le bon moment.' },
-  { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } }
+  { id: 'c_visionnaire', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', isFriend: true, rarity: 'mythique', powerType: 'mystery_vision', powerBase: 1, powerStep: 0, desc: 'Révèle le contenu du cadeau mystérieux avant votre choix', flavor: 'Au tableau, Ayoub a déjà deviné la surprise.' },
+  { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } },
+  { id: 'c_invocateur', name: 'Le Conjurateur de cadeaux', rarity: 'mythique', powerType: 'mystery_activate', powerBase: 1, powerStep: 0, desc: 'Invoque un cadeau mystérieux immédiatement, une fois toutes les 10 minutes', flavor: 'Il sait toujours où trouver une surprise.', style: { c: ['#36166d', '#713cc3', '#e3b7ff'], chip: '#f8e71c', edge: '#bd8cff', isMysterySummoner: true } }
 ];
 
 const COMPANION_SLOT_COOLDOWN_MS = 30 * 60 * 1000;
@@ -1471,7 +1472,7 @@ function mysteryGiftEffect() {
 function closeMysteryGift(accepted) {
   const gift = S.mysteryGift, effect = mysteryGiftEffect(), now = Date.now();
   const popup = document.getElementById('mysteryGiftPopup');
-  const canPreview = false;
+  const canPreview = Boolean(S.compData && Array.isArray(S.compData.equipped) && S.compData.equipped.includes('c_visionnaire'));
   
   if (accepted) S.mysteryAccepted++;
   else S.mysteryRefused++;
@@ -1563,7 +1564,7 @@ function showMysteryGift() {
   gift.pending = true;
   S.mysterySeen++;
   const effect = mysteryGiftEffect();
-  const canPreview = false;
+  const canPreview = Boolean(S.compData && Array.isArray(S.compData.equipped) && S.compData.equipped.includes('c_visionnaire'));
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftPopup';
   popup.className = 'mystery-gift-popup';
@@ -5006,7 +5007,8 @@ function renderCompanions() {
   }
   if (compHasSpecial('mystery_activate')) {
     const remaining = Math.max(0, (S.mysteryGift && S.mysteryGift.manualNext || 0) - Date.now());
-    html += `<div style="flex-basis:100%;text-align:center;margin-top:6px"><button type="button" id="activateCompanionMystery" class="big-btn" style="font-size:12px;padding:7px 12px">🔮 ${remaining ? 'Cadeau mystère dans ' + fmtTime(remaining / 1000) : 'Appeler un cadeau mystère'}</button><small style="display:block;color:#a4b0be;margin-top:3px">Pouvoir d’Ayoub au tableau · recharge de 10 min</small></div>`;
+    const summonerName = (S.compData.equipped || []).map((id) => COMPANIONS.find((companion) => companion.id === id)).find((companion) => companion && companion.powerType === 'mystery_activate')?.name || 'Compagnon invocateur';
+    html += `<div style="flex-basis:100%;text-align:center;margin-top:6px"><button type="button" id="activateCompanionMystery" class="big-btn" style="font-size:12px;padding:7px 12px">🔮 ${remaining ? 'Cadeau mystère dans ' + fmtTime(remaining / 1000) : 'Appeler un cadeau mystère'}</button><small style="display:block;color:#a4b0be;margin-top:3px">Pouvoir de ${summonerName} · recharge de 10 min</small></div>`;
     if (remaining) setTimeout(() => { if (compHasSpecial('mystery_activate')) renderCompanions(); }, remaining + 50);
   }
   ctn.innerHTML = html;
@@ -5870,7 +5872,7 @@ window.openCompanionDetail = function(cid) {
   else if (type === 'mystery_blind_bonus') explanation = `Sans compagnon qui révèle le cadeau, vous avez ${Math.round(val * 0.3)}% de chance de renforcer un cadeau accepté : +5 secondes à un effet chronométré, ou 60 secondes de production si le cadeau n’est pas chronométré.`;
   else if (type === 'mystery_history') explanation = `Ouvre l’historique des 20 derniers cadeaux mystérieux acceptés.`;
   else if (type === 'mystery_vision') explanation = `Révèle le contenu du cadeau mystérieux avant de l’accepter ou de le refuser.`;
-  else if (type === 'mystery_activate') explanation = `Tant qu’Ayoub au tableau est équipé, vous pouvez appeler un cadeau mystérieux immédiatement. Le pouvoir se recharge en 10 minutes.`;
+  else if (type === 'mystery_activate') explanation = `Tant que ${c.name} est équipé, vous pouvez appeler un cadeau mystérieux immédiatement. Le pouvoir se recharge en 10 minutes.`;
   else if (type === 'companion_no_cooldown') explanation = `Tant qu’Adam sur FIFA est équipé, vous pouvez modifier les autres compagnons sans attendre. Le délai normal revient dès qu’il est retiré.`;
   else if (type === 'chrono_master') explanation = `Les mini-jeux se rechargent plus vite et les frénésies durent ${val}% plus longtemps.`;
   else explanation = companionEffectText(c, val) + '.';
