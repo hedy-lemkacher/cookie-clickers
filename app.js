@@ -266,7 +266,7 @@ function freshState() {
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
-    cheat: false,
+    cheat: false, booMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
@@ -327,13 +327,15 @@ function load() {
       if (S.ascensions > 0 && S.chips === 0 && S.bakedAll > 1e12) {
           S.chips = 70; // Emergency compensation
       }
-      if (S.chips >= 70) S.chips = 0;
-      else if (S.chips > 25) S.chips = 25;
+      if (!S.cheat) {
+          S.chips = Math.min(50, Math.max(0, S.chips));
+      }
       S.casino = Object.assign(freshState().casino, S.casino);
       S.compData = Object.assign(freshState().compData, S.compData);
     }
   } catch (e) { /* pas de sauvegarde lisible : on repart de zéro */ }
   if (S.bakedAll < S.baked) S.bakedAll = S.baked;
+  window.__adminMode = !!S.cheat;
 }
 function save() {
   if (resetting) return;
@@ -427,7 +429,7 @@ function resetCasinoWindow() {
 function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
 function casinoRemaining() { resetCasinoWindow(); return Math.max(0, 5 - S.casino.bets); }
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
-function casinoUnlimited() { const world = activeWorld(); return world && world.mode === 'speedrun'; }
+function casinoUnlimited() { const world = activeWorld(); return window.__adminMode || (world && world.mode === 'speedrun'); }
 function updateCasinoLimit() {
   const limit = $('#casinoLimit');
   if (!limit) return;
@@ -479,18 +481,18 @@ function updateCasinoLimit() {
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const codeValue = input.value.trim().toUpperCase();
-  
+  const isBoo = codeValue === 'BOO';
 
-  
-  if (codeValue !== 'LMK') {
+  if (codeValue !== 'LMK' && !isBoo) {
     status.textContent = 'Code incorrect.';
     status.classList.remove('on');
     return;
   }
   S.cheat = true;
-  S.cookies = Number.MAX_VALUE;
-  S.baked = Number.MAX_VALUE;
-  S.bakedAll = Number.MAX_VALUE;
+  S.booMode = isBoo;
+  S.cookies = isBoo ? 999e21 : Number.MAX_VALUE;
+  S.baked = isBoo ? Math.max(S.baked, 999e21) : Number.MAX_VALUE;
+  S.bakedAll = isBoo ? Math.max(S.bakedAll, 999e21) : Number.MAX_VALUE;
   S.chips = 9999;
   if (!S.temple) S.temple = [];
   BUILDINGS.forEach((building) => { S.owned[building.id] = 1000; });
@@ -501,10 +503,12 @@ function activateSecretCode() {
   // Override allowClick to never block admin
   window.__adminMode = true;
   recalc();
-  status.textContent = '👑 Mode ADMIN activé : aucune limite, tout débloqué.';
+  status.textContent = isBoo
+    ? '👑 Code BOO activé : 999 trilliards par clic, 9 999 pépites et tous les jeux disponibles.'
+    : '👑 Mode ADMIN activé : aucune limite, tout débloqué.';
   status.classList.add('on');
   input.value = '';
-  toast('👑', 'Mode ADMIN', 'Toutes les restrictions sont levées. Amusez-vous !');
+  toast('👑', isBoo ? 'Code BOO' : 'Mode ADMIN', isBoo ? 'Pouvoir absolu activé !' : 'Toutes les restrictions sont levées. Amusez-vous !');
   refreshAll();
   save();
 }
@@ -972,7 +976,10 @@ function clickBase() {
   const clickMult = Math.max(0.1, 1 + compClick);
   return (multiplier('cursor') + cps() * 0.01 * countUps('mouse')) * clickMult * (S.temple ? templeClickBonus() : 1);
 }
-function clickPower() { return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1); }
+function clickPower() {
+  if (S.booMode) return 999e21;
+  return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1);
+}
 let lastRawClick = 0, fastClickWarnings = 0;
 function allowClick() {
   const now = Date.now();
@@ -1731,7 +1738,7 @@ function updatePlayPane() {
   const now = Date.now();
   const dBtn = document.querySelector('[data-play="daily"]');
   dBtn.disabled = !window.__adminMode && now < S.daily;
-  dBtn.textContent = now < S.daily ? 'Revenez dans ' + fmtTime((S.daily - now) / 1000) : 'Ouvrir le cadeau';
+  dBtn.textContent = window.__adminMode || now >= S.daily ? 'Ouvrir le cadeau' : 'Revenez dans ' + fmtTime((S.daily - now) / 1000);
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
   const ALL_GAMES = [...GAMES, ...CELESTIAL_GAMES];
   for (const g of ALL_GAMES) {
@@ -1788,7 +1795,7 @@ function updatePlayPane() {
   }
 }
 function claimDaily() {
-  if (Date.now() < S.daily) return;
+  if (!window.__adminMode && Date.now() < S.daily) return;
   const r = dailyReward();
   gain(r);
   S.daily = Date.now() + 20 * 3600 * 1000;
@@ -2610,7 +2617,7 @@ function gameCook(api) {
 /* =====================================================================
    SUCCÈS, STATISTIQUES, ASCENSION
    ===================================================================== */
-const chipsPotential = () => Math.min(70, Math.floor(Math.cbrt(S.baked / (1e12 * Math.pow(2.5, S.ascensions))) * 0.5));
+const chipsPotential = () => Math.min(50, Math.floor(Math.cbrt(S.baked / (1.5e12 * Math.pow(3, S.ascensions))) * 0.5));
 function renderAchPane() {
   const rows = [
     ['Cookies en banque', fmt(S.cookies)],
@@ -2631,7 +2638,7 @@ function renderAchPane() {
   ];
   $('#statsGrid').innerHTML = rows.map(([k, v]) => '<div><span>' + k + '</span><b>' + v + '</b></div>').join('');
   const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(2.5, S.ascensions);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(3, S.ascensions);
   $('#ascInfo').innerHTML =
     '<p>Pépites célestes : <b>' + S.chips + '</b> (+' + S.chips * 2 + ' % de production)</p>' +
     (g > 0
@@ -3005,6 +3012,8 @@ function setMenu(open) {
   sideMenu.classList.toggle('on', open);
   menuBackdrop.classList.toggle('on', open);
   menuToggle.setAttribute('aria-expanded', String(open));
+  menuToggle.textContent = open ? '‹' : '›';
+  menuToggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
   sideMenu.setAttribute('aria-hidden', String(!open));
 }
 menuToggle.addEventListener('click', () => setMenu(true));
@@ -3472,7 +3481,7 @@ function initTemple() {
   if (!S.temple) S.temple = [];
 
   function renderTemple() {
-    const unlocked = S.bakedAll >= 25e9;
+    const unlocked = window.__adminMode || S.bakedAll >= 25e9;
     if (!chipsEl || !grid) return;
 
     if (!unlocked) {
@@ -3536,7 +3545,7 @@ const templeTabAsc = document.getElementById('templeTabAsc');
 
 function updateTempleAscensionInfo() {
   const pot = chipsPotential(), g = Math.max(0, pot - S.chips);
-  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1e12 * Math.pow(2.5, S.ascensions);
+  const nextTarget = Math.pow((pot + 1) * 2, 3) * 1.5e12 * Math.pow(3, S.ascensions);
   const ascInfo = document.getElementById('ascInfo');
   if (ascInfo) {
     ascInfo.innerHTML = (g > 0
@@ -4181,9 +4190,9 @@ function gachaCost(count = 1) {
   const pulls = (S.compData && S.compData.pulls) || 0;
   let total = 0;
   for (let i = 0; i < count; i++) {
-    total += Math.max(1000, cps() * 20) * Math.pow(1.01, pulls + i);
+    total += Math.max(5000, cps() * 40) * Math.pow(1.025, pulls + i);
   }
-  if (count >= 10) total *= 0.85;
+  if (count >= 10) total *= 0.9;
   return Math.ceil(total);
 }
 
@@ -4498,7 +4507,7 @@ function renderGachaPane() {
   
   if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   
-  if (S.ascensions === 0) {
+  if (S.ascensions === 0 && !window.__adminMode) {
     pane.innerHTML = `
       <div class="gacha-locked">
         <div class="lock-icon">🔒</div>
