@@ -186,7 +186,7 @@ const COMPANIONS = [
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'speed', powerBase: 2.00, powerStep: 0.50, desc: 'Vitesse de production +{val}%' },
   { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
-  { id: 'c_visionnaire', name: 'Visionnaire', rarity: 'mythique', powerType: 'mystery_vision', powerBase: 1, powerStep: 0, desc: 'Révèle le contenu des cadeaux mystères avant le choix', style: { c: ['#dff9fb', '#54a0ff', '#341f97'], chip: '#ffd32a', edge: '#70a1ff', isVisionnaire: true }, flavor: 'L\'avenir n\'a plus de secrets pour lui.' },
+  { id: 'c_visionnaire', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', isFriend: true, rarity: 'mythique', powerType: 'mystery_vision', powerBase: 1, powerStep: 0, desc: 'Présage le contenu des cadeaux mystères avant le choix', flavor: 'Au tableau, Ayoub a déjà deviné la surprise.' },
   { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } }
 ];
 
@@ -286,7 +286,7 @@ function freshState() {
     casino: { windowStart: 0, bets: 0, lastResult: null },
     mysteryGift: { next: now + rand(900, 1800) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 },
-    cheat: false, booMode: false,
+    cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
@@ -545,6 +545,28 @@ function updateCasinoLimit() {
 function activateSecretCode() {
   const input = $('#secretCode'), status = $('#secretStatus');
   const codeValue = input.value.trim().toUpperCase();
+  if (codeValue === 'HDY') {
+    S.cheat = false;
+    S.booMode = false;
+    S.hdyMode = true;
+    updateHdyMenu();
+    S.ascensions = Math.max(1, S.ascensions || 0);
+    S.chips = 70;
+    const hdyBakedTarget = 1.5e12 * Math.pow(2, S.ascensions) * Math.pow(140.1, 3);
+    S.baked = Math.max(S.baked || 0, hdyBakedTarget);
+    S.bakedAll = Math.max(S.bakedAll || 0, S.baked);
+    if (!S.owned) S.owned = {};
+    BUILDINGS.forEach((building) => { S.owned[building.id] = 100; });
+    window.__adminMode = false;
+    recalc();
+    status.textContent = '✨ Profil HDY prêt : 1 ascension minimum, 70 pépites et 100 de chaque bâtiment.';
+    status.classList.add('on');
+    input.value = '';
+    toast('✨', 'Profil HDY activé', 'Ascension, pépites célestes et bâtiments sont prêts.');
+    refreshAll();
+    save();
+    return;
+  }
 
   if (codeValue !== 'LMK') {
     status.textContent = 'Code incorrect.';
@@ -553,6 +575,8 @@ function activateSecretCode() {
   }
   S.cheat = true;
   S.booMode = false;
+  S.hdyMode = false;
+  updateHdyMenu();
   S.cookies = Number.MAX_VALUE;
   S.baked = Number.MAX_VALUE;
   S.bakedAll = Number.MAX_VALUE;
@@ -645,7 +669,7 @@ function renderCasinoPane() {
     const now = Date.now();
     if (!S.casino.wheelNext) S.casino.wheelNext = 0;
     const isFrenzyActive = now < S.fz.until || now < clickFrenzyUntil;
-    const isReady = (now >= S.casino.wheelNext || casinoUnlimited()) && !isFrenzyActive;
+    const isReady = (S.hdyMode || now >= S.casino.wheelNext || casinoUnlimited()) && !isFrenzyActive;
     const n = SEG.length;
     const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
     const odds = (predicate) => (SEG.reduce((sum, segment) => sum + (predicate(segment) ? segment.w : 0), 0) / totalW * 100).toFixed(1);
@@ -716,7 +740,7 @@ function renderCasinoPane() {
       const isFrenzyActive = Date.now() < S.fz.until || Date.now() < clickFrenzyUntil;
       if (!isReady || isFrenzyActive) return;
       btn.disabled = true;
-      S.casino.wheelNext = Date.now() + 30 * 60 * 1000;
+      S.casino.wheelNext = S.hdyMode ? 0 : Date.now() + 30 * 60 * 1000;
       save();
       
       
@@ -1383,7 +1407,7 @@ function closeMysteryGift(accepted) {
   }
   gift.pending = false;
   gift.effectId = '';
-  gift.next = now + mysteryGiftDelay();
+  gift.next = S.hdyMode ? 0 : now + mysteryGiftDelay();
   
   // Remove the original popup
   if (popup) {
@@ -1453,11 +1477,11 @@ function showMysteryGift() {
   save();
 }
 function updateMysteryGift(now) {
-  if (window.__adminMode || !S.mysteryGift || S.mysteryGift.pending) return;
+  if (window.__adminMode || S.hdyMode || !S.mysteryGift || S.mysteryGift.pending) return;
   if (now >= S.mysteryGift.next) showMysteryGift();
 }
 function mysteryCooldownFactor() {
-  return S.mysteryGift && Date.now() < S.mysteryGift.cooldownUntil ? 0.5 : 1;
+  return !S.hdyMode && S.mysteryGift && Date.now() < S.mysteryGift.cooldownUntil ? 0.5 : 1;
 }
 
 /* =====================================================================
@@ -1532,7 +1556,7 @@ for (const b of BUILDINGS) {
 function buyBuilding(b) {
   const buildingIndex = BUILDINGS.indexOf(b);
   const previous = buildingIndex > 0 ? BUILDINGS[buildingIndex - 1] : null;
-  if (S.mysteryGift && Date.now() < S.mysteryGift.buildingLockUntil) {
+  if (!S.hdyMode && S.mysteryGift && Date.now() < S.mysteryGift.buildingLockUntil) {
     toast('🔒', 'Boutique scellée', 'Les achats de bâtiments sont temporairement bloqués.');
     return;
   }
@@ -1990,6 +2014,7 @@ const CELESTIAL_GAMES = [
   { id: 'celestial_football',  icon: '⚽', name: 'Tir au But', cd: 240, start: gameCelestialFootball, desc: 'Trompez le gardien et marquez le penalty. 3 essais.', weight: 20 }
 ];
 const celestialCooldown = (g) => { 
+  if (S.hdyMode) return 0;
   let mult = 1; 
   if (S.ups.includes('celestial_cd1')) mult -= 0.25;
   if (S.ups.includes('celestial_cd2')) mult -= 0.25;
@@ -1999,10 +2024,11 @@ const celestialCooldown = (g) => {
   return Math.max(60000, g.cd * 60 * mult / (1 + arcadeSpeedBonus) * 1000 * mysteryCooldownFactor());
 };
 const gameCooldown = (g) => {
+  if (S.hdyMode) return 0;
   const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
   return g.cd * 60 * Math.pow(0.8, countUps('arcade')) / (1 + arcadeSpeedBonus) * 1000 * mysteryCooldownFactor();
 };
-const gameReady = (g) => window.__adminMode || (Date.now() >= (S.mysteryGift?.gamesLockUntil || 0) && Date.now() >= (S.games[g.id] || 0));
+const gameReady = (g) => S.hdyMode || window.__adminMode || (Date.now() >= (S.mysteryGift?.gamesLockUntil || 0) && Date.now() >= (S.games[g.id] || 0));
 /* Gain maximum = 5 minutes de production (avec un minimum en début de partie) */
 const gameMax = () => Math.max(steadyCps() * 300, multiplier('cursor') * 200 + 100) * Math.pow(1.4, countUps('ticket'));
 const dailyReward = () => Math.max(steadyCps() * 600, 500);
@@ -2035,8 +2061,8 @@ function buildPlayPane() {
 function updatePlayPane() {
   const now = Date.now();
   const dBtn = document.querySelector('[data-play="daily"]');
-  dBtn.disabled = !window.__adminMode && now < S.daily;
-  dBtn.textContent = window.__adminMode || now >= S.daily ? 'Ouvrir le cadeau' : 'Revenez dans ' + fmtTime((S.daily - now) / 1000);
+  dBtn.disabled = !S.hdyMode && !window.__adminMode && now < S.daily;
+  dBtn.textContent = S.hdyMode || window.__adminMode || now >= S.daily ? 'Ouvrir le cadeau' : 'Revenez dans ' + fmtTime((S.daily - now) / 1000);
   document.querySelector('[data-meta="daily"]').innerHTML = 'Contient : <b>' + fmt(dailyReward()) + '</b> cookies';
   const ALL_GAMES = [...GAMES, ...CELESTIAL_GAMES];
   for (const g of ALL_GAMES) {
@@ -2055,7 +2081,7 @@ function updatePlayPane() {
       document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Débloqué à <b>' + fmt(g.req) + '</b> cookies cuits.';
       continue;
     }
-    if (!window.__adminMode && now < (S.mysteryGift?.gamesLockUntil || 0)) {
+    if (!S.hdyMode && !window.__adminMode && now < (S.mysteryGift?.gamesLockUntil || 0)) {
       btn.disabled = true;
       btn.textContent = 'Fermé · ' + fmtTime((S.mysteryGift.gamesLockUntil - now) / 1000);
       document.querySelector('[data-meta="' + g.id + '"]').innerHTML = 'Arcade fermée par un cadeau mystérieux.';
@@ -2078,6 +2104,7 @@ function updatePlayPane() {
       
       const getCd = (btn) => {
         const id = btn.dataset.play;
+        if (S.hdyMode) return 0;
         if (id === 'daily') return Math.max(0, S.daily - now);
         const g = GAMES.find(x => x.id === id);
         if (g && (!g.req || S.baked >= g.req)) return Math.max(0, (S.games[id] || 0) - now);
@@ -2099,10 +2126,10 @@ function updatePlayPane() {
   }
 }
 function claimDaily() {
-  if (!window.__adminMode && Date.now() < S.daily) return;
+  if (!S.hdyMode && !window.__adminMode && Date.now() < S.daily) return;
   const r = dailyReward();
   gain(r);
-  S.daily = Date.now() + 20 * 3600 * 1000;
+  S.daily = S.hdyMode ? 0 : Date.now() + 20 * 3600 * 1000;
   S.dailyCount++;
   toast('🎁', 'Cadeau du jour', '+' + fmt(r) + ' cookies');
   celebrate();
@@ -2112,7 +2139,7 @@ function claimDaily() {
 
 function openGame(g) {
   if (!g || (g.unlock && !g.unlock()) || !gameReady(g) || current) return;
-  S.games[g.id] = Date.now() + (g.id.startsWith('celestial') ? celestialCooldown(g) : gameCooldown(g));
+  S.games[g.id] = S.hdyMode ? 0 : Date.now() + (g.id.startsWith('celestial') ? celestialCooldown(g) : gameCooldown(g));
   save();
   hideTip();
   modal.classList.add('on');
@@ -3311,6 +3338,18 @@ function news() {
    ===================================================================== */
 let currentTab = 'showcase';
 const menuToggle = $('#menuToggle'), menuClose = $('#menuClose'), sideMenu = $('#sideMenu'), menuBackdrop = $('#menuBackdrop');
+const hdyMysteryGiftButton = $('#hdyMysteryGiftButton');
+function updateHdyMenu() { if (hdyMysteryGiftButton) hdyMysteryGiftButton.hidden = !S.hdyMode; }
+if (hdyMysteryGiftButton) hdyMysteryGiftButton.addEventListener('click', () => {
+  if (!S.hdyMode) return;
+  if (S.mysteryGift.pending || document.getElementById('mysteryGiftPopup')) {
+    toast('🎁', 'Un cadeau est déjà ouvert', 'Terminez le cadeau en cours avant d’en demander un autre.');
+    setMenu(false);
+    return;
+  }
+  setMenu(false);
+  showMysteryGift();
+});
 function setMenu(open) {
   sideMenu.classList.toggle('on', open);
   menuBackdrop.classList.toggle('on', open);
@@ -3357,7 +3396,7 @@ function updateDots() {
   const eventsDot = $('#dotEvents');
   const playDot = $('#dotPlay');
   if (eventsDot) eventsDot.classList.toggle('on', unlockedEvents().length > S.evViewed);
-  const flappyReady = Array.isArray(S.games['flappy']) ? S.games['flappy'].length < (3 + templeExtraAttempts()) : true;
+  const flappyReady = S.hdyMode || (Array.isArray(S.games['flappy']) ? S.games['flappy'].length < (3 + templeExtraAttempts()) : true);
   if (playDot) playDot.classList.toggle('on', Date.now() >= S.daily || GAMES.some(gameReady) || flappyReady);
 }
 
@@ -3487,6 +3526,7 @@ function loop() {
    DÉMARRAGE
    ===================================================================== */
 load();
+updateHdyMenu();
 recalc();
 renderWorldUI();
 if (S.milestone < 0) S.milestone = msLevel(); // pas de fête pour les paliers déjà atteints
@@ -3551,7 +3591,7 @@ function initFlappy() {
     const maxAttempts = 3 + templeExtraAttempts();
     const attempts = S.games['flappy'].length;
     const cost = Math.max(1, cps() * 3 * 300);
-    if (attempts >= maxAttempts && !window.__adminMode) {
+    if (attempts >= maxAttempts && !window.__adminMode && !S.hdyMode) {
       if (btnE) btnE.disabled = true;
       if (btnM) btnM.disabled = true;
       if (btnH) btnH.disabled = true;
@@ -3601,7 +3641,7 @@ function initFlappy() {
     mouseX = 200; mouseY = 200;
     startTime = Date.now();
     
-    S.games['flappy'].push(Date.now());
+    if (!S.hdyMode) S.games['flappy'].push(Date.now());
     save();
     
     updateBtn();

@@ -39,6 +39,7 @@ input, select { user-select: text; -webkit-user-select: text; }
 .side-menu-caption { padding: 20px 8px 8px; color: var(--muted); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 .side-menu-links { display: grid; gap: 8px; }
 .side-menu-links button { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; text-align: left; font-size: 16px; }
+.side-menu-links button[hidden] { display: none; }
 .side-menu-links button:hover, .side-menu-links button.on { background: rgba(255, 190, 110, .14); border-color: var(--line); color: var(--gold); }
 .side-menu-links button:first-letter { font-size: 21px; }
 
