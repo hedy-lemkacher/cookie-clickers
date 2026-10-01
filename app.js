@@ -604,10 +604,14 @@ function renderCasinoPane() {
     if (!S.casino.wheelNext) S.casino.wheelNext = 0;
     const isFrenzyActive = now < S.fz.until || now < clickFrenzyUntil;
     const isReady = (now >= S.casino.wheelNext || casinoUnlimited()) && !isFrenzyActive;
+    const n = SEG.length;
+    const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
+    const odds = (predicate) => (SEG.reduce((sum, segment) => sum + (predicate(segment) ? segment.w : 0), 0) / totalW * 100).toFixed(1);
+    const effectsMarkup = '<aside class="wheel-effects" id="wheelEffectsPanel"><button class="wheel-effects-toggle" id="wheelEffectsToggle" type="button" aria-expanded="true"><span><i>✦</i> Effets possibles</span><b>›</b></button><div class="wheel-effects-list"><div><span>☠️</span><p><strong>La Mort qui Tue</strong><small>' + odds((s) => s.death) + ' % · moitié des 3 derniers bâtiments acquis</small></p></div><div><span>📉</span><p><strong>Banqueroute</strong><small>' + odds((s) => s.halfBank) + ' % · moitié des cookies perdue</small></p></div><div><span>💸</span><p><strong>Perte de production</strong><small>' + odds((s) => s.cpsNeg) + ' % · 30 minutes de production perdues</small></p></div><div><span>💰</span><p><strong>Jackpot</strong><small>' + odds((s) => s.bank15) + ' % · +50 % de votre banque</small></p></div><div><span>🍀</span><p><strong>Heure chanceuse</strong><small>' + odds((s) => s.cps1h) + ' % · 1 heure de production gagnée</small></p></div><div><span>🌈</span><p><strong>La Vie qui Vie</strong><small>' + odds((s) => s.life) + ' % · les 2 derniers bâtiments doublent</small></p></div><div><span>👆</span><p><strong>Clic divin</strong><small>' + odds((s) => s.clickFz) + ' % · clics ×500 pendant 5 secondes</small></p></div></div></aside>';
     
     box.innerHTML = tabsHtml + '<div class="casino-page"><div class="casino-page-head"><div><span class="casino-kicker">COOKIE ROYALE</span><h3>Roue de la fortune</h3><p>Un tour de roue toutes les 30 minutes. Jackpot ou catastrophe garantis.</p></div><div class="casino-bankroll"><span>Prochain tour</span><strong id="cwNext">' + (isReady ? 'PRÊT !' : (Math.ceil((S.casino.wheelNext - now)/60000) + ' min')) + '</strong></div></div>' +
       '<div class="wheel-game-layout"><div class="wheel-wrap" style="margin:20px auto;"><div class="wheel-pointer">▼</div><canvas width="320" height="320" style="background:#5c3516;border-radius:50%;box-shadow:inset 0 10px 20px rgba(0,0,0,0.5);"></canvas></div>' +
-      '<aside class="wheel-effects" id="wheelEffectsPanel"><button class="wheel-effects-toggle" id="wheelEffectsToggle" type="button" aria-expanded="true"><span>Effets possibles</span><b>›</b></button><div class="wheel-effects-list"><div><span>☠️</span><p><strong>La Mort qui Tue</strong><small>Moitié des bâtiments perdue</small></p></div><div><span>📉</span><p><strong>Banqueroute</strong><small>Moitié des cookies perdue</small></p></div><div><span>💸</span><p><strong>Perte de production</strong><small>30 minutes de production perdues</small></p></div><div><span>💰</span><p><strong>Jackpot</strong><small>+50 % de votre banque</small></p></div><div><span>🍀</span><p><strong>Heure chanceuse</strong><small>1 heure de production gagnée</small></p></div><div><span>🌈</span><p><strong>La Vie qui Vie</strong><small>Les deux derniers bâtiments doublent</small></p></div><div><span>👆</span><p><strong>Clic divin</strong><small>Clics ×500 pendant 5 secondes</small></p></div></div></aside></div>' +
+      effectsMarkup + '</div>' +
       '<p class="casino-result" id="wheelResult">' + (isReady ? 'La roue est prête à tourner !' : 'Revenez plus tard...') + '</p>' +
       '<div class="center" style="margin-top:15px;"><button class="big-btn w-btn" ' + (isReady ? '' : 'disabled') + '>' + (isFrenzyActive ? 'Frénésie en cours...' : 'Tourner la roue !') + '</button></div></div>';
       
@@ -619,9 +623,6 @@ function renderCasinoPane() {
       const collapsed = effectsPanel.classList.toggle('collapsed');
       box.querySelector('#wheelEffectsToggle').setAttribute('aria-expanded', String(!collapsed));
     });
-    const n = SEG.length;
-    const totalW = SEG.reduce((acc, s) => acc + (s.w || 1), 0);
-    
     function draw(rot) {
       g.clearRect(0, 0, 320, 320);
       g.save();
@@ -700,14 +701,13 @@ function renderCasinoPane() {
         // resolve
         let gainVal = 0, lossVal = 0;
         if (s.death) {
-          for (const b of BUILDINGS) {
-            if (S.owned[b.id] > 0) {
-              S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
-            }
+          const lastThree = BUILDINGS.filter(b => S.owned[b.id] > 0).slice(-3);
+          for (const b of lastThree) {
+            S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
           }
           recalc();
           refreshStore();
-          toast('☠️', 'La Mort qui Tue', 'Vous avez perdu la moitié de vos bâtiments !');
+          toast('☠️', 'La Mort qui Tue', 'La moitié de vos 3 derniers bâtiments acquis a disparu !');
         }
         if (s.life) {
           const ownedBlds = BUILDINGS.filter(b => S.owned[b.id] > 0);
@@ -750,7 +750,7 @@ function renderCasinoPane() {
         if (gainVal > 0) msg = '+' + fmt(gainVal) + ' cookies !';
         else if (lossVal > 0) msg = '-' + fmt(lossVal) + ' cookies...';
         
-        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE ' + msg : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT ' + msg : s.cps1h ? '🍀 CHANCE ' + msg : s.cpsNeg ? '💸 PERTE ' + msg : '';
+        res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% des 3 derniers bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE ' + msg : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT ' + msg : s.cps1h ? '🍀 CHANCE ' + msg : s.cpsNeg ? '💸 PERTE ' + msg : '';
         const wheelWon = Boolean(s.life || s.clickFz || s.bank15 || s.cps1h);
         showCasinoOutcome({
           won: wheelWon,
@@ -2515,10 +2515,9 @@ function gameWheel(api) {
       if (k < 1) { raf = requestAnimationFrame(frame); return; }
       if (s.fz && Date.now() >= S.fz.until) startFrenzy();
       if (s.death) {
-        for (const b of BUILDINGS) {
-          if (S.owned[b.id] > 0) {
-            S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
-          }
+        const lastThree = BUILDINGS.filter(b => S.owned[b.id] > 0).slice(-3);
+        for (const b of lastThree) {
+          S.owned[b.id] = Math.max(0, Math.floor(S.owned[b.id] / 2));
         }
         recalc();
       }
@@ -2530,7 +2529,7 @@ function gameWheel(api) {
         }
         recalc();
       }
-      setTimeout(() => api.end(s.f || 0, s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
+      setTimeout(() => api.end(s.f || 0, s.death ? '☠️ LA MORT QUI TUE (-50% des 3 derniers bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
     }
     raf = requestAnimationFrame(frame);
   });

@@ -790,8 +790,11 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .wheel-wrap canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 20px #0009); }
 .wheel-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 30px; color: var(--gold); z-index: 2; text-shadow: 0 2px 0 #000; }
 .wheel-effects { position: relative; padding: 14px; border: 1px solid #a07030; border-radius: 14px; background: linear-gradient(160deg, #35200f, #1b0c06); box-shadow: inset 0 0 22px #0006, 0 8px 20px #0005; }
-.wheel-effects-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 10px; border: 1px solid #8c5e2c; border-radius: 9px; background: linear-gradient(135deg, #6b4521, #452a12); color: var(--gold); font-weight: 700; }
-.wheel-effects-toggle b { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: #f0a449; color: #2a1400; font-size: 24px; line-height: 1; transition: transform .2s; }
+.wheel-effects-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 11px; border: 1px solid #d5a24b; border-radius: 11px; background: linear-gradient(135deg, #8c5e2c, #4a2b14 58%, #241108); color: #ffe2a3; font-weight: 700; box-shadow: inset 0 1px 0 #fff3, 0 4px 12px #0006; transition: filter .2s, transform .2s; }
+.wheel-effects-toggle:hover { filter: brightness(1.18); transform: translateY(-1px); }
+.wheel-effects-toggle span { display: flex; align-items: center; gap: 8px; }
+.wheel-effects-toggle i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #f0a449; color: #2a1400; font-style: normal; box-shadow: 0 0 12px #f0a44999; }
+.wheel-effects-toggle b { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #ffd166; border-radius: 50%; background: #f0a449; color: #2a1400; font-size: 25px; line-height: 1; transition: transform .2s; }
 .wheel-effects-list { display: grid; gap: 8px; margin-top: 12px; overflow: hidden; max-height: 520px; transition: max-height .25s ease, opacity .2s ease, margin .25s ease; }
 .wheel-effects-list > div { display: flex; align-items: center; gap: 9px; padding: 7px; border-bottom: 1px solid rgba(255,255,255,.08); }
 .wheel-effects-list > div:last-child { border-bottom: 0; }
