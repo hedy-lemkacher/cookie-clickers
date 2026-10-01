@@ -1300,8 +1300,7 @@ function closeMysteryGift(accepted) {
   gift.next = now + mysteryGiftDelay();
   if (popup) {
     popup.className = 'mystery-gift-popup resolved ' + (accepted ? 'accepted' : 'refused');
-    popup.innerHTML = '<div class="mystery-gift-icon">' + effect.icon + '</div><div class="mystery-gift-kicker">CADEAU ' + (accepted ? 'ACCEPTÉ' : 'REFUSÉ') + '</div><h2>' + effect.title + '</h2><p>' + effect.text + '<br><em>' + MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] + '</em></p>';
-    setTimeout(() => popup.remove(), 4200);
+    popup.innerHTML = '<button class="mystery-gift-close" type="button" data-mystery-close aria-label="Fermer le récapitulatif">×</button><div class="mystery-gift-icon">' + effect.icon + '</div><div class="mystery-gift-kicker">CADEAU ' + (accepted ? 'ACCEPTÉ' : 'REFUSÉ') + '</div><h2>' + effect.title + '</h2><p>' + effect.text + '<br><em>' + MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] + '</em></p>';
   }
   save();
 }
@@ -1319,6 +1318,10 @@ function showMysteryGift() {
   const preview = canPreview ? '<div class="mystery-preview"><b>🔮 Vision de l\'Oracle</b><span>' + effect.icon + ' ' + effect.title + '</span><small>' + effect.text + '</small></div>' : '';
   popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>' + MYSTERY_PROMPTS[Math.floor(Math.random() * MYSTERY_PROMPTS.length)] + '<br>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p>' + preview + '<div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
   popup.addEventListener('click', (event) => {
+    if (event.target.closest('[data-mystery-close]')) {
+      popup.remove();
+      return;
+    }
     const action = event.target.closest('[data-mystery]');
     if (action) closeMysteryGift(action.dataset.mystery === 'accept');
   });

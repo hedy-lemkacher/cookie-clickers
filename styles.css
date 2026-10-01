@@ -527,6 +527,8 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .mystery-gift-popup.resolved.refused { border-color: #a4b0be; background: radial-gradient(circle at 50% 0, #46505c, transparent 48%), linear-gradient(145deg, #252d35, #11161b); }
 .mystery-gift-popup.resolved .mystery-gift-icon { animation: none; }
 .mystery-gift-popup.resolved p em { color: #ffd166; font-size: 13px; }
+.mystery-gift-close { position: absolute; top: 10px; right: 12px; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #ffffff44; border-radius: 50%; background: #0004; color: #fff; font-size: 24px; line-height: 1; }
+.mystery-gift-close:hover { background: #fff3; transform: scale(1.06); }
 .mystery-gift-icon { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 10px; border: 2px solid #ffd166; border-radius: 18px; background: #ffd16622; color: #ffd166; font-size: 34px; box-shadow: 0 0 24px #ffd16666; animation: mysteryPulse 1.8s ease-in-out infinite; }
 .mystery-gift-kicker { color: #ffd166; font-size: 13px; font-weight: 800; letter-spacing: .16em; }
 .mystery-gift-popup h2 { margin: 7px 0; font-size: clamp(21px, 5vw, 29px); }
