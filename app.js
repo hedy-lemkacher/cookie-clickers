@@ -3890,7 +3890,7 @@ if (tabTempleUps && tabTempleAsc) {
 function gameCelestialBowling(api, g) {
   let playing = false, angle = -90, dir = 1, speed = 2.5;
   let raf, animRaf;
-  const pinMarkup = [1, 2, 3, 4].map((count, row) => '<div class="bowling-pin-row">' + Array.from({ length: count }, (_, index) => '<span class="bowling-pin" data-pin="' + (row * 4 + index) + '">🥛</span>').join('') + '</div>').join('');
+  const pinMarkup = [4, 3, 2, 1].map((count, row) => '<div class="bowling-pin-row">' + Array.from({ length: count }, (_, index) => '<span class="bowling-pin" data-pin="' + (row * 4 + index) + '">🥛</span>').join('') + '</div>').join('');
   
   api.body.innerHTML = `<div class="game-bowling">
     <p class="game-hint bowling-instruction">Arrêtez le curseur vert au centre, puis relâchez <b>LANCER</b> pour viser les quilles. Plus vous êtes près du centre, plus la boule renverse de quilles.</p>
@@ -3942,7 +3942,7 @@ function gameCelestialBowling(api, g) {
       else pins = 0;
       
       const targetX = (angle / 90) * 150;
-      ball.style.transform = `translate3d(${targetX}px, -330px, 150px) scale(0.56) rotate(720deg)`;
+      ball.style.transform = `translate3d(${targetX}px, -430px, 170px) scale(0.56) rotate(720deg)`;
       
       setTimeout(() => {
         const knocked = Math.min(10, pins);
@@ -3972,7 +3972,7 @@ function gameCelestialBowling(api, g) {
 
 function gameCelestialBasketball(api, g) {
   const ballSize = 76;
-  const gravity = 1100;
+  const gravity = 1100, hoopSpeed = 110;
   let playing = false, aiming = false, shooting = false;
   let tries = 3, raf = 0, hoopRaf = 0, shootRaf = 0, hoopLastTime = 0, hoopPosition = 0, hoopDirection = 1;
   let pointerOriginX = 0, pointerOriginY = 0, dragX = 0, dragY = 0;
@@ -4010,12 +4010,12 @@ function gameCelestialBasketball(api, g) {
   }
 
   function animateHoop(now) {
-    if (!playing || shooting) return;
+    if (!playing) return;
     const width = area.clientWidth;
     if (!hoopLastTime) hoopLastTime = now;
     const dt = Math.min(0.04, (now - hoopLastTime) / 1000);
     hoopLastTime = now;
-    hoopPosition += hoopDirection * 92 * dt;
+    hoopPosition += hoopDirection * 110 * dt;
     if (hoopPosition >= width * 0.78) { hoopPosition = width * 0.78; hoopDirection = -1; }
     if (hoopPosition <= width * 0.22) { hoopPosition = width * 0.22; hoopDirection = 1; }
     hoop.style.left = hoopPosition + 'px';
@@ -4036,7 +4036,6 @@ function gameCelestialBasketball(api, g) {
     net.classList.remove('basket-net-shake');
     hint.textContent = 'Tirez le ballon vers le haut ↗';
     btn.textContent = 'Aide au tir';
-    if (playing) { hoopLastTime = 0; hoopRaf = requestAnimationFrame(animateHoop); }
   }
 
   function drawTrajectory(dx, dy) {
@@ -4094,8 +4093,18 @@ function gameCelestialBasketball(api, g) {
     const hoopDelta = p.ballY - p.hoopY;
     const discriminant = vy * vy - 2 * gravity * hoopDelta;
     const hoopTime = discriminant >= 0 ? (vy + Math.sqrt(discriminant)) / gravity : -1;
+    const minHoopX = p.width * 0.22;
+    const maxHoopX = p.width * 0.78;
+    const hoopSpan = maxHoopX - minHoopX;
+    function hoopXAt(time) {
+      let phase = hoopPosition - minHoopX;
+      if (hoopDirection < 0) phase = 2 * hoopSpan - phase;
+      phase = ((phase + hoopSpeed * time) % (2 * hoopSpan) + 2 * hoopSpan) % (2 * hoopSpan);
+      return phase <= hoopSpan ? minHoopX + phase : maxHoopX - (phase - hoopSpan);
+    }
+    const impactHoopX = hoopTime > 0 ? hoopXAt(hoopTime) : p.hoopX;
     const hoopCrossX = p.ballX + vx * hoopTime;
-    const scored = hoopTime > 0 && Math.abs(hoopCrossX - p.hoopX) <= 38;
+    const scored = hoopTime > 0 && Math.abs(hoopCrossX - impactHoopX) <= 38;
     const startTime = performance.now();
     const flightLimit = scored ? hoopTime : 1.18;
     btn.textContent = 'Tir en cours…';
@@ -4122,7 +4131,7 @@ function gameCelestialBasketball(api, g) {
         hoop.classList.add('basket-rim-flash');
         net.classList.add('basket-net-shake');
         ball.style.transition = 'left 220ms ease-in, top 220ms ease-in, transform 220ms ease-in';
-        ball.style.left = (p.hoopX - ballSize / 2) + 'px';
+        ball.style.left = (impactHoopX - ballSize / 2) + 'px';
         ball.style.top = (p.hoopY + 24 - ballSize / 2) + 'px';
         ball.style.transform = 'translateZ(35px) scale(.62) rotate(900deg)';
         setTimeout(() => api.end(1, 'Super shoot ! Le cookie traverse le filet.'), 1100);
@@ -4172,14 +4181,17 @@ function gameCelestialBasketball(api, g) {
   });
 
   playing = true;
+  hoopPosition = area.clientWidth / 2;
+  hoop.style.left = hoopPosition + 'px';
   resetBall();
+  hoopRaf = requestAnimationFrame(animateHoop);
   raf = requestAnimationFrame(function ambient() {
     if (!playing || aiming || shooting) return;
     ball.classList.toggle('basket-ball-bounce', Math.sin(performance.now() / 650) > 0.92);
     raf = requestAnimationFrame(ambient);
   });
   btn.addEventListener('click', () => {
-    if (!playing || shooting) return;
+    if (!playing) return;
     status.textContent = 'Cliquez sur le ballon et faites-le glisser vers le haut.';
     ball.focus();
   });
@@ -4231,7 +4243,7 @@ function gameCelestialFootball(api, g) {
   }
 
   function selectTarget(event) {
-    if (!playing || shooting) return;
+    if (!playing) return;
     const rect = goal.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(0.999999, (event.clientX - rect.left) / rect.width));
     selectedLane = Math.floor(fraction * 3);

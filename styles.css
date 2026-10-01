@@ -1958,14 +1958,14 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 /* Bowling lane refresh: wider 3D alley and a centered four-row pin rack. */
 .game-bowling { width:100%; box-sizing:border-box; padding:16px; border-radius:18px; overflow:hidden; background:radial-gradient(ellipse at 50% 0,#3c2630,#150f18 74%); box-shadow:inset 0 1px #ffffff18,0 16px 36px #0007; }
 .bowling-instruction { max-width:620px; margin:0 auto 14px; text-align:center; color:#e9dce0; }
-.celestial-bowling-stage { position:relative; width:min(100%,560px); height:460px; margin:0 auto 16px; overflow:hidden; border:8px solid #281d21; border-radius:16px; perspective:760px; background:linear-gradient(180deg,#18243c 0 15%,#644325 15%,#a87743 70%,#633d25) !important; box-shadow:inset 0 0 28px #0a0912aa,0 18px 32px #0009; }
+.celestial-bowling-stage { position:relative; width:min(100%,560px); box-sizing:border-box; height:560px; margin:0 auto 16px; overflow:hidden; border:8px solid #281d21; border-radius:16px; perspective:580px; background:linear-gradient(180deg,#18243c 0 15%,#644325 15%,#a87743 70%,#633d25) !important; box-shadow:inset 0 0 28px #0a0912aa,0 18px 32px #0009; }
 .celestial-bowling-stage::after { background:linear-gradient(180deg,#fff2,transparent 25%,#120b0b30 70%,#09060966); mix-blend-mode:normal; }
-.celestial-bowling-stage::before { left:10%; right:10%; top:16%; bottom:0; z-index:0; transform:perspective(600px) rotateX(9deg); background:repeating-linear-gradient(90deg,#ffe3ae55 0 2px,transparent 2px 46px),repeating-linear-gradient(0deg,#3b21154a 0 2px,transparent 2px 38px),linear-gradient(90deg,#3c271dbb,#d6a66c 18%,#e2b679 50%,#d6a66c 82%,#3c271dbb); opacity:.75; }
-.bowling-lane-gloss { position:absolute; z-index:1; inset:17% 14% 0; background:linear-gradient(105deg,transparent 8%,#fff2 22%,transparent 38%,transparent 65%,#fff2 79%,transparent 91%); transform:perspective(600px) rotateX(9deg); transform-origin:top; pointer-events:none; }
-.bowling-gutter { position:absolute; z-index:1; top:17%; bottom:0; width:8%; background:linear-gradient(90deg,#110f15,#35313a 45%,#100e13); border-left:2px solid #edc27a88; border-right:2px solid #09080b; transform:perspective(600px) rotateX(9deg); transform-origin:top; }
+.celestial-bowling-stage::before { left:10%; right:10%; top:16%; bottom:0; z-index:0; transform:perspective(500px) rotateX(16deg); background:repeating-linear-gradient(90deg,#ffe3ae55 0 2px,transparent 2px 46px),repeating-linear-gradient(0deg,#3b21154a 0 2px,transparent 2px 38px),linear-gradient(90deg,#3c271dbb,#d6a66c 18%,#e2b679 50%,#d6a66c 82%,#3c271dbb); opacity:.75; }
+.bowling-lane-gloss { position:absolute; z-index:1; inset:17% 14% 0; background:linear-gradient(105deg,transparent 8%,#fff2 22%,transparent 38%,transparent 65%,#fff2 79%,transparent 91%); transform:perspective(500px) rotateX(16deg); transform-origin:top; pointer-events:none; }
+.bowling-gutter { position:absolute; z-index:1; top:17%; bottom:0; width:8%; background:linear-gradient(90deg,#110f15,#35313a 45%,#100e13); border-left:2px solid #edc27a88; border-right:2px solid #09080b; transform:perspective(500px) rotateX(16deg); transform-origin:top; }
 .bowling-gutter-left { left:6%; }.bowling-gutter-right { right:6%; }
 .bowling-lane-arrow { position:absolute; z-index:2; top:55%; color:#fff6d3aa; font-size:22px; font-weight:900; text-shadow:0 2px 5px #0008; }.bowling-arrow-left { left:19%; }.bowling-arrow-right { right:19%; }
-.celestial-bowling-stage #cBowlingPins { position:absolute; top:40px; left:50%; width:260px; transform:translateX(-50%) translateZ(54px) scale(1); transform-origin:center top; z-index:4; }
+.celestial-bowling-stage #cBowlingPins { position:absolute; top:40px; left:50%; width:260px; transform:translateX(-50%) translateZ(75px) scale(1.08); transform-origin:center top; z-index:4; }
 .bowling-pin-formation { display:grid; gap:3px; }
 .bowling-pin-row { display:flex; justify-content:center; gap:8px; }
 .bowling-pin { width:52px; height:54px; font-size:42px; filter:drop-shadow(0 7px 4px #0009); }
@@ -1976,4 +1976,4 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .game-bowling .gauge-label { font-size:9px; }.game-bowling .gauge-center { font-size:11px; }
 .bowling-controls { display:flex; justify-content:center; }
 .bowling-controls .big-btn { width:210px; font-size:18px; font-weight:900; letter-spacing:.08em; color:#fff; background:linear-gradient(135deg,#f05b49,#9f252b); box-shadow:0 8px 18px #0006,inset 0 1px #ffffff44; }
-@media (max-width:520px) { .game-bowling { padding:10px; }.celestial-bowling-stage { height:400px; border-width:5px; }.celestial-bowling-stage #cBowlingPins { top:34px; transform:translateX(-50%) translateZ(45px) scale(.84); }.bowling-lane-arrow { top:51%; } }
+@media (max-width:520px) { .game-bowling { padding:10px; }.celestial-bowling-stage { height:470px; border-width:5px; }.celestial-bowling-stage #cBowlingPins { top:34px; transform:translateX(-50%) translateZ(65px) scale(.94); }.bowling-lane-arrow { top:51%; } }
