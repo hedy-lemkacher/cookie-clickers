@@ -4061,25 +4061,24 @@ function gameCelestialBasketball(api, g) {
 }
 
 function gameCelestialFootball(api, g) {
-  let playing = false, gkX = 0, gkDir = 1, gkSpeed = 5.2;
-  let cookieY = 0, targetX = 0, targetSelected = false;
-  let raf, shootRaf;
-  let tries = 3;
-  let shooting = false;
-  
+  const lanes = ['Gauche', 'Centre', 'Droite'];
+  let playing = false, selectedLane = 1;
+  let cookieY = 0, raf, shootRaf;
+  let tries = 3, shooting = false, targetSelected = false;
+
   api.body.innerHTML = `<div class="game-football">
-    <p class="game-hint">Cliquez dans la cage pour choisir votre zone de tir, puis lancez. Le gardien peut arrêter le ballon. <span id="cFooTries">${tries}</span> essais.</p>
+    <p class="game-hint">Choisissez une zone dans le but, puis tirez. Le gardien plonge au hasard à gauche, à droite ou reste au centre. S'il couvre votre zone, le tir est arrêté. <span id="cFooTries">${tries}</span> essais.</p>
     <div class="celestial-3d-stage celestial-football-stage" style="position:relative;width:100%;height:190px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
       <div style="position:absolute;top:0;left:10%;width:80%;height:20px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-right:3px solid #fff;box-sizing:border-box;"></div>
-      <div id="cFooGoal" class="football-goal-target"><span class="football-target-label">Choisir la zone</span><span id="cFooAim" class="football-aim"></span></div>
-      <div id="cGk" style="position:absolute;top:20px;left:0;width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;">🥛</div>
+      <div id="cFooGoal" class="football-goal-target"><span class="football-target-label">Choisissez : Gauche · Centre · Droite</span><span class="football-lane-line" style="left:33.333%"></span><span class="football-lane-line" style="left:66.666%"></span><span id="cFooAim" class="football-aim" style="display:none"></span></div>
+      <div id="cGk" style="position:absolute;top:20px;left:calc(50% - 15px);width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;z-index:4;">🥛</div>
       <div id="cBallFoo" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
     </div>
     <div style="text-align:center;">
-      <button id="cFooBtn" class="big-btn" style="background:linear-gradient(135deg, #27ae60, #2ecc71); width:150px;">Tirer</button>
+      <button id="cFooBtn" class="big-btn" style="background:linear-gradient(135deg, #27ae60, #2ecc71); width:170px;" disabled>Choisir une zone</button>
     </div>
   </div>`;
-  
+
   const gk = api.body.querySelector('#cGk');
   const ball = api.body.querySelector('#cBallFoo');
   const btn = api.body.querySelector('#cFooBtn');
@@ -4087,95 +4086,100 @@ function gameCelestialFootball(api, g) {
   const area = api.body.querySelector('#cFooArea');
   const goal = api.body.querySelector('#cFooGoal');
   const aim = api.body.querySelector('#cFooAim');
-  const areaW = area.clientWidth;
-  targetX = areaW / 2;
+
+  function resetShot() {
+    shooting = false;
+    targetSelected = false;
+    selectedLane = 1;
+    cookieY = 0;
+    aim.style.display = 'none';
+    goal.querySelector('.football-target-label').textContent = 'Choisissez : Gauche · Centre · Droite';
+    btn.textContent = 'Choisir une zone';
+    btn.disabled = true;
+    gk.style.left = 'calc(50% - 15px)';
+    gk.style.transform = '';
+    ball.style.left = '50%';
+    ball.style.bottom = '10px';
+    ball.style.transform = 'translateZ(0) scale(1)';
+    ball.innerHTML = '🍪';
+  }
 
   function selectTarget(event) {
-    if (shooting || !playing) return;
+    if (!playing || shooting) return;
     const rect = goal.getBoundingClientRect();
-    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
-    targetX = rect.left + localX - area.getBoundingClientRect().left;
+    const fraction = Math.max(0, Math.min(0.999999, (event.clientX - rect.left) / rect.width));
+    selectedLane = Math.floor(fraction * 3);
     targetSelected = true;
-    aim.style.left = (localX / rect.width * 100) + '%';
-    goal.querySelector('.football-target-label').textContent = 'Zone visée';
-    btn.textContent = 'Tirer ici';
+    aim.style.display = 'block';
+    aim.style.left = ((selectedLane + 0.5) / 3 * 100) + '%';
+    goal.querySelector('.football-target-label').textContent = 'Zone visée : ' + lanes[selectedLane];
+    btn.textContent = 'Tirer à ' + lanes[selectedLane].toLowerCase();
+    btn.disabled = false;
   }
   goal.addEventListener('pointerdown', selectTarget);
-  
-  function runGk() {
-    gkX += gkSpeed * gkDir;
-    if (gkX >= areaW - 30) { gkX = areaW - 30; gkDir = -1; }
-    if (gkX <= 0) { gkX = 0; gkDir = 1; }
-    gk.style.left = gkX + 'px';
-    raf = requestAnimationFrame(runGk);
-  }
-  
+
   playing = true;
-  runGk();
-  
   btn.addEventListener('click', () => {
     if (!playing || shooting || tries <= 0 || !targetSelected) return;
     shooting = true;
-    cookieY = 0;
-    let keeperChecked = false;
-    const keeperStartX = gkX;
-    
-    function animateShoot() {
-      cookieY += 8;
-      const shotDepth = Math.min(110, cookieY * 0.85);
-      const shotScale = Math.max(0.45, 1 - cookieY / 300);
-      const progress = Math.min(1, cookieY / 130);
-      const currentX = areaW / 2 + (targetX - areaW / 2) * progress;
-      if (cookieY > 35) {
-        const diveProgress = Math.min(0.72, (cookieY - 35) / 80);
-        const diveTarget = Math.max(0, Math.min(areaW - 30, targetX - 15));
-        gkX = keeperStartX + (diveTarget - keeperStartX) * diveProgress;
-        gk.style.left = gkX + 'px';
-      }
+    btn.disabled = true;
+    btn.textContent = 'Tir en cours…';
+
+    const keeperLane = Math.floor(Math.random() * 3);
+    const areaW = area.clientWidth;
+    const goalWidth = goal.clientWidth;
+    const goalLeft = areaW * 0.1;
+    const keeperX = goalLeft + ((keeperLane + 0.5) / 3) * goalWidth - 15;
+    const shotX = goalLeft + ((selectedLane + 0.5) / 3) * goalWidth - 15;
+    const startTime = performance.now();
+    const duration = 850;
+
+    function animateShoot(now) {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = progress * progress * (3 - 2 * progress);
+      const height = 110 * eased;
+      const scale = 1 - 0.5 * eased;
+      const startX = areaW / 2 - 15;
+      const currentX = startX + (shotX - startX) * eased;
+      const keeperStartX = areaW / 2 - 15;
+      gk.style.left = (keeperStartX + (keeperX - keeperStartX) * Math.min(1, progress * 1.8)) + 'px';
+      if (keeperLane !== 1) gk.style.transform = `translateZ(75px) scale(1.35) rotate(${keeperLane === 0 ? '-55deg' : '55deg'})`;
+      else gk.style.transform = 'translateZ(75px) scale(1.25)';
       ball.style.left = currentX + 'px';
-      ball.style.bottom = (10 + cookieY) + 'px';
-      ball.style.transform = `translateZ(${shotDepth}px) scale(${shotScale})`;
-      
-      if (cookieY >= 80 && !keeperChecked) {
-        keeperChecked = true;
-        const gkCenter = gkX + 15;
-        if (Math.abs(targetX - gkCenter) < 46) {
-          gk.style.transform = 'translateZ(75px) scale(1.35)';
-          ball.innerHTML = '🧤';
-          tries--;
-          triesTxt.textContent = tries;
-          if (tries <= 0) {
-            playing = false;
-            btn.textContent = 'Terminé';
-            btn.disabled = true;
-            setTimeout(() => api.end(0, "Arrêt du gardien !"), 1500);
-          } else {
-            shooting = false;
-            targetSelected = false;
-            goal.querySelector('.football-target-label').textContent = 'Choisir une nouvelle zone';
-            btn.textContent = 'Viser puis tirer';
-            gk.style.transform = '';
-            ball.style.left = '50%';
-            ball.innerHTML = '🍪';
-            ball.style.bottom = '10px';
-            ball.style.transform = 'translateZ(0) scale(1)';
-          }
-          return;
-        }
+      ball.style.bottom = (10 + height) + 'px';
+      ball.style.transform = `translateZ(${height}px) scale(${scale})`;
+
+      if (progress < 1) {
+        shootRaf = requestAnimationFrame(animateShoot);
+        return;
       }
-      if (cookieY > 130) {
+
+      if (keeperLane === selectedLane) {
+        ball.innerHTML = '🧤';
+        tries--;
+        triesTxt.textContent = tries;
+        if (tries <= 0) {
           playing = false;
-          ball.innerHTML = '✨';
-          setTimeout(() => api.end(1, 'Buuut !'), 1500);
-          return;
+          btn.textContent = 'Terminé';
+          setTimeout(() => api.end(0, 'Le gardien a arrêté votre dernier tir !'), 1200);
+        } else {
+          goal.querySelector('.football-target-label').textContent = 'Arrêt du gardien ! Choisissez une autre zone';
+          btn.textContent = 'Choisir une zone';
+          setTimeout(resetShot, 900);
+        }
+      } else {
+        playing = false;
+        ball.innerHTML = '✨';
+        goal.querySelector('.football-target-label').textContent = 'BUUUT ! Le gardien a plongé ailleurs';
+        btn.textContent = 'But !';
+        setTimeout(() => api.end(1, 'Buuut ! Le gardien a plongé ' + lanes[keeperLane].toLowerCase() + '.'), 1200);
       }
-      shootRaf = requestAnimationFrame(animateShoot);
     }
-    animateShoot();
+    shootRaf = requestAnimationFrame(animateShoot);
   });
+
   return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
-
 
 /* =====================================================================
    MACHINE À SOUS & COMPAGNONS (SYSTÈME COMPLET & INTUITIF)
