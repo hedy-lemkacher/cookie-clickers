@@ -430,6 +430,24 @@ function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
 function casinoRemaining() { resetCasinoWindow(); return Math.max(0, 5 - S.casino.bets); }
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
 function casinoUnlimited() { const world = activeWorld(); return window.__adminMode || (world && world.mode === 'speedrun'); }
+function showCasinoOutcome({ won, title, amount = 0, detail = '' }) {
+  const previous = document.getElementById('casinoOutcomePopup');
+  if (previous) previous.remove();
+  const popup = document.createElement('div');
+  popup.id = 'casinoOutcomePopup';
+  popup.className = 'casino-outcome-popup ' + (won ? 'won' : 'lost');
+  const amountText = amount > 0 ? '+' + fmt(amount) : amount < 0 ? '-' + fmt(Math.abs(amount)) : '';
+  popup.innerHTML = '<div class="casino-outcome-kicker">' + (won ? '🎉 GAGNÉ' : '💥 PERDU') + '</div>' +
+    '<strong>' + title + '</strong>' +
+    (amountText ? '<div class="casino-outcome-amount">' + amountText + ' cookies</div>' : '') +
+    (detail ? '<small>' + detail + '</small>' : '');
+  document.body.appendChild(popup);
+  requestAnimationFrame(() => popup.classList.add('on'));
+  setTimeout(() => {
+    popup.classList.remove('on');
+    popup.addEventListener('transitionend', () => popup.remove(), { once: true });
+  }, 3600);
+}
 function updateCasinoLimit() {
   const limit = $('#casinoLimit');
   if (!limit) return;
@@ -726,6 +744,13 @@ function renderCasinoPane() {
         else if (lossVal > 0) msg = '-' + fmt(lossVal) + ' cookies...';
         
         res.innerHTML = s.death ? '☠️ LA MORT QUI TUE (-50% bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.halfBank ? '📉 BANQUEROUTE ' + msg : s.clickFz ? '👆 CLIC DIVIN (Clics x500 pendant 5s)' : s.bank15 ? '💰 JACKPOT ' + msg : s.cps1h ? '🍀 CHANCE ' + msg : s.cpsNeg ? '💸 PERTE ' + msg : '';
+        const wheelWon = Boolean(s.life || s.clickFz || s.bank15 || s.cps1h);
+        showCasinoOutcome({
+          won: wheelWon,
+          title: s.death ? 'La Mort qui Tue' : s.life ? 'La Vie qui Vie' : s.halfBank ? 'Banqueroute' : s.clickFz ? 'Clic divin' : s.bank15 ? 'Jackpot !' : s.cps1h ? 'Heure chanceuse' : 'Mauvais présage',
+          amount: gainVal > 0 ? gainVal : -lossVal,
+          detail: gainVal > 0 ? 'La roue vous récompense.' : lossVal > 0 ? 'La roue vous fait perdre des cookies.' : 'Effet spécial activé.'
+        });
         
         setTimeout(() => renderCasinoPane(), 3000);
       }
@@ -775,6 +800,12 @@ function spinCasino() {
     casinoSelectedBet = null;
     save();
     renderCasinoPane();
+    showCasinoOutcome({
+      won,
+      title: won ? 'La roulette est pour vous !' : 'La roulette vous échappe.',
+      amount: won ? payout * comboMult - stake : -stake,
+      detail: 'Résultat : ' + number + ' · ' + color.toUpperCase()
+    });
   }, 1400);
 }
 

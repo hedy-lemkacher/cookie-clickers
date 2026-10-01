@@ -636,6 +636,14 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .casino-result-color.rouge { color: #f06a76; }
 .casino-result-color.noir { color: #ddd4e2; }
 .casino-result small { display: block; color: var(--muted); font-size: 11px; }
+.casino-outcome-popup { position: fixed; left: 50%; top: 50%; z-index: 140; width: min(520px, calc(100vw - 32px)); padding: 30px 24px 26px; border: 3px solid; border-radius: 24px; text-align: center; pointer-events: none; opacity: 0; transform: translate(-50%, -44%) scale(.72); transition: opacity .25s ease, transform .25s cubic-bezier(.2, .9, .25, 1); box-shadow: 0 24px 80px #000d, 0 0 45px currentColor; backdrop-filter: blur(10px); }
+.casino-outcome-popup.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.casino-outcome-popup.won { color: #55efc4; background: linear-gradient(145deg, #123b35f2, #10251ff2); border-color: #55efc4; }
+.casino-outcome-popup.lost { color: #ff7675; background: linear-gradient(145deg, #4a191cf2, #261012f2); border-color: #ff7675; }
+.casino-outcome-kicker { margin-bottom: 8px; font-size: clamp(28px, 7vw, 48px); font-weight: 900; letter-spacing: .05em; text-shadow: 0 3px 0 #0008, 0 0 24px currentColor; }
+.casino-outcome-popup strong { display: block; color: #fff; font-size: clamp(19px, 4vw, 28px); }
+.casino-outcome-amount { margin: 14px 0 4px; color: #fff; font-size: clamp(24px, 6vw, 38px); font-weight: 800; }
+.casino-outcome-popup small { display: block; margin-top: 8px; color: #fbeee0; font-size: 14px; }
 .casino-spin { width: 100%; }
 .casino-page { display: grid; gap: 16px; max-width: 900px; margin: 0 auto; }
 .casino-page-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid #a07030; border-radius: 18px; background: radial-gradient(circle at 0 0, #75471f, transparent 45%), linear-gradient(135deg, #32190c, #160a05); }
