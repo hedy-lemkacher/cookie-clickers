@@ -601,7 +601,7 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .flappy-stage::before { content:''; position:absolute; z-index:1; inset:0; pointer-events:none; border-radius:inherit; box-shadow:inset 0 0 60px #020914bb,inset 0 1px #ffffff44; background:linear-gradient(180deg,#42ddff11,transparent 25% 78%,#02071144); }
 .flappy-stage-label { position:absolute; z-index:3; top:12px; left:14px; right:14px; display:flex; justify-content:space-between; pointer-events:none; color:#a9d7e5aa; font-size:9px; font-weight:900; letter-spacing:.15em; }
 .flappy-stage-label b { color:#6ff0f5; }
-#flappyCanvas { display:block; width:100%; height:auto; aspect-ratio:900/560; border-radius:15px; cursor:none; touch-action:none; background:radial-gradient(ellipse at 50% 42%,#286078,#0c1928 72%); }
+#flappyCanvas { display:block; width:100%; height:auto; aspect-ratio:900/440; border-radius:15px; cursor:none; touch-action:none; background:radial-gradient(ellipse at 50% 42%,#286078,#0c1928 72%); }
 .flappy-overlay { position:absolute; z-index:4; inset:0; display:flex; align-items:center; justify-content:center; padding:clamp(10px,3vw,28px); overflow:auto; background:linear-gradient(135deg,#061321aa,#0b1528bb); backdrop-filter:blur(5px); }
 .flappy-intro-card { width:min(660px,100%); padding:clamp(16px,3vw,28px); border:1px solid #8befff55; border-radius:20px; background:linear-gradient(145deg,#10283adb,#111526ed); box-shadow:0 24px 60px #0009,inset 0 1px #ffffff24; text-align:center; }
 .flappy-intro-icon { display:grid; place-items:center; width:56px; height:56px; margin:0 auto 10px; border:1px solid #ffc76399; border-radius:18px; background:radial-gradient(circle at 32% 25%,#ffe7a9,#dc873d 65%,#663213); font-size:31px; filter:drop-shadow(0 9px 12px #0008); transform:rotate(-8deg); }
@@ -2092,3 +2092,83 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 @keyframes football-goal-flash { 50% { background-color:#55efc455; box-shadow:inset 0 0 50px #55efc488; } }
 @keyframes football-field-celebrate { 50% { filter:brightness(1.35) saturate(1.4); } }
 @media (max-width:520px) { .game-football { padding:10px; }.celestial-football-stage { height:285px; }.football-goal-frame { left:5%; width:90%; }.celestial-football-stage .football-goal-target { left:8%; width:84%; height:90px; }.celestial-football-stage #cGk { top:68px; }.football-tries-badge { min-width:48px; padding:7px; } }
+
+/* Arcade polish and compact stages: keep the games lively without forcing a tall scroll area. */
+.game-card {
+  position:relative; isolation:isolate; overflow:hidden; min-height:202px; padding:16px;
+  border-color:#e7b55b30; background:radial-gradient(circle at 100% 0,#ffc15b17,transparent 44%),linear-gradient(155deg,#362416,#1c140f 70%);
+  box-shadow:inset 0 1px #fff2,0 8px 18px #0003; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.game-card::before { content:''; position:absolute; z-index:-1; inset:0 0 auto; height:4px; background:linear-gradient(90deg,#f5be55,#e77b32,#ba4d4d); opacity:.8; }
+.game-card:hover { transform:translateY(-3px); border-color:#ffd16699; box-shadow:inset 0 1px #fff3,0 12px 24px #0006,0 0 18px #f7b64a18; }
+.game-card .gi { display:grid; place-items:center; width:50px; height:50px; border:1px solid #ffd16655; border-radius:16px; background:radial-gradient(circle at 35% 25%,#ffe9b655,#ffb34712 70%); font-size:29px; filter:drop-shadow(0 4px 6px #0007); transition:transform .22s cubic-bezier(.2,.8,.2,1); }
+.game-card:hover .gi { transform:translateY(-2px) rotate(-6deg) scale(1.08); }
+.game-card h4 { color:#fff0d4; font-size:16px; }
+.game-card p { min-height:38px; color:#c7b8a8; font-size:12px; }
+.game-card .meta { min-height:16px; color:#a89278; font-size:11px; }
+.game-card .meta b { color:#82e7b0; font-weight:700; }
+.game-card .play-btn { border:1px solid #ffe1a366; transition:filter .16s,transform .16s,box-shadow .16s; }
+.game-card .play-btn:hover:not(:disabled) { filter:brightness(1.12); transform:translateY(-1px); box-shadow:0 5px 0 #7a4210,0 0 16px #ffb34744; }
+.game-card .play-btn:disabled { opacity:.62; }
+.game-card.gift { background:radial-gradient(circle at 100% 0,#ffd16630,transparent 48%),linear-gradient(155deg,#493216,#21170c 72%); border-color:#ffd16666; }
+.game-card.gift::before { background:linear-gradient(90deg,#fff0a8,#ffd166,#f08b38); }
+.game-card:nth-child(3n+2):not(.gift)::before { background:linear-gradient(90deg,#72e8ff,#658cff,#bc88ff); }
+.game-card:nth-child(3n):not(.gift)::before { background:linear-gradient(90deg,#81f2bf,#44c78b,#d9e873); }
+
+.modal-card:has(#mBody[data-game]) { width:min(720px,100%); max-height:calc(100dvh - 28px); border-color:#d6a45277; background:radial-gradient(ellipse at 50% 0,#573719 0,transparent 48%),linear-gradient(180deg,#2b1b12,#130e0c); }
+.modal-card:has(#mBody[data-game]) .modal-head { background:#100c0bbd; }
+#mBody[data-game] { background:radial-gradient(ellipse at 50% 5%,#ffd1660b,transparent 62%); }
+#mBody[data-game] .game-hint { max-width:650px; margin:0 auto 12px; padding:10px 13px; border:1px solid #f4d19b22; border-radius:12px; background:#0807064d; color:#e0d0bd; text-align:center; font-size:13px; }
+#mBody[data-game] button:not(.big-btn) { transition:transform .14s ease,filter .14s ease,box-shadow .14s ease; }
+#mBody[data-game] button:not(:disabled):hover { filter:brightness(1.13); transform:translateY(-2px); }
+#mBody[data-game] .arena { height:clamp(220px,36vh,320px); border-color:#ffd16644; box-shadow:inset 0 0 30px #0008,0 8px 22px #0005; }
+#mBody[data-game] .maze-grid { border-color:#ffd16677; box-shadow:inset 0 0 22px #000c,0 8px 22px #0006; }
+#mBody[data-game] .maze-cell.player { border-radius:30%; animation:cookieBeacon .7s ease-in-out infinite alternate; }
+#mBody[data-game] .rush-cookie { animation:cookieBob 1.5s ease-in-out infinite; }
+#mBody[data-game] .oven-window { box-shadow:inset 0 0 30px #ff641599,0 0 24px #ff841e33; }
+#mBody[data-game] .products button { box-shadow:0 4px 0 #1a0d05,0 6px 14px #0005; }
+#mBody[data-game] .mcard:not(.found):hover .back { border-color:#ffd166; box-shadow:0 0 15px #ffd16644; }
+#mBody[data-game] .result { padding:14px; border:1px solid #ffd16644; border-radius:18px; background:radial-gradient(circle at 50% 0,#ffd16618,transparent 65%),#100d0b88; }
+#mBody[data-game] .result-emoji { filter:drop-shadow(0 6px 12px #0007); animation:resultBounce .8s ease both; }
+#mBody[data-game] .result .reward { display:inline-block; padding:8px 18px; border:1px solid #ffd16666; border-radius:999px; background:#ffd16612; }
+.game-bowling { padding:12px; }
+.bowling-instruction { margin-bottom:8px; font-size:12px; }
+.celestial-bowling-stage { height:390px; margin-bottom:10px; border-width:6px; }
+.celestial-bowling-stage #cBowlingPins { top:30px; transform:translateX(-50%) translateZ(65px) scale(.88); }
+.bowling-pin-row { gap:6px; }
+.bowling-pin { width:46px; height:46px; font-size:36px; }
+.game-bowling .bowling-precision-gauge { width:min(60%,280px); height:92px; }
+.game-bowling .bowling-aim-arrow { bottom:30px; height:90px; }
+.bowling-controls .big-btn { padding:10px 18px; }
+.flappy-room { padding:clamp(12px,1.8vw,20px); }
+.flappy-heading { margin-bottom:10px; }
+.flappy-hud { margin-bottom:9px; }
+.flappy-footer { padding-top:8px; }
+@media (min-width:1001px) {
+  #flappy.pane.on { overflow:hidden; padding:8px; }
+  .flappy-room { box-sizing:border-box; height:100%; display:flex; flex-direction:column; }
+  .flappy-stage { flex:1; min-height:0; display:grid; place-items:center; }
+  #flappyCanvas { max-height:100%; object-fit:contain; }
+  .flappy-heading h2 { font-size:30px; }
+  .flappy-heading p { font-size:12px; line-height:1.35; }
+  .flappy-status-wrap,.flappy-attempts { min-height:46px; padding:7px 11px; }
+}
+@media (max-height:760px) and (min-width:1001px) {
+  .flappy-heading { margin-bottom:6px; }
+  .flappy-heading h2 { font-size:25px; }
+  .flappy-reward { padding:8px 12px; }
+  .flappy-hud { margin-bottom:6px; }
+  .flappy-footer { padding-top:5px; font-size:10px; }
+  .flappy-difficulty { min-height:76px; padding:9px; }
+  .game-bowling .celestial-bowling-stage,.celestial-bowling-stage { height:min(390px,42vh); }
+}
+@media (max-width:520px) {
+  .celestial-bowling-stage { height:350px; }
+  .celestial-bowling-stage #cBowlingPins { top:25px; transform:translateX(-50%) translateZ(55px) scale(.76); }
+  .game-bowling .bowling-precision-gauge { height:80px; }
+  #mBody[data-game] .game-hint { padding:8px 10px; font-size:12px; }
+  .game-card { min-height:180px; }
+}
+@keyframes cookieBeacon { to { filter:drop-shadow(0 0 12px #ffd166); } }
+@keyframes cookieBob { 50% { transform:translateY(-5px) rotate(-3deg); } }
+@keyframes resultBounce { 0% { transform:scale(.5) rotate(-12deg); opacity:0; } 75% { transform:scale(1.12) rotate(4deg); } 100% { transform:scale(1); opacity:1; } }

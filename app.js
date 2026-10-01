@@ -2153,7 +2153,7 @@ function updatePlayPane() {
     const hasBought = isCelestial ? (S.temple && S.temple.includes(g.id)) || window.__adminMode : true;
     const card = btn ? btn.closest('.game-card') : null;
     if (isCelestial && card) {
-      card.style.display = hasBought ? 'block' : 'none';
+      card.style.display = hasBought ? 'flex' : 'none';
       if (!hasBought) continue;
     }
     const unlocked = !g.req || S.baked >= g.req;
@@ -2225,6 +2225,7 @@ function openGame(g) {
   save();
   hideTip();
   modal.classList.add('on');
+  mBody.dataset.game = g.id;
   $('#mTitle').textContent = g.icon + ' ' + g.name;
   mInfo.textContent = '';
   mBody.innerHTML = '';
@@ -2266,6 +2267,7 @@ function closeModal() {
   if (current && !current.ended) { finishGame(current, current.api.frac, 'Partie interrompue.'); return; }
   modal.classList.remove('on');
   mBody.innerHTML = '';
+  delete mBody.dataset.game;
   current = null;
 }
 $('#mClose').addEventListener('click', closeModal);
@@ -3828,17 +3830,17 @@ function initFlappy() {
       for (let i=0;i<5;i++) { ctx.fillStyle = i%2 ? '#ff5377' : '#72f4ff'; ctx.fillRect(x-5, horizon+20+i*45, 10, 5); }
     }
 
-    const maxActiveLasers = elapsed >= 30 ? 10 : elapsed >= 10 ? 6 : 5;
-    const spawnInterval = elapsed >= 30 ? 320 : elapsed >= 10 ? 420 : 520;
+    const maxActiveLasers = elapsed >= 45 ? 15 : elapsed >= 30 ? 10 : elapsed >= 10 ? 6 : 5;
+    const spawnInterval = elapsed >= 45 ? 190 : elapsed >= 30 ? 320 : elapsed >= 10 ? 420 : 520;
     if (lasers.length < maxActiveLasers && frameNow - lastSpawnAt > spawnInterval) {
       const drone = Math.random() < .27;
       if (drone) {
         const direction = Math.random() < .5 ? 1 : -1;
-        lasers.push({ axis: 'drone', x: direction > 0 ? -34 : W + 34, y: H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .72 - difficulty*.1, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis: 'drone', x: direction > 0 ? -34 : W + 34, y: H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
       } else {
         const axis = Math.random() > 0.5 ? 'x' : 'y';
         const span = axis === 'x' ? W : H;
-        lasers.push({ axis, pos: span * (0.14 + Math.random()*.72), state: 'warn', timer: .78 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis, pos: span * (0.14 + Math.random()*.72), state: 'warn', timer: .72 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
       }
       lastSpawnAt = frameNow;
     }
