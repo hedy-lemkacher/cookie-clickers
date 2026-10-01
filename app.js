@@ -96,7 +96,8 @@ function special(prefix, icon, name, desc, costs, stat, needs) {
     id: prefix + i, icon, tier: ROMAN[i], cost, name: name + ' ' + ROMAN[i], desc,
     unlocked: () => stat() >= needs[i],
   }));
-}
+  }
+  special('mystery', '🎁', 'Boussole mystérieuse',   'Les cadeaux mystères apparaissent <b>10 %</b> plus vite.',       [1e6, 1e10, 1e14], () => S.baked, [1e6, 1e10, 1e14]);
 special('fzcd',   '⏱️', 'Levure express',         'La prochaine frénésie arrive <b>15 %</b> plus vite.',              [1e4, 1e7, 1e10],  () => S.frenzies,  [1, 5, 15]);
 special('fzdur',  '⌛', 'Four à chaleur tournante', 'Les frénésies durent <b>25 %</b> plus longtemps.',               [3e4, 3e7, 3e10],  () => S.frenzies,  [2, 8, 20]);
 special('fzpow',  '⚡', 'Sucre de canne',          'Débloque des frénésies plus puissantes : <b>×10</b>, <b>×15</b>, <b>×20</b>, puis rarement <b>×50</b>.', [1e5, 1e8, 1e11], () => S.frenzies, [3, 10, 25]);
@@ -151,6 +152,7 @@ const COMPANIONS = [
   { id: 'c_templier', name: 'Cookie templier sacré', rarity: 'rare', powerType: 'building_temple', powerBase: 0.40, powerStep: 0.10, desc: 'Les temples produisent +{val}%', style: { c: ['#f5f6fa', '#dcdde1', '#718093'], chip: '#e74c3c', edge: '#e74c3c', isTemplar: true } },
   { id: 'c_arcade', name: 'Cookie 8-bit rétro', rarity: 'rare', powerType: 'arcade_speed', powerBase: 0.25, powerStep: 0.06, desc: 'Vitesse de recharge des mini-jeux +{val}%', style: { c: ['#1e3799', '#0c2461', '#041033'], chip: '#e74c3c', edge: '#4a69bd', isArcade: true } },
   { id: 'c_glace', name: 'Cookie givré polaire', rarity: 'rare', powerType: 'frenzy_dur', powerBase: 0.25, powerStep: 0.06, desc: 'Durée des frénésies +{val}%', style: { c: ['#dff9fb', '#c7ecee', '#7ed6df'], chip: '#22a6b3', edge: '#22a6b3', isIce: true } },
+  { id: 'c_eclaireur_mystere', name: 'Cookie éclaireur mystérieux', rarity: 'rare', powerType: 'mystery_freq', powerBase: 0.25, powerStep: 0.06, desc: 'Les cadeaux mystères arrivent jusqu\'à {val}% plus vite', style: { c: ['#ffeaa7', '#f39c12', '#8e44ad'], chip: '#2ecc71', edge: '#f1c40f', isMysteryScout: true } },
 
   // Épiques (Cookies CSS/SVG)
   { id: 'c_demon', name: 'Cookie démon infernal', rarity: 'epique', powerType: 'cps_click_hybrid', powerBase: 0.30, powerStep: 0.08, desc: 'Production et clics +{val}%', style: { c: ['#ff4d4d', '#7f1d1d', '#300a0e'], chip: '#000000', edge: '#ff3838', isDemon: true } },
@@ -176,6 +178,7 @@ const COMPANIONS = [
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'speed', powerBase: 2.00, powerStep: 0.50, desc: 'Vitesse de production +{val}%' },
   { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
+  { id: 'c_oracle_mystere', name: 'Oracle du cadeau mystère', rarity: 'mythique', powerType: 'mystery_vision', powerBase: 1, powerStep: 0, desc: 'Révèle le contenu des cadeaux mystères avant le choix', style: { c: ['#dff9fb', '#54a0ff', '#341f97'], chip: '#ffd32a', edge: '#70a1ff', isOracle: true } },
   { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } }
 ];
 
@@ -223,6 +226,12 @@ const ACHIEVEMENTS = [
   { icon: '🌟', name: 'Collectionneur Averti', desc: 'Débloquer 10 compagnons différents.',                    test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 10 },
   { icon: '👑', name: 'Compagnon Légendaire', desc: 'Débloquer un compagnon de rareté Légendaire ou Mythique.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && (c.rarity === 'legendaire' || c.rarity === 'mythique'); }) },
   { icon: '🌌', name: 'Divinité Mythique',     desc: 'Débloquer un compagnon de rareté Mythique.',             test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && c.rarity === 'mythique'; }) },
+  { icon: '🎁', name: 'Premier Mystère',        desc: 'Découvrir votre premier cadeau mystérieux.',             test: () => S.mysterySeen >= 1 },
+  { icon: '🎲', name: 'Prise de risque',        desc: 'Accepter 5 cadeaux mystérieux.',                        test: () => S.mysteryAccepted >= 5 },
+  { icon: '🛡️', name: 'Prudence légendaire',    desc: 'Refuser 5 cadeaux mystérieux.',                         test: () => S.mysteryRefused >= 5 },
+  { icon: '🔮', name: 'Le sixième sens',        desc: 'Débloquer l’Oracle du cadeau mystère.',                 test: () => S.compData && S.compData.unlocked && S.compData.unlocked.includes('c_oracle_mystere') },
+  { icon: '⚡', name: 'Chasseur de cadeaux',    desc: 'Réduire au maximum le délai des cadeaux mystères.',      test: () => countUps('mystery') >= 3 || (S.compData && S.compData.unlocked && S.compData.unlocked.includes('c_eclaireur_mystere')) },
+  { icon: '🎁', name: 'Collection mystérieuse', desc: 'Accepter 10 cadeaux mystérieux.',                       test: () => S.mysteryAccepted >= 10 },
 ];
 
 /* --- Personnalisation --- */
@@ -263,6 +272,7 @@ function freshState() {
     frenzies: 0, fz: { start: now, next: now + 150000, until: 0, mult: 1, dur: 1 },
     evTotal: 0, evSeen: {}, evNext: now + rand(60, 120) * 1000, evViewed: 0,
     gamesPlayed: 0, games: {}, gameBest: {}, perfect: 0, daily: 0, dailyCount: 0,
+    mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0,
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
     mysteryGift: { next: now + rand(900, 1800) * 1000, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
@@ -1218,6 +1228,10 @@ function toast(icon, small, text) {
   setTimeout(() => { t.classList.add('out'); t.addEventListener('animationend', () => t.remove()); }, 3800);
 }
 
+function mysteryGiftDelay() {
+  const companionBonus = typeof compHas === 'function' ? compHas('mystery_freq') : 0;
+  return rand(900, 1800) * Math.pow(0.9, countUps('mystery')) / (1 + companionBonus) * 1000;
+}
 const MYSTERY_EFFECTS = [
   { id: 'click150', icon: '👆', title: 'Pouvoir des clics', text: 'Vos clics valent ×150 pendant 20 secondes.', apply: (gift, now) => { gift.clickUntil = now + 20000; } },
   { id: 'gain40', icon: '🎁', title: 'Réserve providentielle', text: 'Vous gagnez immédiatement 40 minutes de production.', apply: () => gain(steadyCps() * 2400) },
@@ -1270,6 +1284,8 @@ function mysteryGiftEffect() {
 function closeMysteryGift(accepted) {
   const gift = S.mysteryGift, effect = mysteryGiftEffect(), now = Date.now();
   const popup = document.getElementById('mysteryGiftPopup');
+  if (accepted) S.mysteryAccepted++;
+  else S.mysteryRefused++;
   if (accepted) {
     effect.apply(gift, now);
     toast(effect.icon, 'Cadeau mystérieux', effect.title);
@@ -1278,7 +1294,7 @@ function closeMysteryGift(accepted) {
   }
   gift.pending = false;
   gift.effectId = '';
-  gift.next = now + rand(900, 1800) * 1000;
+  gift.next = now + mysteryGiftDelay();
   if (popup) {
     popup.className = 'mystery-gift-popup resolved ' + (accepted ? 'accepted' : 'refused');
     popup.innerHTML = '<div class="mystery-gift-icon">' + effect.icon + '</div><div class="mystery-gift-kicker">CADEAU ' + (accepted ? 'ACCEPTÉ' : 'REFUSÉ') + '</div><h2>' + effect.title + '</h2><p>' + effect.text + '<br><em>' + MYSTERY_REVEALS[Math.floor(Math.random() * MYSTERY_REVEALS.length)] + '</em></p>';
@@ -1291,10 +1307,14 @@ function showMysteryGift() {
   const gift = S.mysteryGift;
   if (!gift.effectId) gift.effectId = MYSTERY_EFFECTS[Math.floor(Math.random() * MYSTERY_EFFECTS.length)].id;
   gift.pending = true;
+  S.mysterySeen++;
+  const effect = mysteryGiftEffect();
+  const canPreview = typeof compHas === 'function' && compHas('mystery_vision') > 0;
   const popup = document.createElement('div');
   popup.id = 'mysteryGiftPopup';
   popup.className = 'mystery-gift-popup';
-  popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>' + MYSTERY_PROMPTS[Math.floor(Math.random() * MYSTERY_PROMPTS.length)] + '<br>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p><div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
+  const preview = canPreview ? '<div class="mystery-preview"><b>🔮 Vision de l\'Oracle</b><span>' + effect.icon + ' ' + effect.title + '</span><small>' + effect.text + '</small></div>' : '';
+  popup.innerHTML = '<div class="mystery-gift-icon">❔</div><div class="mystery-gift-kicker">CADEAU MYSTÈRE</div><h2>Un cadeau inconnu vous attend</h2><p>' + MYSTERY_PROMPTS[Math.floor(Math.random() * MYSTERY_PROMPTS.length)] + '<br>Acceptez-vous de prendre le risque ? Son effet peut être bénéfique... ou contraignant.</p>' + preview + '<div class="mystery-gift-actions"><button type="button" data-mystery="accept">Accepter</button><button type="button" data-mystery="refuse">Refuser</button></div>';
   popup.addEventListener('click', (event) => {
     const action = event.target.closest('[data-mystery]');
     if (action) closeMysteryGift(action.dataset.mystery === 'accept');
@@ -2821,7 +2841,7 @@ function performAscension(g, keptCompId = null) {
     keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   }
 
-  ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount',
+  ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'perfect', 'daily', 'dailyCount', 'mysterySeen', 'mysteryAccepted', 'mysteryRefused',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.ascensions = S.ascensions + 1;
   keep.chips = (keep.chips || 0) + g;
@@ -5046,6 +5066,10 @@ window.openCompanionDetail = function(cid) {
     explanation = `Réduit le temps de recharge des mini-jeux de ${val}%.`;
   } else if (c.powerType === 'combo_power') {
     explanation = `Augmente le plafond et l'efficacité de votre combo de ${val}%.`;
+  } else if (c.powerType === 'mystery_freq') {
+    explanation = `Réduit le délai entre les cadeaux mystères de ${val}%.`;
+  } else if (c.powerType === 'mystery_vision') {
+    explanation = `Révèle le nom et l'effet du prochain cadeau mystérieux avant votre choix.`;
   } else if (c.powerType === 'chrono_master') {
     explanation = `Accélère les mini-jeux et prolonge les frénésies de ${val}%.`;
   } else {

@@ -531,6 +531,10 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .mystery-gift-kicker { color: #ffd166; font-size: 13px; font-weight: 800; letter-spacing: .16em; }
 .mystery-gift-popup h2 { margin: 7px 0; font-size: clamp(21px, 5vw, 29px); }
 .mystery-gift-popup p { margin: 0 auto 18px; max-width: 350px; color: var(--muted); line-height: 1.45; font-size: 14px; }
+.mystery-preview { display: grid; gap: 4px; margin: 0 auto 16px; padding: 10px 12px; border: 1px solid #70a1ff; border-radius: 10px; background: #70a1ff18; color: #dff9fb; }
+.mystery-preview b { color: #70a1ff; font-size: 12px; letter-spacing: .04em; }
+.mystery-preview span { color: #fff; font-weight: 800; }
+.mystery-preview small { color: #c7d9ff; line-height: 1.3; }
 .mystery-gift-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mystery-gift-actions button { padding: 11px 14px; border-radius: 10px; font-weight: 700; }
 .mystery-gift-actions button:first-child { background: linear-gradient(135deg, #55efc4, #20bf8f); color: #09271f; box-shadow: 0 4px 14px #20bf8f55; }
