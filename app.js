@@ -4205,18 +4205,17 @@ function gameCelestialFootball(api, g) {
   let tries = 3, shooting = false, targetSelected = false;
 
   api.body.innerHTML = `<div class="game-football">
-    <p class="game-hint">Choisissez une zone dans le but, puis tirez. Le gardien plonge au hasard à gauche, à droite ou reste au centre. S'il couvre votre zone, le tir est arrêté. <span id="cFooTries">${tries}</span> essais.</p>
-    <div class="celestial-3d-stage celestial-football-stage" style="position:relative;width:100%;height:190px;background:#2ecc71;border:2px solid #27ae60;border-radius:10px;margin-bottom:10px;overflow:hidden;" id="cFooArea">
-      <div style="position:absolute;top:0;left:10%;width:80%;height:20px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-right:3px solid #fff;box-sizing:border-box;"></div>
-      <div id="cFooGoal" class="football-goal-target"><span class="football-target-label">Choisissez : Gauche · Centre · Droite</span><span class="football-lane-line" style="left:33.333%"></span><span class="football-lane-line" style="left:66.666%"></span><span id="cFooAim" class="football-aim" style="display:none"></span></div>
-      <div id="cGk" style="position:absolute;top:20px;left:calc(50% - 15px);width:30px;height:40px;font-size:30px;text-align:center;line-height:40px;z-index:4;">🥛</div>
-      <div id="cBallFoo" style="position:absolute;bottom:10px;left:50%;margin-left:-15px;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;">🍪</div>
+    <div class="football-topbar"><div><span class="football-eyebrow">⚽ DÉFI CÉLESTE</span><p class="game-hint">Choisissez une zone, puis tentez de tromper le gardien. Il peut plonger à gauche, à droite ou rester au centre.</p></div><div class="football-tries-badge"><span>ESSAIS</span><b id="cFooTries">${tries}</b></div></div>
+    <div class="celestial-3d-stage celestial-football-stage" id="cFooArea">
+      <div class="football-stadium-lights"></div><div class="football-field-lines"></div>
+      <div class="football-goal-frame"><div class="football-goal-net"></div><div class="football-goal-post football-post-left"></div><div class="football-goal-post football-post-right"></div><div class="football-goal-crossbar"></div></div>
+      <div id="cFooGoal" class="football-goal-target"><span class="football-target-label">CHOISISSEZ VOTRE TIR</span><span class="football-lane-line" style="left:33.333%"></span><span class="football-lane-line" style="left:66.666%"></span><span id="cFooAim" class="football-aim" style="display:none"></span></div>
+      <div id="cGk" class="football-keeper" aria-label="Gardien">🥛</div>
+      <div id="cBallFoo" class="football-cookie-ball" aria-label="Ballon-cookie">🍪</div>
+      <div class="football-vignette"></div>
     </div>
-    <div style="text-align:center;">
-      <button id="cFooBtn" class="big-btn" style="background:linear-gradient(135deg, #27ae60, #2ecc71); width:170px;" disabled>Choisir une zone</button>
-    </div>
+    <div class="football-controls"><div id="cFooStatus" class="football-status">Visez une case dans le but</div><button id="cFooBtn" class="big-btn" disabled>Choisir une zone</button></div>
   </div>`;
-
   const gk = api.body.querySelector('#cGk');
   const ball = api.body.querySelector('#cBallFoo');
   const btn = api.body.querySelector('#cFooBtn');
@@ -4231,10 +4230,13 @@ function gameCelestialFootball(api, g) {
     selectedLane = 1;
     cookieY = 0;
     aim.style.display = 'none';
-    goal.querySelector('.football-target-label').textContent = 'Choisissez : Gauche · Centre · Droite';
+    goal.classList.remove('football-save', 'football-goal-flash');
+    area.classList.remove('football-scored');
+    gk.classList.remove('football-keeper-dive');
+    goal.querySelector('.football-target-label').textContent = 'CHOISISSEZ VOTRE TIR';
     btn.textContent = 'Choisir une zone';
     btn.disabled = true;
-    gk.style.left = 'calc(50% - 15px)';
+    gk.style.left = 'calc(50% - 26px)';
     gk.style.transform = '';
     ball.style.left = '50%';
     ball.style.bottom = '10px';
@@ -4250,7 +4252,8 @@ function gameCelestialFootball(api, g) {
     targetSelected = true;
     aim.style.display = 'block';
     aim.style.left = ((selectedLane + 0.5) / 3 * 100) + '%';
-    goal.querySelector('.football-target-label').textContent = 'Zone visée : ' + lanes[selectedLane];
+    goal.querySelector('.football-target-label').textContent = 'ZONE VISÉE : ' + lanes[selectedLane].toUpperCase();
+    api.body.querySelector('#cFooStatus').textContent = 'Votre tir : ' + lanes[selectedLane];
     btn.textContent = 'Tirer à ' + lanes[selectedLane].toLowerCase();
     btn.disabled = false;
   }
@@ -4262,13 +4265,15 @@ function gameCelestialFootball(api, g) {
     shooting = true;
     btn.disabled = true;
     btn.textContent = 'Tir en cours…';
+    api.body.querySelector('#cFooStatus').textContent = 'Le gardien plonge…';
+    gk.classList.add('football-keeper-dive');
 
     const keeperLane = Math.floor(Math.random() * 3);
     const areaW = area.clientWidth;
     const goalWidth = goal.clientWidth;
     const goalLeft = areaW * 0.1;
-    const keeperX = goalLeft + ((keeperLane + 0.5) / 3) * goalWidth - 15;
-    const shotX = goalLeft + ((selectedLane + 0.5) / 3) * goalWidth - 15;
+    const keeperX = goalLeft + ((keeperLane + 0.5) / 3) * goalWidth - 26;
+    const shotX = goalLeft + ((selectedLane + 0.5) / 3) * goalWidth;
     const startTime = performance.now();
     const duration = 850;
 
@@ -4277,9 +4282,9 @@ function gameCelestialFootball(api, g) {
       const eased = progress * progress * (3 - 2 * progress);
       const height = 110 * eased;
       const scale = 1 - 0.5 * eased;
-      const startX = areaW / 2 - 15;
+      const startX = areaW / 2;
       const currentX = startX + (shotX - startX) * eased;
-      const keeperStartX = areaW / 2 - 15;
+      const keeperStartX = areaW / 2 - 26;
       gk.style.left = (keeperStartX + (keeperX - keeperStartX) * Math.min(1, progress * 1.8)) + 'px';
       if (keeperLane !== 1) gk.style.transform = `translateZ(75px) scale(1.35) rotate(${keeperLane === 0 ? '-55deg' : '55deg'})`;
       else gk.style.transform = 'translateZ(75px) scale(1.25)';
@@ -4293,7 +4298,9 @@ function gameCelestialFootball(api, g) {
       }
 
       if (keeperLane === selectedLane) {
+        goal.classList.add('football-save');
         ball.innerHTML = '🧤';
+        api.body.querySelector('#cFooStatus').textContent = 'ARRÊT DU GARDIEN !';
         tries--;
         triesTxt.textContent = tries;
         if (tries <= 0) {
@@ -4307,7 +4314,10 @@ function gameCelestialFootball(api, g) {
         }
       } else {
         playing = false;
+        goal.classList.add('football-goal-flash');
+        area.classList.add('football-scored');
         ball.innerHTML = '✨';
+        api.body.querySelector('#cFooStatus').textContent = 'BUUUT !';
         goal.querySelector('.football-target-label').textContent = 'BUUUT ! Le gardien a plongé ailleurs';
         btn.textContent = 'But !';
         setTimeout(() => api.end(1, 'Buuut ! Le gardien a plongé ' + lanes[keeperLane].toLowerCase() + '.'), 1200);
@@ -4316,7 +4326,7 @@ function gameCelestialFootball(api, g) {
     shootRaf = requestAnimationFrame(animateShoot);
   });
 
-  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(hoopRaf); cancelAnimationFrame(shootRaf); };
+  return () => { cancelAnimationFrame(raf); cancelAnimationFrame(shootRaf); };
 }
 
 /* =====================================================================
