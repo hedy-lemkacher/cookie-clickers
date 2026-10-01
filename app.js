@@ -3828,7 +3828,9 @@ function initFlappy() {
       for (let i=0;i<5;i++) { ctx.fillStyle = i%2 ? '#ff5377' : '#72f4ff'; ctx.fillRect(x-5, horizon+20+i*45, 10, 5); }
     }
 
-    if (lasers.length < 4 && frameNow - lastSpawnAt > (760 - difficulty * 280)) {
+    const maxActiveLasers = elapsed >= 30 ? 10 : elapsed >= 10 ? 6 : 5;
+    const spawnInterval = elapsed >= 30 ? 320 : elapsed >= 10 ? 420 : 520;
+    if (lasers.length < maxActiveLasers && frameNow - lastSpawnAt > spawnInterval) {
       const drone = Math.random() < .27;
       if (drone) {
         const direction = Math.random() < .5 ? 1 : -1;
