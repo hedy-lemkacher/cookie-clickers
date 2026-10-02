@@ -602,6 +602,10 @@ function resetCasinoWindow() {
 function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
 function casinoMaxBets() { return 5 + (compHasSpecial("casino_free") ? templeCasinoFreeBets() : 0); }
 function casinoRemaining() { resetCasinoWindow(); return Math.max(0, casinoMaxBets() - S.casino.bets); }
+function casinoCanBuyExtraSpin(remaining = casinoRemaining()) {
+  const maxBets = casinoMaxBets();
+  return remaining === 0 || remaining < maxBets / 5;
+}
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
 function casinoUnlimited() { 
   const world = activeWorld(); 
@@ -640,16 +644,30 @@ function updateCasinoLimit() {
   }
   const remaining = casinoRemaining(), left = casinoTimeLeft();
   const spin = $('#casinoSpin');
-  if (remaining === 0) {
+  if (!casinoCanBuyExtraSpin(remaining)) {
+    const buyButton = document.getElementById('buyExtraSpin');
+    if (buyButton) buyButton.remove();
+    limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / ' + casinoMaxBets() + '</span> mises restantes</div><div class="cl-subtitle">Recharge disponible uniquement sous ' + Math.ceil(casinoMaxBets() / 5) + ' mise restante</div></div></div>';
+    limit.classList.remove('locked');
+    if (spin) spin.disabled = false;
+    return;
+  }
+  {
     const baseCost = Math.max(1, Math.floor(steadyCps() * 300));
     const casinoDiscount = compHas('casino_discount'); // Joueur de Casino
     const casinoCostReduce = compHas('casino_cost_reduce'); // Banquier
     const discountMultiplier = 1 - (casinoDiscount * 0.5) - (casinoCostReduce * 0.15);
     const cost = Math.max(1, Math.floor(baseCost * discountMultiplier));
     
-    limit.innerHTML = '<div class="casino-limit-box locked"><div class="cl-icon">⏳</div><div class="cl-info"><div class="cl-title">Accro au jeu</div><div class="cl-subtitle">Prochaine série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
+    const limitTitle = remaining === 0 ? 'Dernière chance' : 'Dernière recharge possible';
+    const limitSubtitle = remaining === 0
+      ? 'Rechargez une mise avant la prochaine série · <span class="cl-time">' + fmtTime(left / 1000) + '</span>'
+      : 'Encore ' + remaining + ' mise disponible avant le verrouillage';
+    limit.innerHTML = '<div class="casino-limit-box ' + (remaining === 0 ? 'locked' : 'active') + ' "><div class="cl-icon">' + (remaining === 0 ? '⏳' : '⚡') + '</div><div class="cl-info"><div class="cl-title">' + limitTitle + '</div><div class="cl-subtitle">' + limitSubtitle + '</div></div></div>';
     const bHead = document.querySelector('#casinoPane .casino-bankroll');
-    if (bHead && !document.getElementById('buyExtraSpin')) {
+    const existingBuyButton = document.getElementById('buyExtraSpin');
+    if (existingBuyButton) existingBuyButton.remove();
+    if (bHead) {
       const btn = document.createElement('button');
       btn.id = 'buyExtraSpin';
       btn.className = 'buy-spin-btn';
@@ -663,6 +681,7 @@ function updateCasinoLimit() {
           S.cookies -= currentCost;
           S.casino.bets--;
           save();
+          renderCasinoPane();
           updateCasinoLimit();
           toast('🎰', 'Tour supplémentaire !', 'Vous avez acheté un tour de roulette.');
         } else {
@@ -671,8 +690,8 @@ function updateCasinoLimit() {
       });
       bHead.appendChild(btn);
     }
-    limit.classList.add('locked');
-    if (spin) spin.disabled = true;
+    limit.classList.toggle('locked', remaining === 0);
+    if (spin) spin.disabled = remaining === 0;
     return;
   }
   limit.innerHTML = '<div class="casino-limit-box active"><div class="cl-icon">🎰</div><div class="cl-info"><div class="cl-title"><span class="cl-remaining">' + remaining + ' / ' + casinoMaxBets() + '</span> mises restantes</div><div class="cl-subtitle">Nouvelle série dans <span class="cl-time">' + fmtTime(left / 1000) + '</span></div></div></div>';
@@ -766,9 +785,9 @@ function renderCasinoPane() {
     return;
   }
   
-  const tabsHtml = '<div class="casino-tabs" style="display:flex;gap:10px;margin-bottom:15px;justify-content:center;">' + 
-    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'roulette' ? 'active' : '') + '" data-tab="roulette" style="' + (S.casino.tab !== 'roulette' ? 'background:#8a4c1c;filter:brightness(0.7);' : '') + '">🎰 Roulette</button>' +
-    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'wheel' ? 'active' : '') + '" data-tab="wheel" style="' + (S.casino.tab !== 'wheel' ? 'background:#8a4c1c;filter:brightness(0.7);' : '') + '">🎡 Roue de la Fortune</button>' +
+  const tabsHtml = '<div class="casino-tabs">' + 
+    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'roulette' ? 'active' : '') + '" data-tab="roulette">🎰 Roulette</button>' +
+    '<button class="big-btn casino-tab-btn ' + (S.casino.tab === 'wheel' ? 'active' : '') + '" data-tab="wheel">🎡 Roue de la Fortune</button>' +
   '</div>';
 
   if (S.casino.tab === 'roulette') {
