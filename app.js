@@ -5276,7 +5276,7 @@ function updateGachaButtons() {
   if (btnLegendary) {
     const cost = gachaLegendaryCost();
     btnLegendary.disabled = frenzy || !S.compData?.equipped.includes('c_blessure') || S.cookies < cost;
-    btnLegendary.textContent = frenzy ? '⚡ Indisponible pendant la frénésie' : `🌟 Tirage légendaire garanti · 25 × x10 (${fmt(cost)} 🍪)`;
+    btnLegendary.textContent = frenzy ? '⚡ Indisponible pendant la frénésie' : `Tirage spécial Adam (${fmt(cost)} 🍪)`;
   }
 }
 
@@ -5379,7 +5379,7 @@ function spinGacha(count = 1, drawMode = 'standard') {
   isGachaSpinning = true;
   if (btn1) { btn1.disabled = true; btn1.textContent = '👥 Tirage...'; }
   if (btn10) { btn10.disabled = true; btn10.textContent = '✨ Tirage...'; }
-  if (btnLegendary) { btnLegendary.disabled = true; btnLegendary.textContent = '🌟 Tirage garanti en cours...'; }
+  if (btnLegendary) { btnLegendary.disabled = true; btnLegendary.textContent = 'Tirage spécial Adam en cours...'; }
   
   function rollOneCompanion(guaranteedLegendary = false) {
     S.compData.pulls = (S.compData.pulls || 0) + 1;
@@ -5735,7 +5735,7 @@ function renderGachaPane() {
         <button class="big-btn" id="btnSpinGacha10" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaCost(10) ? 'disabled' : ''} style="min-width:210px; font-size:15px; padding:12px 18px; background:linear-gradient(135deg, #e67e22, #f39c12); box-shadow:0 4px 15px rgba(243,156,18,0.4);">
           ${isGachaSpinning ? '👥 Tirage en cours...' : `✨ Tirer x10 ( ${fmt(gachaCost(10))} 🍪 )`}
         </button>
-        ${S.compData.equipped.includes('c_blessure') ? `<button class="big-btn legendary-draw-button" id="btnSpinLegendaryGacha" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaLegendaryCost() ? 'disabled' : ''} style="min-width:250px; font-size:14px; padding:12px 18px; background:linear-gradient(135deg,#4b2878,#a875e8 55%,#f3c667); box-shadow:0 4px 16px #8a58c655;">${isGachaSpinning ? '🌟 Tirage garanti en cours...' : `🌟 Légendaire ou mythique garanti · 25 × x10 (${fmt(gachaLegendaryCost())} 🍪)`}</button>` : ''}
+        ${S.compData.equipped.includes('c_blessure') ? `<button class="big-btn legendary-draw-button" id="btnSpinLegendaryGacha" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaLegendaryCost() ? 'disabled' : ''} style="min-width:250px; font-size:14px; padding:12px 18px; background:linear-gradient(135deg,#4b2878,#a875e8 55%,#f3c667); box-shadow:0 4px 16px #8a58c655;">${isGachaSpinning ? 'Tirage spécial Adam en cours...' : `Tirage spécial Adam (${fmt(gachaLegendaryCost())} 🍪)`}</button>` : ''}
       </div>
       <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <b style="color:#a4b0be;">Taux :</b>
