@@ -5052,6 +5052,10 @@ window.openCompanionSelector = function(slotIdx) {
 
   const currentEquippedId = S.compData.equipped[slotIdx] || null;
   const unlocked = S.compData.unlocked || [];
+  const favoriteIds = Array.isArray(S.compData.favorites) ? S.compData.favorites : [];
+  // Le sélecteur rapide ouvert depuis le cookie ne montre que les favoris,
+  // tout en gardant le compagnon actuel accessible pour le retirer.
+  const quickSelectIds = unlocked.filter((id) => favoriteIds.includes(id) || id === currentEquippedId);
   
   current = { ended: true, api: { frac: 0 } };
   mInfo.textContent = '';
@@ -5059,7 +5063,8 @@ window.openCompanionSelector = function(slotIdx) {
   let modalHtml = `
     <div style="padding:15px; text-align:center;">
       <h2 style="color:#f1c40f; margin-bottom:6px;">🛡️ Sélectionner pour ${slotName}</h2>
-      <p style="font-size:13px; color:#a4b0be; margin-bottom:15px;">Choisissez le compagnon que vous souhaitez équiper sur cet emplacement.</p>
+      <p style="font-size:13px; color:#a4b0be; margin-bottom:8px;">Choisissez un favori pour remplacer rapidement le compagnon de cet emplacement.</p>
+      <p class="selector-favorites-note">⭐ Seuls vos favoris apparaissent ici. Ajoutez-en depuis votre collection de compagnons.</p>
   `;
   
   if (currentEquippedId) {
@@ -5072,17 +5077,17 @@ window.openCompanionSelector = function(slotIdx) {
     `;
   }
   
-  if (unlocked.length === 0) {
+  if (quickSelectIds.length === 0) {
     modalHtml += `
       <div style="padding:30px; color:#747d8c; font-size:14px;">
-        <div style="font-size:40px; margin-bottom:10px;">👥</div>
-        Vous n'avez pas encore débloqué de compagnons.<br>
-        Rendez-vous dans l'onglet <b>Compagnons</b> pour effectuer vos premiers tirages !
+        <div style="font-size:40px; margin-bottom:10px;">⭐</div>
+        Aucun favori à afficher.<br>
+        Ouvrez la page <b>Compagnons</b> et marquez d’une étoile ceux que vous utilisez souvent.
       </div>
     `;
   } else {
     modalHtml += `<div class="selector-comp-grid">`;
-    for (let id of unlocked) {
+    for (let id of quickSelectIds) {
       const c = COMPANIONS.find(x => x.id === id);
       if (!c) continue;
       const lvl = Math.min(13, S.compData.levels[id] || 1);

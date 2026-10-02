@@ -2076,6 +2076,7 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   padding: 10px 4px;
   margin: 15px 0;
 }
+.selector-favorites-note { margin:0 0 14px; color:#ffd166; font-size:11px; }
 .selector-comp-card {
   background: #1e272e;
   border: 2px solid #353b48;
