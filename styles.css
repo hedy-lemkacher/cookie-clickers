@@ -2302,3 +2302,78 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   80%  { translate: 40% -26%; rotate: 20deg; }
   100% { translate: 0 0; rotate: 0deg; }
 }
+
+/* Quatuor Légendaire : 4 emplacements de compagnons */
+#companions-container { flex-wrap: wrap; }
+#companions-container:has(.active-comp-wrapper:nth-child(4)) { gap: 14px; }
+.comp-card-actions.quatuor-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.companion-card.locked.vision-revealed.vision-color,
+.companion-card.locked.vision-revealed.vision-color .comp-card-visual.vision-locked { filter: none; opacity: .85; }
+
+/* ===== Temple des Légendes ===== */
+.temple-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 6px 0 14px; padding: 12px 14px; border: 1px solid rgba(255, 235, 59, .25); border-radius: 14px; background: rgba(0, 0, 0, .25); }
+.temple-chip-count { color: #ffeb3b; font-size: 17px; font-weight: 700; }
+.temple-chip-count b { font-size: 22px; text-shadow: 0 0 12px rgba(255, 235, 59, .55); }
+.temple-progress { display: flex; flex-direction: column; gap: 5px; min-width: 180px; flex: 1; max-width: 300px; color: #d4b0ff; font-size: 12px; text-align: right; }
+.temple-progress i { display: block; height: 8px; border-radius: 99px; background: #0006; overflow: hidden; }
+.temple-progress i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #9b59b6, #ffeb3b); transition: width .6s ease; }
+.temple-grid { display: flex; flex-direction: column; gap: 18px; text-align: left; }
+
+.temple-hero { position: relative; display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 18px; overflow: hidden; isolation: isolate; border: 1px solid rgba(255, 215, 0, .45); background: linear-gradient(135deg, #2b1048, #4a2a07); }
+.temple-hero-aura { position: absolute; inset: -60%; z-index: -1; background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, .28), transparent 30%, rgba(155, 89, 182, .35), transparent 60%); animation: templeSpin 12s linear infinite; opacity: .55; }
+.temple-hero-crown { flex: 0 0 auto; font-size: 54px; filter: drop-shadow(0 0 14px rgba(255, 215, 0, .7)); animation: templeFloat 3.2s ease-in-out infinite; }
+.temple-hero-body { flex: 1; min-width: 0; }
+.temple-hero-kicker { color: #ffd166; font-size: 11px; font-weight: 700; letter-spacing: .14em; }
+.temple-hero h4 { margin: 2px 0 6px; color: #fff3b0; font-size: 22px; }
+.temple-hero p { color: #e9d8ff; font-size: 13px; line-height: 1.45; margin-bottom: 10px; }
+.temple-hero.is-affordable { animation: templeGlow 2.2s ease-in-out infinite; }
+.temple-hero.is-owned { border-color: #ffd700; box-shadow: 0 0 26px rgba(255, 215, 0, .35); }
+.temple-hero.is-owned .temple-hero-aura { opacity: .9; animation-duration: 6s; }
+
+.temple-section { padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(155, 89, 182, .3); }
+.temple-section header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.temple-section-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: rgba(155, 89, 182, .25); font-size: 20px; }
+.temple-section h4 { color: #ffeb3b; font-size: 16px; }
+.temple-section small { color: #b9a3d1; font-size: 12px; }
+.temple-section header em { margin-left: auto; padding: 3px 9px; border-radius: 99px; background: #0005; color: #d4b0ff; font-style: normal; font-size: 12px; font-weight: 700; }
+.temple-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+
+.temple-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 13px; border-radius: 13px; overflow: hidden; background: rgba(255, 255, 255, .05); border: 1px solid #555; transition: transform .2s, box-shadow .2s, border-color .2s; animation: templeCardIn .45s ease both; }
+.temple-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px #0007; }
+.temple-card-name { color: #fff; font-size: 16px; font-weight: 800; }
+.temple-card-desc { color: #ccc; font-size: 12px; line-height: 1.4; }
+.temple-legend-line { padding: 5px 8px; border-radius: 8px; background: rgba(255, 215, 0, .07); color: #c9b46a; font-size: 11px; }
+.temple-legend-line.on { background: rgba(255, 215, 0, .16); color: #ffe27a; font-weight: 700; }
+.temple-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.temple-cost { color: #ffb347; font-weight: 700; font-size: 13px; white-space: nowrap; }
+.temple-buy { padding: 7px 12px; border: 0; border-radius: 9px; background: linear-gradient(135deg, #9b59b6, #6c3483); color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: filter .15s, transform .15s; }
+.temple-buy:hover:not(:disabled) { filter: brightness(1.2); transform: scale(1.05); }
+.temple-buy:disabled { cursor: default; background: #3a3344; color: #a99cb8; }
+.temple-card.is-locked { opacity: .6; }
+.temple-card.is-affordable { border-color: #9b59b6; animation: templeCardIn .45s ease both, templePulse 2.4s ease-in-out .45s infinite; }
+.temple-card.is-owned { border-color: #9b59b6; background: linear-gradient(135deg, #2e1f5e, #4a2e0a); }
+.temple-card.is-owned .temple-card-name { color: #ffeb3b; }
+.temple-card.is-owned .temple-buy:disabled { background: rgba(46, 204, 113, .2); color: #8fe39b; }
+.temple-card.is-owned::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .12) 50%, transparent 65%); transform: translateX(-100%); animation: templeShine 4s ease-in-out infinite; pointer-events: none; }
+.temple-card.is-doubled { border-color: #ffd700; box-shadow: inset 0 0 0 1px rgba(255, 215, 0, .25); }
+.temple-card.is-doubled::before { content: '×2'; position: absolute; top: 8px; right: 9px; padding: 1px 6px; border-radius: 6px; background: #ffd700; color: #3b2600; font-size: 11px; font-weight: 900; }
+.temple-section .temple-card:nth-child(2) { animation-delay: .05s; }
+.temple-section .temple-card:nth-child(3) { animation-delay: .1s; }
+.temple-section .temple-card:nth-child(4) { animation-delay: .15s; }
+.temple-section .temple-card:nth-child(5) { animation-delay: .2s; }
+
+@keyframes templeSpin { to { transform: rotate(360deg); } }
+@keyframes templeFloat { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+@keyframes templeGlow { 0%, 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); } 50% { box-shadow: 0 0 28px rgba(255, 215, 0, .45); } }
+@keyframes templePulse { 0%, 100% { box-shadow: 0 0 0 rgba(155, 89, 182, 0); } 50% { box-shadow: 0 0 16px rgba(155, 89, 182, .55); } }
+@keyframes templeShine { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@keyframes templeCardIn { from { opacity: 0; transform: translateY(8px); } }
+@media (max-width: 600px) {
+  .temple-hero { flex-direction: column; text-align: center; padding: 16px; }
+  .temple-hero .temple-card-foot { justify-content: center; }
+  .temple-cards { grid-template-columns: 1fr; }
+  .temple-progress { max-width: none; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-hero-aura, .temple-hero-crown, .temple-card, .temple-card::after, .temple-hero.is-affordable { animation: none !important; }
+}
