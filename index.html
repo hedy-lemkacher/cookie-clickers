@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=2.17">
+<link rel="stylesheet" href="styles.css?v=2.18">
 </head>
 <body>
 
@@ -19,6 +19,7 @@
   <div class="side-menu-head"><h2>Menu</h2><button id="menuClose" type="button" aria-label="Fermer le menu">✕</button></div>
   <p class="side-menu-caption">Pages secondaires</p>
   <nav class="side-menu-links" aria-label="Pages secondaires">
+    <button data-menu-tab="rules" type="button">📖 <span>Règles du jeu</span></button>
     <button data-menu-tab="worlds" type="button">🌍 <span>Vos mondes</span></button>
     <button data-menu-tab="events" type="button">🎉 <span>Événements</span></button>
     <button data-menu-tab="style" type="button">🎨 <span>Style / personnalisation</span></button>
@@ -304,7 +305,7 @@
             <li style="margin-bottom: 12px;"><b>🔒 ATTENTION À LA BOUTIQUE SCELLÉE</b> : Certains cadeaux mystérieux ferment temporairement les achats. La boutique passe en noir et blanc et un grand cadenas affiche le compte à rebours jusqu’à sa réouverture.</li>
             <li style="margin-bottom: 12px;"><b>🍀 LES BONUS DE CHANCE SONT CONCRETS</b> : Chanceux peut doubler la récompense d’un mini-jeu. Chasseur de Jackpot augmente vos chances de gagner à la roulette, jusqu’à <b>65 %</b> au total.</li>
             <li style="margin-bottom: 12px;"><b>🛡️ COPAIN POUR TOUJOURS</b> : Avec cette amélioration du Temple, le compagnon du <b>slot A</b> est conservé après l’ascension. Un bouclier discret apparaît sur le slot ; survolez-le pour vérifier quel compagnon part avec vous.</li>
-            <li style="margin-bottom: 12px;"><b>🍪 UNE NOUVELLE FOURNÉE DE COMPAGNONS</b> : Quatre cookies rejoignent les catégories Commun et Peu commun : café-crème, miel doré, cerise pétillante et mousse de cacao. Filtrez par rareté, puis triez la collection par rareté, nom ou niveau.</li>
+            <li style="margin-bottom: 12px;"><b>🍪 UNE NOUVELLE FOURNÉE DE COMPAGNONS</b> : Quatre cookies rejoignent les catégories Commun et Peu commun : café-crème, miel doré, cerise pétillante et mousse de cacao. Retrouvez vos préférés avec l’onglet Favoris, filtrez par rareté ou type d’effet, puis triez par rareté, effet, nom ou niveau.</li>
             <li style="margin-bottom: 12px;"><b>🌟 LES MYTHIQUES SONT PLUS EXCEPTIONNELS</b> : Leur chance d’apparition passe de <b>0,05 % à 0,04 %</b>. Les pouvoirs des compagnons ont été légèrement renforcés, surtout ceux des légendaires et mythiques.</li>
             <li style="margin-bottom: 12px;"><b>🏆 VOS COMPAGNONS PROGRESSENT JUSQU’AU NIVEAU 13</b> : Un tirage coûte maintenant <b>2 min 30 s de production automatique</b> (minimum 25 milliards de cookies). Les améliorations de rotation se débloquent à <b>5 Tourelles Max</b>, puis à <b>1 Boss LMK</b>.</li>
             <li style="margin-bottom: 12px;"><b>🕊️ ESQUIVE PLUS INTENSE, SANS INTERRUPTION</b> : Le mode difficile offre un multiplicateur de <b>×400</b> et aucun cadeau mystérieux ne peut apparaître pendant une partie.</li>
@@ -312,6 +313,110 @@
         </div>
       </div>
       
+      <div class="pane" id="rules">
+        <div class="pane-head">
+          <h2>📖 Règles du jeu</h2>
+          <p>Bienvenue dans votre boulangerie ! Voici le guide complet pour comprendre la production, les événements, les jeux et la progression.</p>
+        </div>
+        <div class="card rules-goal">
+          <h3 class="card-title"><span>🏆 Votre objectif pour gagner</span></h3>
+          <p>Faites grandir votre boulangerie, réalisez des ascensions et rassemblez des pépites célestes. Votre objectif final est d’acheter <b>toutes les améliorations du menu du Temple des Légendes</b>. Certaines coûtent beaucoup de pépites : avancez étape par étape et gardez votre production en croissance.</p>
+        </div>
+        <div class="rules-grid">
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🍪 1. Produire des cookies</span></h3>
+            <p>Cliquez sur le grand cookie pour en gagner à la main. La puissance du clic dépend notamment de vos curseurs et des améliorations. Chaque clic augmente votre combo si vous continuez à cliquer régulièrement ; le compteur indique le bonus actuel. Les améliorations de souris peuvent ajouter une part de votre production par seconde à chaque clic.</p>
+            <p>Achetez ensuite des bâtiments : <b>Curseurs, Grand-mères, Fermes, Mines, Usines, Banques, Temples, Tours de sorcier, Fusées, Maillots d’Adam, Méchants Chris, EBBY POSES, Vikash Le BG, Chancelleries, Moteurs Fractals, Tourelles Max et Boss LMK.</b> Ils produisent automatiquement des cookies chaque seconde. Le compteur « par seconde » affiche votre rythme de production.</p>
+            <p>Le prix d’un bâtiment augmente de <b>15 % par exemplaire acheté</b>. Les boutons <b>×1, ×10, ×100 et Max</b> règlent la quantité achetée. Pour débloquer le bâtiment suivant, il faut posséder au moins <b>5 exemplaires du bâtiment précédent</b> et avoir cuit au moins 60 % de son prix de base. Les améliorations de la boutique renforcent votre production, vos clics, les événements ou les mini-jeux ; leur carte indique leur coût et leur condition de déblocage.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>⚡ Frénésies et événements</span></h3>
+            <p>Une <b>frénésie</b> se déclenche automatiquement. Elle multiplie votre production pendant 3 à 25 secondes ; les niveaux possibles sont ×10, ×15, ×20 et, plus rarement, ×50. Votre progression et les améliorations peuvent en débloquer de plus puissantes ou les prolonger. La jauge à gauche indique le compte à rebours ou le bonus actif.</p>
+            <p>Des <b>événements de bâtiments</b> apparaissent à mesure que vous en possédez davantage : chaque bâtiment ouvre de nouveaux événements à <b>5, 25 et 75 exemplaires</b>. Cliquez sur leur bannière ou leur icône avant la fin pour recevoir des cookies. Les gains dépendent du bâtiment, du niveau de l’événement et de vos améliorations.</p>
+          </article>
+          <article class="card rules-card rules-warning">
+            <h3 class="card-title"><span>🌟 Cookies dorés, argentés, bronze et noirs</span></h3>
+            <p>En général, une pluie arrive toutes les 5 à 15 minutes et les cookies restent visibles environ 1,5 seconde. Elle contient 1 cookie d’or, 1 noir, 8 argentés et 15 de bronze. <b>Un seul clic termine toute la pluie</b> : choisissez bien votre cible.</p>
+            <ul>
+              <li><b>Cookie d’or 🍪 :</b> ajoute à votre banque un bonus égal à 25 % des cookies que vous possédez au moment du clic.</li>
+              <li><b>Cookie d’argent :</b> retire la moitié de votre banque actuelle.</li>
+              <li><b>Cookie de bronze :</b> vide votre banque de cookies. Vos bâtiments restent là et continuent de produire.</li>
+              <li><b>Cookie noir ☠️ :</b> supprime tous les exemplaires de votre bâtiment le plus avancé actuellement possédé.</li>
+            </ul>
+            <p>Les cookies argentés, bronze et noirs sont donc dangereux : visez le cookie d’or si vous voulez le bonus. À ne pas confondre avec le thème d’apparence « Choco noir », qui est seulement une personnalisation visuelle.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🎮 Fête foraine et mini-jeux</span></h3>
+            <p>Les jeux se débloquent en cuisant des cookies. Chaque jeu possède sa propre recharge (durée de base indiquée ci-dessous et sur sa carte). Un bon résultat rapporte une plus grande part de la récompense maximale, calculée à partir de 5 minutes de production automatique et ajustée selon le jeu. Les améliorations et certains compagnons peuvent l’augmenter.</p>
+            <ul>
+              <li><b>Évasion du labyrinthe :</b> trouvez la sortie (dès le début, recharge 12 min).</li>
+              <li><b>Simon Cookie :</b> répétez la séquence (500 cookies cuits, 10 min).</li>
+              <li><b>Le Cookie Doré :</b> trouvez le bon cookie caché (50 000 cuits, 15 min).</li>
+              <li><b>Rush de clics :</b> cliquez vite pendant 8 secondes (250 000 cuits, 12 min).</li>
+              <li><b>Sortie du four :</b> sortez les fournées au bon moment (5 millions cuits, 12 min).</li>
+              <li><b>Vente de cookies :</b> servez les clients (25 millions cuits, 15 min).</li>
+              <li><b>Attrape-cookies :</b> attrapez les cookies et évitez les brocolis (100 millions cuits, 12 min).</li>
+              <li><b>Memory gourmand :</b> retrouvez les paires (500 millions cuits, 15 min).</li>
+              <li><b>Tri gourmand :</b> placez les ingrédients dans le bon sac (750 millions cuits, 14 min).</li>
+              <li><b>Le Chef :</b> préparez le cookie selon les étapes (950 millions cuits, 18 min).</li>
+            </ul>
+            <p>La page <b>Jouer</b> contient aussi le cadeau du jour : il rapporte l’équivalent de 10 minutes de production automatique (au moins 500 cookies) et revient toutes les 20 heures. Le bouton <b>i</b> affiche vos records de jeux.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🎳 Jeux célestes et Esquive laser</span></h3>
+            <p>Après avoir débloqué leurs améliorations au Temple (5 pépites chacune), vous pouvez jouer au <b>Bowling Céleste</b>, au <b>Panier Céleste</b> et au <b>Tir au But</b>. Ils ont chacun 3 essais et une recharge de base de 4 minutes, réductible avec certaines améliorations. Le bowling demande de viser la piste, le panier de tracer le tir du cookie-ballon et le tir au but de tromper le gardien.</p>
+            <p>Dans <b>Esquive laser</b>, déplacez le cookie avec la souris ou l’écran tactile et évitez tous les faisceaux jusqu’à la fin du temps. Les défis durent 10 s (calme, ×50), 30 s (tension, ×150) ou 60 s (survie, ×400). Vous avez 3 essais par heure ; le Temple peut en ajouter. Gagner débloque le pouvoir de la touche <b>Entrée</b> : maintenez cette touche pour cliquer automatiquement environ 20 fois par seconde. Le pouvoir dure 60 s (plus longtemps avec les améliorations du Temple) ; pendant ses 30 premières secondes, chaque clic profite aussi du multiplicateur du défi réussi. Aucun cadeau mystérieux n’apparaît pendant une partie d’Esquive.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🎰 Casino et roue de la fortune</span></h3>
+            <p>Le casino s’ouvre après avoir cuit <b>1 million de cookies</b>. À la roulette, choisissez une mise (minimum 1 million) puis Rouge ou Noir : une bonne couleur paie ×2. La limite normale est de 5 mises par période de 15 minutes ; certains compagnons peuvent en donner davantage.</p>
+            <p>La <b>Roue de la Fortune</b> se tourne toutes les 30 minutes. Elle peut offrir une heure de production, +50 % de votre banque, doubler vos deux bâtiments les plus avancés ou booster les clics. Elle peut aussi faire perdre la moitié de la banque, 30 minutes de production ou la moitié de vos trois derniers types de bâtiments. Consultez les effets et leurs chances affichés près de la roue avant de jouer. La frénésie rend le tour indisponible.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🎁 Cadeaux mystérieux</span></h3>
+            <p>Un cadeau mystérieux arrive aléatoirement, en général toutes les <b>10 à 20 minutes</b>. Vous pouvez l’accepter ou le refuser ; le jeu vous indique ensuite ce que vous avez obtenu ou laissé passer.</p>
+            <p>Les effets possibles sont variés : clics ×150 pendant 20 s, 40 minutes de production offertes, recharges réinitialisées, recharges réduites de moitié pendant 3 min, bâtiment le plus avancé offert, production réduite de 30 % pendant 90 s, perte de 50 minutes de production, boutique scellée pendant 45 min ou arcade fermée pendant 30 min.</p>
+            <p><b>Ayoub au tableau</b>, s’il est équipé, révèle le contenu avant votre choix. <b>Le Panipuri de Vikash</b> ajoute un bouton sous le cookie pour invoquer immédiatement un cadeau, avec une recharge de 10 minutes. Un bouton du hamburger peut aussi activer un cadeau sur certains profils.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>👥 Compagnons et tirages</span></h3>
+            <p>Après votre première ascension, les tirages permettent de collectionner des compagnons de rareté <b>Commun (53,26 %), Peu commun (26 %), Rare (14 %), Épique (6,2 %), Légendaire (0,5 %) ou Mythique (0,04 %)</b>. Un compteur garantit une rareté Épique ou mieux au 20<sup>e</sup> tirage. Un doublon devient un éclat, utilisé pour faire progresser ce compagnon jusqu’au niveau 13.</p>
+            <p>Équipez jusqu’à 2 compagnons (3 avec l’amélioration correspondante du Temple). Leurs pouvoirs ne se cumulent pas si deux compagnons donnent le même type d’effet. Les lunettes d’Abdel sont maintenant mythiques et améliorent à la fois la vitesse des mini-jeux et la durée des frénésies ; leur bonus est supérieur à celui du Maître du Chronos. La casquette d’Hedy est mythique et réduit davantage le coût des bâtiments et améliorations. Marquez les compagnons que vous utilisez le plus avec l’étoile pour les retrouver dans l’onglet <b>Favoris</b>. Vous pouvez filtrer par rareté ou type d’effet (production, clics, frénésie, mini-jeux, cadeaux et autres), puis trier par rareté, effet, nom ou niveau. Changer un compagnon déclenche normalement un délai par emplacement, de 30 minutes au départ, réduit par les améliorations de la boutique. Adam sur FIFA supprime ce délai tant qu’il est équipé. Un tirage simple coûte l’équivalent de <b>2 min 30 s de production automatique</b> (minimum 25 milliards) ; seuls les cookies produits automatiquement comptent, pas les clics. Les tirages sont indisponibles pendant une frénésie. Le tirage ×10 bénéficie d’une réduction de 12 %.
+            </p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🛕 Améliorations du Temple des Légendes</span></h3>
+            <p>Le Temple contient <b>17 améliorations permanentes</b>. Elles restent achetées après les ascensions. En les achetant toutes une fois, il faut réunir <b>1 090 pépites célestes</b> au total :</p>
+            <ul>
+              <li><b>Bowling Céleste, Panier Céleste et Tir au But</b> — 5 pépites chacun : débloquent leurs mini-jeux.</li>
+              <li><b>Vision Absolue</b> — 5 : révèle la collection de compagnons verrouillés et leurs pouvoirs.</li>
+              <li><b>Trio Légendaire</b> — 15 : ouvre un troisième emplacement de compagnon.</li>
+              <li><b>Copain pour toujours</b> — 20 : conserve le compagnon du slot A après une ascension.</li>
+              <li><b>Esquive Augmentée</b> — 5 : ajoute un essai d’Esquive par heure.</li>
+              <li><b>Pouvoir Prolongé</b> — 10 : porte le pouvoir Entrée de 60 à 90 secondes.</li>
+              <li><b>Grande Frénésie</b> — 20 : prolonge la phase de frénésie Entrée de 30 à 45 secondes.</li>
+              <li><b>Prestige des Clics</b> — 30 : +5 % de puissance de clic ; <b>Arsenal Cosmique</b> — 50 : +10 % de production.</li>
+              <li><b>Légende Absolue</b> — 100 : double les effets des améliorations précédentes.</li>
+              <li><b>Savoir Universel</b> — 150 : +15 % de production ; <b>Clic Divin II</b> — 150 : +10 % de puissance de clic.</li>
+              <li><b>Chronomaître</b> — 200 : divise par deux la recharge des jeux célestes.</li>
+              <li><b>Chance Dorée</b> — 250 : fait arriver la pluie de cookies dorés plus souvent.</li>
+              <li><b>Compagnons renforcés</b> — 70 : multiplie par 1,5 les effets numériques des compagnons et donne une mise supplémentaire au Maître du Casino.</li>
+            </ul>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>😇 Ascension et pépites célestes</span></h3>
+            <p>Le Temple se débloque après avoir cuit <b>25 milliards de cookies au total</b>. Dans l’onglet Ascension, la barre indique votre progression et le nombre de pépites que vous gagneriez maintenant. Ascender remet à zéro la banque, les bâtiments et les améliorations classiques de la partie, mais conserve vos pépites, le Temple, vos succès, votre style et vos records.</p>
+            <p>Chaque pépite céleste conservée donne <b>+1 % de production</b>. Une ascension rapporte au maximum <b>70 nouvelles pépites</b>, qui s’ajoutent à votre total : avec 30 pépites avant une ascension maximale, vous en aurez 100 après. Les paliers deviennent plus exigeants à chaque ascension. Les achats du Temple, eux, restent acquis. « Copain pour toujours » conserve après l’ascension le compagnon du slot A.</p>
+            <p>Pour atteindre la victoire finale, achetez <b>toutes les améliorations proposées dans le menu du Temple des Légendes</b>. Les coûts sont indiqués sur chaque carte : certaines demandent de nombreuses ascensions.</p>
+          </article>
+          <article class="card rules-card">
+            <h3 class="card-title"><span>🧭 Mondes, succès et personnalisation</span></h3>
+            <p>Vous pouvez créer jusqu’à 5 mondes indépendants : chacun garde sa propre banque, ses bâtiments et ses améliorations. Le monde Speedrun vise 500 000 cookies et enregistre votre temps. Les succès et les statistiques suivent vos exploits ; les records des mini-jeux sont consultables avec le bouton <b>i</b> de la page Jouer.</p>
+            <p>Dans le hamburger, <b>Style / personnalisation</b> permet de renommer la boulangerie, changer le fond, choisir l’apparence du cookie et la couleur de ses pépites, activer la pluie décorative et modifier l’affichage des grands nombres. Les pages Événements, Performances et Dernières modifications donnent accès à d’autres informations sur votre partie.</p>
+          </article>
+        </div>
+      </div>
+
       <div class="pane" id="secret">
       <div class="pane-intro"><h3>Mode développeur</h3><p>Entrez le code secret pour tester rapidement toutes les fonctionnalités du jeu.</p></div>
       <div class="card secret-card">
@@ -395,7 +500,7 @@
   </div>
 </div>
 
-<script src="app.js?v=2.17"></script>
+<script src="app.js?v=2.18"></script>
 
 </body>
 </html>
