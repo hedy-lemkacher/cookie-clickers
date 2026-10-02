@@ -385,7 +385,8 @@ const COOKIE_THEMES = [
 const SAVE_KEY = 'cookie-clicker-worlds-v3';
 const LEGACY_SAVE_KEYS = ['cookie-clicker-tm251297', 'cookie-clicker', 'cookie-clicker-worlds-v2'];
 const SPEEDRUN_GOAL = 500000;
-const DEFAULT_CUSTOM = { name: 'La boulangerie de tm251297', bg: 'choco', bgCustom: '#7a4a18', cookie: 'classic', cookieCustom: '#dc9a4f', rain: true, numfmt: 'words' };
+const LEGACY_BAKERY_NAME = 'La boulangerie de tm251297';
+const DEFAULT_CUSTOM = { name: 'Ma boulangerie', bg: 'choco', bgCustom: '#7a4a18', cookie: 'classic', cookieCustom: '#dc9a4f', rain: true, numfmt: 'words' };
 
 function freshState() {
   const now = Date.now();
@@ -398,7 +399,7 @@ function freshState() {
     mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0, mysteryHistory: [],
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, totalBets: 0, totalWins: 0, bestWinStreak: 0, wheelSpins: 0, lastResult: null },
-    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
+    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0, slowClickUntil: 0, napUntil: 0, mirrorUntil: 0, dodgeUntil: 0, comboFreezeUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, lifetimePulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
@@ -418,7 +419,10 @@ function newWorldId() {
     : 'world-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 }
 function worldRecord(name, mode, goal, state) {
-  return { id: newWorldId(), name, mode, goal: mode === 'speedrun' ? goal : null, speedrun: { startedAt: 0, durationMs: 0 }, createdAt: Date.now(), state: state || freshState() };
+  const worldState = state || freshState();
+  // The bakery takes the name given to its world.
+  if (worldState.custom && (!worldState.custom.name || worldState.custom.name === LEGACY_BAKERY_NAME || worldState.custom.name === DEFAULT_CUSTOM.name)) worldState.custom.name = name;
+  return { id: newWorldId(), name, mode, goal: mode === 'speedrun' ? goal : null, speedrun: { startedAt: 0, durationMs: 0 }, createdAt: Date.now(), state: worldState };
 }
 function activeWorld() { return worlds.find((world) => world.id === activeWorldId) || null; }
 
@@ -449,7 +453,11 @@ function load() {
       if (Array.isArray(d.worlds)) {
         worlds = d.worlds.slice(0, 5);
         speedrunRecords = d.speedrunRecords || [];
-        worlds.forEach((world) => { world.speedrun = Object.assign({ startedAt: 0, durationMs: 0 }, world.speedrun); });
+        worlds.forEach((world) => {
+          world.speedrun = Object.assign({ startedAt: 0, durationMs: 0 }, world.speedrun);
+          const custom = world.state && world.state.custom;
+          if (custom && (!custom.name || custom.name === LEGACY_BAKERY_NAME)) custom.name = world.name;
+        });
         activeWorldId = d.activeWorldId || (worlds[0] && worlds[0].id);
         const world = activeWorld();
         if (world) S = Object.assign(freshState(), world.state);
@@ -1187,7 +1195,8 @@ function baseCps() {
 function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b, true); return s; }
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() {
-  const productionFactor = S.mysteryGift && Date.now() < S.mysteryGift.productionUntil ? 0.7 : 1;
+  const gift = S.mysteryGift, now = Date.now();
+  const productionFactor = gift && now < (gift.napUntil || 0) ? 0.1 : gift && now < gift.productionUntil ? 0.7 : 1;
   return baseCps() * frenzyMult() * productionFactor;
 }
 
@@ -1220,7 +1229,8 @@ addEventListener('keydown', (e) => {
         clickTimes = [];
         fastClickWarnings = 0;
         lastRawClick = 0;
-        cookieBtn.click();
+        clickIntervals = [];
+        triggerCookieClick(cookieBtn);
         clickBlockedUntil = oldBlocked;
         if (inFrenzy) {
           clickFrenzyUntil = prevFrenzyUntil;
@@ -1244,40 +1254,65 @@ function clickBase() {
 }
 function clickPower() {
   if (S.booMode) return 999e21;
-  const mysteryClick = S.mysteryGift && Date.now() < S.mysteryGift.clickUntil ? 150 : 1;
+  const gift = S.mysteryGift, now = Date.now();
+  const mysteryClick = (gift && now < gift.clickUntil ? 150 : 1) * (gift && now < (gift.slowClickUntil || 0) ? 0.5 : 1);
   return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1) * mysteryClick;
 }
 let lastRawClick = 0, fastClickWarnings = 0;
-function allowClick() {
+let clickIntervals = [], botStrikes = 0, lastBotStrikeAt = 0;
+// Internal triggers (Enter power, keyboard) call cookieBtn.click() and must bypass the trust check.
+let internalCookieClick = false;
+function triggerCookieClick(btn) {
+  internalCookieClick = true;
+  try { btn.click(); } finally { internalCookieClick = false; }
+}
+function flagBot(now, reason) {
+  botStrikes = now - lastBotStrikeAt < 60000 ? botStrikes + 1 : 1;
+  lastBotStrikeAt = now;
+  clickTimes = [];
+  clickIntervals = [];
+  if (botStrikes === 1) {
+    clickBlockedUntil = now + 3000;
+    toast('🛡️', 'Rythme suspect', reason + ' Pause de 3 s.');
+  } else {
+    clickBlockedUntil = now + Math.min(60000, 15000 * (botStrikes - 1));
+    toast('🛡️', 'Autoclicker détecté', reason + ' Blocage de ' + Math.round((clickBlockedUntil - now) / 1000) + ' s.');
+  }
+}
+function allowClick(e) {
   const now = Date.now();
   // Admin mode: no restrictions at all
   if (window.__adminMode) return true;
+  // Scripted clicks (console, extensions) are not trusted by the browser.
+  if (e && e.isTrusted === false && !internalCookieClick) return false;
   if (now < clickBlockedUntil) return false;
-  
+
   const diff = now - lastRawClick;
   lastRawClick = now;
-  
-  if (diff < 10) {
+
+  // Two fingers on a phone hit almost at the same time: ignore the duplicate without punishing.
+  if (diff < 15) {
     fastClickWarnings++;
-    if (fastClickWarnings >= 8) {
-      clickBlockedUntil = now + 5000;
-      clickTimes = [];
-      fastClickWarnings = 0;
-      toast('🛡️', 'Autoclicker détecté', 'Vitesse anormale. Blocage de 5 s.');
-      return false;
-    }
+    if (fastClickWarnings >= 25) { fastClickWarnings = 0; flagBot(now, 'Clics simultanés en rafale.'); }
     return false;
-  } else if (fastClickWarnings > 0 && diff > 200) {
-    fastClickWarnings--;
   }
-  
+  if (fastClickWarnings > 0 && diff > 120) fastClickWarnings--;
+
+  // A human hand never keeps the same rhythm: autoclickers do, to the millisecond.
+  if (diff < 400) {
+    clickIntervals.push(diff);
+    if (clickIntervals.length > 30) clickIntervals.shift();
+  } else {
+    clickIntervals = [];
+  }
+  if (clickIntervals.length >= 24) {
+    const mean = clickIntervals.reduce((a, b) => a + b, 0) / clickIntervals.length;
+    const sd = Math.sqrt(clickIntervals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / clickIntervals.length);
+    if (sd < 3.5 && sd / mean < 0.05) { flagBot(now, 'Rythme parfaitement régulier.'); return false; }
+  }
+
   clickTimes = clickTimes.filter((time) => now - time < 1000);
-  if (clickTimes.length >= 35) {
-    clickBlockedUntil = now + 20000;
-    clickTimes = [];
-    toast('🛡️', 'Protection anti-spam', 'Trop de clics ! Blocage de 20 secondes.');
-    return false;
-  }
+  if (clickTimes.length >= 30) { flagBot(now, 'Plus de 30 clics par seconde.'); return false; }
   clickTimes.push(now);
   return true;
 }
@@ -1472,8 +1507,31 @@ const MYSTERY_EFFECTS = [
   { id: 'productionPenalty', icon: '🕯️', title: 'Four ralenti', text: 'Votre production est réduite de 30 % pendant 1 min 30.', apply: (gift, now) => { gift.productionUntil = now + 90000; } },
   { id: 'loss50', icon: '🌪️', title: 'Taxe mystérieuse', text: 'Vous perdez 50 minutes de production.', apply: () => { S.cookies = Math.max(0, S.cookies - steadyCps() * 3000); } },
   { id: 'buildingLock', icon: '🔒', title: 'Boutique scellée', text: 'Les achats de bâtiments sont bloqués pendant 45 minutes.', apply: (gift, now) => { gift.buildingLockUntil = now + 2700000; } },
-  { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } }
+  { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } },
+  { id: 'coinFlip', icon: '🪙', title: 'Pile ou face', text: 'Une pièce tourne : pile, +20 minutes de production. Face, -20 minutes.', apply: () => {
+    const amount = steadyCps() * 1200;
+    if (Math.random() < 0.5) { gain(amount); toast('🪙', 'Pile !', '+' + fmt(amount) + ' cookies'); }
+    else { S.cookies = Math.max(0, S.cookies - amount); toast('🪙', 'Face...', '-' + fmt(amount) + ' cookies'); }
+  } },
+  { id: 'goldMagnet', icon: '🧲', title: 'Aimant doré', text: 'Un cookie doré tombe du ciel dans 5 secondes. Soyez prêt !', apply: () => { goldenNext = Date.now() + 5000; } },
+  { id: 'cookieRain', icon: '🌧️', title: 'Averse de cookies', text: 'Il pleut des cookies : +5 minutes de production.', apply: () => { gain(steadyCps() * 300); spawnRain(150); } },
+  { id: 'comboHot', icon: '🔥', title: 'Combo bouillant', text: 'Votre combo passe au maximum et ne redescend pas pendant 30 secondes.', apply: (gift, now) => {
+    combo = (comboCap() - 1) / (0.02 * (1 + (typeof compHas === 'function' ? compHas('combo_power') : 0)));
+    lastClick = now;
+    gift.comboFreezeUntil = now + 30000;
+  } },
+  { id: 'slowClicks', icon: '🐌', title: 'Doigts en guimauve', text: 'Vos clics valent deux fois moins pendant 45 secondes.', apply: (gift, now) => { gift.slowClickUntil = now + 45000; } },
+  { id: 'nap', icon: '😴', title: 'Sieste des boulangers', text: 'Toute la boulangerie dort : production à 10 % pendant 30 secondes.', apply: (gift, now) => { gift.napUntil = now + 30000; } },
+  { id: 'mirror', icon: '🪞', title: 'Monde miroir', text: 'Tout l\'écran passe à l\'envers gauche-droite pendant 25 secondes.', apply: (gift, now) => { gift.mirrorUntil = now + 25000; } },
+  { id: 'dodgeCookie', icon: '🏃', title: 'Cookie fugueur', text: 'Le gros cookie prend peur et se balade partout pendant 30 secondes.', apply: (gift, now) => { gift.dodgeUntil = now + 30000; } }
 ];
+function updateMysteryVisuals(now) {
+  const gift = S.mysteryGift || {};
+  const app = document.querySelector('.app');
+  const zone = document.querySelector('.cookie-zone');
+  if (app) app.classList.toggle('gift-mirror', now < (gift.mirrorUntil || 0));
+  if (zone) zone.classList.toggle('gift-dodge', now < (gift.dodgeUntil || 0));
+}
 const MYSTERY_PROMPTS = [
   'Je ne sais pas ce qu\'il y a dedans. Et je préfère ne pas savoir.',
   'Un cadeau enveloppé de secrets et de questions sans réponses.',
@@ -1667,13 +1725,13 @@ cookieBtn.addEventListener('focus', () => cookieBtn.blur());
 cookieBtn.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.repeat) return;
   e.preventDefault();
-  cookieBtn.click();
+  triggerCookieClick(cookieBtn);
 });
 cookieBtn.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') e.preventDefault();
 });
 cookieBtn.addEventListener('click', (e) => {
-  if (!allowClick()) return;
+  if (!allowClick(e)) return;
   const now = Date.now();
   combo++;
   lastClick = now;
@@ -1699,7 +1757,7 @@ addEventListener('keydown', (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
   e.preventDefault();
-  cookieBtn.click();
+  triggerCookieClick(cookieBtn);
 });
 
 /* =====================================================================
@@ -2602,19 +2660,25 @@ function gameSimon(api) {
 
 
 function gameFind(api) {
-  let time = 8, timer = 0, alive = true;
+  let time = 8, timer = 0, alive = true, raf = 0, lastAt = 0;
   const startAt = Date.now();
   const count = 40;
-  let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps.</p><div style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
+  let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps. Attention, ils bougent !</p><div class="find-arena" style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
   const goldenIdx = Math.floor(Math.random() * count);
+  const movers = [];
   for (let i=0; i<count; i++) {
     const isG = i === goldenIdx;
     const x = Math.random() * 90, y = Math.random() * 85;
-    html += '<button data-find="'+(isG?1:0)+'" style="position:absolute;left:'+x+'%;top:'+y+'%;font-size:24px;background:none;border:none;cursor:pointer;filter:'+(isG?'hue-rotate(40deg) brightness(1.5)':'none')+'">🍪</button>';
+    // Every cookie drifts in its own random direction and bounces off the walls.
+    const angle = Math.random() * Math.PI * 2, speed = 10 + Math.random() * 18;
+    movers.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+    const goldStyle = 'filter:sepia(1) saturate(7) hue-rotate(2deg) brightness(1.35) drop-shadow(0 0 4px #ffd700) drop-shadow(0 0 9px #ffb300);';
+    html += '<button data-find="'+(isG?1:0)+'" style="position:absolute;left:'+x+'%;top:'+y+'%;font-size:24px;background:none;border:none;cursor:pointer;padding:0;'+(isG?goldStyle:'')+'">🍪</button>';
   }
   html += '</div>';
   api.body.innerHTML = html;
-  api.body.querySelectorAll('[data-find]').forEach(b => b.addEventListener('click', () => {
+  const buttons = Array.from(api.body.querySelectorAll('[data-find]'));
+  buttons.forEach(b => b.addEventListener('click', () => {
     if (!alive) return;
     if (b.dataset.find === "1") {
       b.style.transform = 'scale(2)';
@@ -2624,9 +2688,23 @@ function gameFind(api) {
       b.style.opacity = '0.2';
     }
   }));
+  const step = (now) => {
+    if (!alive) return;
+    const dt = lastAt ? Math.min(0.05, (now - lastAt) / 1000) : 0;
+    lastAt = now;
+    movers.forEach((m, i) => {
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.x < 0) { m.x = 0; m.vx = Math.abs(m.vx); } else if (m.x > 90) { m.x = 90; m.vx = -Math.abs(m.vx); }
+      if (m.y < 0) { m.y = 0; m.vy = Math.abs(m.vy); } else if (m.y > 85) { m.y = 85; m.vy = -Math.abs(m.vy); }
+      buttons[i].style.left = m.x + '%';
+      buttons[i].style.top = m.y + '%';
+    });
+    raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
   timer = setInterval(() => { time--; api.info('Cherchez... ' + time + ' s'); if (time <= 0) api.end(0, 'Temps écoulé, introuvable'); }, 1000);
   api.info('Cherchez... 8 s');
-  return () => { alive = false; clearInterval(timer); };
+  return () => { alive = false; clearInterval(timer); cancelAnimationFrame(raf); };
 }
 
 function gameRush(api) {
@@ -3500,7 +3578,7 @@ function applyStyle() {
   if (chipsHi) chipsHi.setAttribute('fill', shade(ck.chip, lum(ck.chip) > 0.5 ? -0.25 : 0.3));
   drawSprite(ck);
   
-  $('#bakery').textContent = String(S.custom.name || '').trim() || DEFAULT_CUSTOM.name;
+  $('#bakery').textContent = String(S.custom.name || '').trim() || (activeWorld() && activeWorld().name) || DEFAULT_CUSTOM.name;
   
   // Toggle UI visibility in the style pane
   const c = S.custom;
@@ -3764,12 +3842,14 @@ function loop() {
   gain(cps() * dt);
   checkSpeedrun();
   S.playTime += dt;
-  if (now - lastClick > 700) combo = Math.max(0, combo - dt * 40);
+  const comboFrozen = S.mysteryGift && now < (S.mysteryGift.comboFreezeUntil || 0);
+  if (now - lastClick > 700 && !comboFrozen) combo = Math.max(0, combo - dt * 40);
   updateFrenzy(now);
   updateGachaButtons();
   updateGolden(now);
   updateEvents(now);
   updateMysteryGift(now);
+  updateMysteryVisuals(now);
   document.body.classList.toggle('frenzy', now < S.fz.until);
   document.body.classList.toggle('clickfrenzy', now < clickFrenzyUntil);
   drawRain(Math.min(dt, 0.1));
@@ -3864,7 +3944,7 @@ function initFlappy() {
   let lasers = []; 
   let currentTargetTime = 10;
   let currentTargetMult = 50;
-  let lastSpawnAt = 0, lastFrameAt = 0;
+  let lastSpawnAt = 0, lastFrameAt = 0, campTime = 0, lastCampShotAt = 0;
   
   if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
   let buyBtn = document.getElementById('flappyBuyBtn');
@@ -3936,6 +4016,8 @@ function initFlappy() {
     trail = [];
     lastSpawnAt = 0;
     lastFrameAt = 0;
+    campTime = 0;
+    lastCampShotAt = 0;
     startTime = Date.now();
     
     if (!S.hdyMode) S.games['flappy'].push(Date.now());
@@ -4013,6 +4095,18 @@ function initFlappy() {
       for (let i=0;i<5;i++) { ctx.fillStyle = i%2 ? '#ff5377' : '#72f4ff'; ctx.fillRect(x-5, horizon+20+i*45, 10, 5); }
     }
 
+    // Anti-camping: staying near an edge or a corner makes the arena aim at the player.
+    const edgeMargin = 95;
+    const nearEdgeX = mouseX < edgeMargin || mouseX > W - edgeMargin;
+    const nearEdgeY = mouseY < edgeMargin || mouseY > H - edgeMargin;
+    if (nearEdgeX || nearEdgeY) campTime += dt; else campTime = Math.max(0, campTime - dt * 2);
+    if (campTime > 1.1 && frameNow - lastCampShotAt > 900 - difficulty * 300) {
+      const aimX = nearEdgeX || !nearEdgeY;
+      lasers.push({ axis: aimX ? 'x' : 'y', pos: aimX ? mouseX : mouseY, state: 'warn', timer: .62 - difficulty*.15, width: 46 - difficulty*10, phase: 0, camp: true });
+      if (nearEdgeX && nearEdgeY) lasers.push({ axis: 'y', pos: mouseY, state: 'warn', timer: .62 - difficulty*.15, width: 46 - difficulty*10, phase: 0, camp: true });
+      lastCampShotAt = frameNow;
+    }
+
     const maxActiveLasers = elapsed >= 45 ? 15 : elapsed >= 30 ? 10 : elapsed >= 10 ? 6 : 5;
     const spawnInterval = elapsed >= 45 ? 190 : elapsed >= 30 ? 320 : elapsed >= 10 ? 420 : 520;
     if (lasers.length < maxActiveLasers && frameNow - lastSpawnAt > spawnInterval) {
@@ -4020,11 +4114,11 @@ function initFlappy() {
       if (drone) {
         const direction = Math.random() < .5 ? 1 : -1;
         const vertical = Math.random() < .5;
-        lasers.push({ axis: vertical ? 'droneV' : 'drone', x: vertical ? W * (.12 + Math.random()*.76) : direction > 0 ? -34 : W + 34, y: vertical ? direction > 0 ? -34 : H + 34 : H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis: vertical ? 'droneV' : 'drone', x: vertical ? W * (.04 + Math.random()*.92) : direction > 0 ? -34 : W + 34, y: vertical ? direction > 0 ? -34 : H + 34 : H * (.04 + Math.random()*.92), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
       } else {
         const axis = Math.random() > 0.5 ? 'x' : 'y';
         const span = axis === 'x' ? W : H;
-        lasers.push({ axis, pos: span * (0.14 + Math.random()*.72), state: 'warn', timer: .72 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis, pos: span * (0.03 + Math.random()*.94), state: 'warn', timer: .72 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
       }
       lastSpawnAt = frameNow;
     }

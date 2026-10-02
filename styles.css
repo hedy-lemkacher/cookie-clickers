@@ -2290,3 +2290,15 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .asc-chip-goal.next i b { background:linear-gradient(90deg,#e19a34,#ffe17b); box-shadow:0 0 10px #ffd16688; }
 .selector-comp-card.effect-conflict { border-color:#ff6b6b88; background:linear-gradient(160deg,#542a2a,#241c21); opacity:.72; }
 .selector-comp-card.effect-conflict:hover { border-color:#ff6b6b; background:linear-gradient(160deg,#542a2a,#241c21); }
+
+/* Cadeaux mystère : monde miroir et cookie fugueur */
+.app.gift-mirror { transform: scaleX(-1); transition: transform .4s ease; }
+.cookie-zone.gift-dodge #cookie { animation: giftDodge 2.6s ease-in-out infinite; }
+@keyframes giftDodge {
+  0%   { translate: 0 0; rotate: 0deg; }
+  20%  { translate: -38% -22%; rotate: -25deg; }
+  40%  { translate: 34% 18%; rotate: 30deg; }
+  60%  { translate: -26% 30%; rotate: -15deg; }
+  80%  { translate: 40% -26%; rotate: 20deg; }
+  100% { translate: 0 0; rotate: 0deg; }
+}
