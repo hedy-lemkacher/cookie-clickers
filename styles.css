@@ -1431,6 +1431,7 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   .active-duo-grid { grid-template-columns: 1fr; }
 }
 .duo-slot-box {
+  position: relative;
   background: #1e272e;
   border: 2px dashed #485460;
   border-radius: 12px;
@@ -1693,6 +1694,21 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   position: relative;
   pointer-events: auto !important;
 }
+#mystery-gift-action { width: min(100%, 340px); margin: 8px auto 0; z-index: 100; }
+.mystery-summon-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 11px; padding: 10px 16px; border: 1px solid rgba(191, 140, 255, .8); border-radius: 16px; color: #fff7ff; background: radial-gradient(ellipse at 20% 0%, #9661d2 0, transparent 55%), linear-gradient(135deg, #29144d, #512875 52%, #271447); box-shadow: 0 5px 18px rgba(111, 49, 168, .42), inset 0 1px rgba(255,255,255,.18); font: inherit; font-weight: 700; cursor: pointer; transition: transform .18s, box-shadow .18s, filter .18s; }
+.mystery-summon-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(143, 83, 210, .6), inset 0 1px rgba(255,255,255,.24); filter: brightness(1.12); }
+.mystery-summon-button:disabled { cursor: not-allowed; opacity: .68; filter: saturate(.7); }
+.mystery-summon-icon { font-size: 25px; filter: drop-shadow(0 0 7px #d9adff); }
+.mystery-summon-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.mystery-summon-copy strong { font-size: 13px; }
+.mystery-summon-copy small { color: #e0c8ff; font-size: 10px; font-weight: 500; }
+.companion-keep-shield { position: absolute; top: -8px; right: -8px; z-index: 3; display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid rgba(255, 225, 133, .55); border-radius: 50%; background: rgba(31, 26, 14, .78); color: #ffe28a; font-size: 14px; opacity: .64; box-shadow: 0 2px 8px #0008; transition: opacity .16s, transform .16s; cursor: help; }
+.active-comp-wrapper:hover .companion-keep-shield { opacity: .98; transform: scale(1.12); }
+.duo-slot-box:hover .companion-keep-shield { opacity: .98; transform: scale(1.12); }
+.keep-friend-status { padding: 10px 12px; border: 1px solid rgba(255, 226, 138, .24); border-radius: 10px; color: #e7d6a4; background: rgba(255, 226, 138, .06); }
+.companion-sort-control { display: inline-flex; align-items: center; gap: 7px; color: #dfe4ea; font-size: 12px; white-space: nowrap; }
+.companion-sort-control select { max-width: 210px; padding: 7px 9px; border: 1px solid rgba(255,255,255,.16); border-radius: 9px; color: #f1f2f6; background: #211b30; font: inherit; }
+.companion-sort-control option { color: #f1f2f6; background: #211b30; }
 .active-comp-wrapper {
   display: flex;
   flex-direction: column;

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=2.13">
+<link rel="stylesheet" href="styles.css?v=2.14">
 </head>
 <body>
 
@@ -85,6 +85,7 @@
           </g>
         </svg>
       </button>
+      <div id="mystery-gift-action" aria-live="polite" hidden></div>
       <div id="companions-container"></div>
     </div>
     <div class="mini-stats">
@@ -156,7 +157,7 @@
               <div class="flappy-difficulty-grid" id="flappyMenu">
                 <button id="flappyStartE" class="flappy-difficulty easy" type="button"><span>01 · CALME</span><b>10 secondes</b><small>Récompense ×50</small></button>
                 <button id="flappyStartM" class="flappy-difficulty medium" type="button"><span>02 · TENSION</span><b>30 secondes</b><small>Récompense ×150</small></button>
-                <button id="flappyStartH" class="flappy-difficulty hard" type="button"><span>03 · SURVIE</span><b>60 secondes</b><small>Récompense ×300</small></button>
+                <button id="flappyStartH" class="flappy-difficulty hard" type="button"><span>03 · SURVIE</span><b>60 secondes</b><small>Récompense ×400</small></button>
               </div>
               <div class="flappy-controls-hint">🖱️ Souris · 📱 Écran tactile</div>
             </div>
@@ -293,16 +294,20 @@
     <div class="pane" id="info">
         <div class="pane-head">
           <h2>Les nouveautés qui changent la partie</h2>
-          <p>De nouveaux pouvoirs mythiques, des récompenses mieux expliquées et une boutique qui réagit aux cadeaux mystères.</p>
+          <p>De nouveaux compagnons, des pouvoirs précieux et des améliorations pour vos ascensions et mini-jeux.</p>
         </div>
         <div class="section">
           <ul style="line-height: 1.65; font-size: 15px;">
             <li style="margin-bottom: 12px;"><b>🌌 LE CRÂNE D’AYOUB ET LE TROU NOIR ONT ÉCHANGÉ LEURS POUVOIRS</b> : Le Crâne d’Ayoub porte maintenant la puissance du Trou Noir Infini, et le Trou Noir hérite de l’effet du Crâne. La casquette d’Hedy rejoint aussi la rareté mythique.</li>
-            <li style="margin-bottom: 12px;"><b>🔮 DEUX POUVOIRS POUR LES CADEAUX MYSTÈRES</b> : Ayoub au tableau révèle le contenu du cadeau avant votre choix. Le Panipuri de Vikash permet d’en invoquer un immédiatement, avec une recharge de <b>10 minutes</b>. Le Conjurateur de cadeaux peut doubler n’importe quel gain selon sa chance.</li>
+            <li style="margin-bottom: 12px;"><b>🔮 DEUX POUVOIRS POUR LES CADEAUX MYSTÈRES</b> : Ayoub au tableau révèle le contenu avant votre choix. Équipez le Panipuri de Vikash pour faire apparaître un beau bouton d’activation sous le cookie principal : il invoque un cadeau, puis affiche sa recharge de <b>10 minutes</b>. Le Conjurateur de cadeaux peut doubler n’importe quel gain selon sa chance.</li>
             <li style="margin-bottom: 12px;"><b>⚽ CHANGEMENTS D’ÉQUIPE SANS ATTENDRE</b> : Adam sur FIFA supprime le délai de changement des compagnons tant qu’il est équipé. Retirez-le, et les délais habituels reprennent.</li>
             <li style="margin-bottom: 12px;"><b>🔒 ATTENTION À LA BOUTIQUE SCELLÉE</b> : Certains cadeaux mystérieux ferment temporairement les achats. La boutique passe en noir et blanc et un grand cadenas affiche le compte à rebours jusqu’à sa réouverture.</li>
             <li style="margin-bottom: 12px;"><b>🍀 LES BONUS DE CHANCE SONT CONCRETS</b> : Chanceux peut doubler la récompense d’un mini-jeu. Chasseur de Jackpot augmente vos chances de gagner à la roulette, jusqu’à <b>65 %</b> au total.</li>
-            <li style="margin-bottom: 12px;"><b>🏆 VOS COMPAGNONS PROGRESSENT JUSQU’AU NIVEAU 13</b> : Leurs pouvoirs ont reçu un léger renfort, plus généreux pour les épiques, légendaires et mythiques. Un tirage coûte maintenant <b>2 min 15 s de production automatique</b> (minimum 25 milliards de cookies). Les améliorations de rotation se débloquent à <b>5 Tourelles Max</b>, puis à <b>1 Boss LMK</b>.</li>
+            <li style="margin-bottom: 12px;"><b>🛡️ COPAIN POUR TOUJOURS</b> : Avec cette amélioration du Temple, le compagnon du <b>slot A</b> est conservé après l’ascension. Un bouclier discret apparaît sur le slot ; survolez-le pour vérifier quel compagnon part avec vous.</li>
+            <li style="margin-bottom: 12px;"><b>🍪 UNE NOUVELLE FOURNÉE DE COMPAGNONS</b> : Quatre cookies rejoignent les catégories Commun et Peu commun : café-crème, miel doré, cerise pétillante et mousse de cacao. Filtrez par rareté, puis triez la collection par rareté, nom ou niveau.</li>
+            <li style="margin-bottom: 12px;"><b>🌟 LES MYTHIQUES SONT PLUS EXCEPTIONNELS</b> : Leur chance d’apparition passe de <b>0,05 % à 0,04 %</b>. Les pouvoirs des compagnons ont été légèrement renforcés, surtout ceux des légendaires et mythiques.</li>
+            <li style="margin-bottom: 12px;"><b>🏆 VOS COMPAGNONS PROGRESSENT JUSQU’AU NIVEAU 13</b> : Un tirage coûte maintenant <b>2 min 30 s de production automatique</b> (minimum 25 milliards de cookies). Les améliorations de rotation se débloquent à <b>5 Tourelles Max</b>, puis à <b>1 Boss LMK</b>.</li>
+            <li style="margin-bottom: 12px;"><b>🕊️ ESQUIVE PLUS INTENSE, SANS INTERRUPTION</b> : Le mode difficile offre un multiplicateur de <b>×400</b> et aucun cadeau mystérieux ne peut apparaître pendant une partie.</li>
           </ul>
         </div>
       </div>
@@ -390,7 +395,7 @@
   </div>
 </div>
 
-<script src="app.js?v=2.13"></script>
+<script src="app.js?v=2.14"></script>
 
 </body>
 </html>
