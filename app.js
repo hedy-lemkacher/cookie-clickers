@@ -148,6 +148,7 @@ const COMPANIONS = [
   { id: 'c_flocon', name: 'Cookie flocon d\'avoine', rarity: 'peu_commun', powerType: 'building_mine', powerBase: 0.25, powerStep: 0.06, desc: 'Les mines produisent +{val}%', style: { c: ['#fae5b9', '#dfb875', '#a37c3f'], chip: '#5c431d', edge: '#8a652a', isOat: true } },
   { id: 'c_sel', name: 'Cookie caramel salé', rarity: 'peu_commun', powerType: 'combo_power', powerBase: 0.15, powerStep: 0.04, desc: 'Efficacité des combos +{val}%', style: { c: ['#f6c589', '#d48834', '#8a4b08'], chip: '#ffffff', edge: '#6d3600', isSalt: true } },
   { id: 'c_citron', name: 'Cookie citron givré', rarity: 'peu_commun', powerType: 'frenzy_dur', powerBase: 0.15, powerStep: 0.04, desc: 'Durée des frénésies +{val}%', style: { c: ['#ffffc2', '#fff176', '#fbc02d'], chip: '#f57f17', edge: '#f9a825', isLemon: true } },
+  { id: 'c_flan', name: 'Cookie flan joueur', rarity: 'peu_commun', powerType: 'minigame_god', powerBase: 0.05, powerStep: 0.015, desc: 'Récompenses des mini-jeux +{val}%', style: { c: ['#fff1a8', '#f6c453', '#bd7b24'], chip: '#8e5b23', edge: '#d99b2b', isFlan: true }, flavor: 'Une petite douceur après chaque partie.' },
   { id: 'c_noisette', name: 'Cookie praliné noisette', rarity: 'peu_commun', powerType: 'building_bank', powerBase: 0.25, powerStep: 0.06, desc: 'Les banques produisent +{val}%', style: { c: ['#d7a77e', '#ab6e3a', '#6f3a12'], chip: '#401800', edge: '#592906', isNut: true } },
   { id: 'c_cerise', name: 'Cookie cerise pétillante', rarity: 'peu_commun', powerType: 'arcade_speed', powerBase: 0.18, powerStep: 0.04, desc: 'Recharge des mini-jeux accélérée de {val}%', style: { c: ['#ffb8c6', '#e84367', '#8e263c'], chip: '#f8d6dd', edge: '#c63853', isCherry: true } },
   { id: 'c_mousse', name: 'Cookie mousse de cacao', rarity: 'peu_commun', powerType: 'mystery_freq', powerBase: 0.15, powerStep: 0.035, desc: 'Les cadeaux mystérieux arrivent {val}% plus vite', style: { c: ['#9b7653', '#654321', '#352012'], chip: '#e8cfaa', edge: '#744a2c', isMousse: true } },
@@ -162,6 +163,7 @@ const COMPANIONS = [
   { id: 'c_alchimiste', name: 'Cookie alchimiste', rarity: 'rare', powerType: 'building_wizard', powerBase: 0.40, powerStep: 0.10, desc: 'Les tours de sorcier produisent +{val}%', style: { c: ['#9b59b6', '#8e44ad', '#4a154b'], chip: '#2ecc71', edge: '#6c3483', isAlchemist: true } },
   { id: 'c_templier', name: 'Cookie templier sacré', rarity: 'rare', powerType: 'building_temple', powerBase: 0.40, powerStep: 0.10, desc: 'Les temples produisent +{val}%', style: { c: ['#f5f6fa', '#dcdde1', '#718093'], chip: '#e74c3c', edge: '#e74c3c', isTemplar: true } },
   { id: 'c_arcade', name: 'Cookie 8-bit rétro', rarity: 'rare', powerType: 'arcade_speed', powerBase: 0.25, powerStep: 0.06, desc: 'Vitesse de recharge des mini-jeux +{val}%', style: { c: ['#1e3799', '#0c2461', '#041033'], chip: '#e74c3c', edge: '#4a69bd', isArcade: true } },
+  { id: 'c_manette', name: 'Cookie manette pixel', rarity: 'rare', powerType: 'minigame_god', powerBase: 0.12, powerStep: 0.03, desc: 'Récompenses des mini-jeux +{val}%', style: { c: ['#74b9ff', '#0984e3', '#2d3436'], chip: '#ffeaa7', edge: '#0984e3', isGamepad: true }, flavor: 'Un bouton de plus, quelques cookies de plus.' },
   { id: 'c_glace', name: 'Cookie givré polaire', rarity: 'rare', powerType: 'frenzy_dur', powerBase: 0.25, powerStep: 0.06, desc: 'Durée des frénésies +{val}%', style: { c: ['#dff9fb', '#c7ecee', '#7ed6df'], chip: '#22a6b3', edge: '#22a6b3', isIce: true } },
   { id: 'c_eclaireur_mystere', name: 'Cookie éclaireur mystérieux', rarity: 'rare', powerType: 'mystery_freq', powerBase: 0.25, powerStep: 0.06, desc: 'Les cadeaux mystères arrivent jusqu\'à {val}% plus vite', style: { c: ['#ffeaa7', '#f39c12', '#8e44ad'], chip: '#2ecc71', edge: '#f1c40f', isMysteryScout: true } },
   { id: 'c_chanceux', name: 'Chanceux', rarity: 'rare', powerType: 'extra_reward_chance', powerBase: 0.05, powerStep: 0.02, desc: 'À chaque mini-jeu, {val}% de chances de doubler la récompense en cookies', style: { c: ['#fdcb6e', '#f39c12', '#e17055'], chip: '#d63031', edge: '#e17055', isLucky: true }, flavor: 'La chance, c\'est juste une question de timing.' },
@@ -182,11 +184,12 @@ const COMPANIONS = [
   { id: 'c_collectionneur', name: 'Collectionneur', rarity: 'epique', powerType: 'first_discovery_bonus', powerBase: 0.20, powerStep: 0.05, desc: 'Première victoire dans chaque mini-jeu : récompense +{val}%', style: { c: ['#fdcb6e', '#f39c12', '#e17055'], chip: '#d63031', edge: '#e17055', isCollector: true }, flavor: 'La première fois est toujours la plus précieuse.' },
 
   // Légendaires (Amis avec photo OU thématiques)
-  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte vingt-cinq fois le tirage ×10' },
+  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte vingt fois le tirage ×10' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.28, powerStep: 0.06, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés, quatre au niveau ×2 de Légende Absolue)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
+  { id: 'c_roulette_mystique', name: 'Le Croupier Fantôme', rarity: 'mythique', powerType: 'roulette_color_luck', powerBase: 0.03, powerStep: 0.01, desc: 'Rouge ou noir : +{val} points de chance de gagner (maximum 5)', style: { c: ['#2d3436', '#636e72', '#111111'], chip: '#e74c3c', edge: '#f1c40f', isGhostDealer: true }, flavor: 'Il souffle doucement sur la bille, jamais sur le zéro.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
   { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
   { id: 'c_empereur', name: 'Cookie Empereur Stellaire', rarity: 'legendaire', powerType: 'all_buildings', powerBase: 0.45, powerStep: 0.10, desc: 'Tous les bâtiments produisent +{val}%', style: { c: ['#2c3e50', '#8e44ad', '#f1c40f'], chip: '#f39c12', edge: '#f1c40f', isEmperor: true } },
@@ -235,7 +238,7 @@ function companionEffectGroups(id) {
   if (['casino_free', 'casino_discount', 'casino_cost_reduce'].includes(type)) groups.add('casino_cost');
   if (['luck_mult', 'extra_reward_chance'].includes(type)) groups.add('gain_luck');
   if (['minigame_god', 'first_discovery_bonus'].includes(type)) groups.add('minigame_reward');
-  if (['golden_reward', 'jackpot_luck'].includes(type)) groups.add('casino_reward');
+  if (['golden_reward', 'jackpot_luck', 'roulette_color_luck'].includes(type)) groups.add('casino_reward');
   return groups;
 }
 function companionEffectConflict(id, slotIndex) {
@@ -400,7 +403,7 @@ function freshState() {
     mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0, mysteryHistory: [],
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, totalBets: 0, totalWins: 0, bestWinStreak: 0, wheelSpins: 0, lastResult: null },
-    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0, slowClickUntil: 0, napUntil: 0, mirrorUntil: 0, dodgeUntil: 0, comboFreezeUntil: 0 },
+    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0, slowClickUntil: 0, napUntil: 0, mirrorUntil: 0, dodgeUntil: 0, comboFreezeUntil: 0, wheelProductionUntil: 0, wheelClickUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, lifetimePulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
@@ -1032,6 +1035,13 @@ function spinCasino() {
     color = casinoColor(number);
     won = true;
   }
+  const ghostDealerLuck = Math.min(0.05, compHas('roulette_color_luck'));
+  if (!won && casinoSelectedBet.type === 'color' && ghostDealerLuck > 0 && Math.random() < ghostDealerLuck) {
+    const winningNumbers = casinoSelectedBet.value === 'rouge' ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9];
+    number = winningNumbers[Math.floor(Math.random() * winningNumbers.length)];
+    color = casinoColor(number);
+    won = true;
+  }
   const payout = won ? stake * 2 : 0;
   wheel.style.setProperty('--roulette-turn', (1440 - number * (360 / 10)) + 'deg');
   wheel.classList.remove('roulette-spinning');
@@ -1217,7 +1227,7 @@ function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * 
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() {
   const gift = S.mysteryGift, now = Date.now();
-  const productionFactor = gift && now < (gift.napUntil || 0) ? 0.1 : gift && now < gift.productionUntil ? 0.7 : 1;
+  const productionFactor = (gift && now < (gift.napUntil || 0) ? 0.1 : gift && now < gift.productionUntil ? 0.7 : 1) * (gift && now < (gift.wheelProductionUntil || 0) ? 1.2 : 1);
   return baseCps() * frenzyMult() * productionFactor;
 }
 
@@ -1276,7 +1286,7 @@ function clickBase() {
 function clickPower() {
   if (S.booMode) return 999e21;
   const gift = S.mysteryGift, now = Date.now();
-  const mysteryClick = (gift && now < gift.clickUntil ? 150 : 1) * (gift && now < (gift.slowClickUntil || 0) ? 0.5 : 1);
+  const mysteryClick = (gift && now < gift.clickUntil ? 150 : 1) * (gift && now < (gift.slowClickUntil || 0) ? 0.5 : 1) * (gift && now < (gift.wheelClickUntil || 0) ? 3 : 1);
   return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1) * mysteryClick;
 }
 let lastRawClick = 0, fastClickWarnings = 0;
@@ -1737,6 +1747,38 @@ function activateCompanionMysteryGift() {
 function updateMysteryGift(now) {
   if (window.__adminMode || S.hdyMode || window.__flappyPlaying || !S.mysteryGift || S.mysteryGift.pending) return;
   if (now >= S.mysteryGift.next) showMysteryGift();
+}
+const MYSTERY_TIMED_EFFECTS = [
+  { key: 'clickUntil', title: 'Pouvoir des clics', icon: '👆', duration: 20000 },
+  { key: 'productionUntil', title: 'Four ralenti', icon: '🕯️', duration: 90000 },
+  { key: 'cooldownUntil', title: 'Chrono accéléré', icon: '⚡', duration: 180000 },
+  { key: 'buildingLockUntil', title: 'Boutique scellée', icon: '🔒', duration: 2700000 },
+  { key: 'gamesLockUntil', title: 'Arcade fermée', icon: '🎮', duration: 1800000 },
+  { key: 'slowClickUntil', title: 'Doigts en guimauve', icon: '🐌', duration: 45000 },
+  { key: 'napUntil', title: 'Sieste des boulangers', icon: '😴', duration: 30000 },
+  { key: 'mirrorUntil', title: 'Monde miroir', icon: '🪞', duration: 25000 },
+  { key: 'dodgeUntil', title: 'Cookie fugueur', icon: '🏃', duration: 30000 },
+  { key: 'comboFreezeUntil', title: 'Combo bouillant', icon: '🔥', duration: 30000 },
+  { key: 'wheelProductionUntil', title: 'Bénédiction sucrée', icon: '🍀', duration: 120000 },
+  { key: 'wheelClickUntil', title: 'Doigts de fée', icon: '✨', duration: 30000 }
+];
+function updateMysteryEffectBars(now = Date.now()) {
+  const gift = S.mysteryGift;
+  if (!gift) return;
+  let bar = document.getElementById('mysteryEffectTimers');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'mysteryEffectTimers';
+    bar.className = 'mystery-effect-timers';
+    document.body.appendChild(bar);
+  }
+  const active = MYSTERY_TIMED_EFFECTS.filter(effect => Number(gift[effect.key]) > now);
+  bar.innerHTML = active.map(effect => {
+    const left = gift[effect.key] - now;
+    const pct = Math.max(0, Math.min(100, left / effect.duration * 100));
+    return `<div class="mystery-timer-row"><div class="mystery-timer-label"><span>${effect.icon} ${effect.title}</span><b>${fmtTime(left / 1000)}</b></div><div class="mystery-timer-track"><i style="width:${pct.toFixed(2)}%"></i></div></div>`;
+  }).join('');
+  bar.classList.toggle('is-visible', active.length > 0);
 }
 function mysteryCooldownFactor() {
   return !S.hdyMode && S.mysteryGift && Date.now() < S.mysteryGift.cooldownUntil ? 0.5 : 1;
@@ -2818,9 +2860,15 @@ function gameCasino(api) {
     spinning = true;
     spin.disabled = true;
     S.cookies -= stake;
-    const number = Math.floor(Math.random() * 11);
-    const color = number === 0 ? 'green' : number % 2 === 0 ? 'red' : 'black';
-    const won = betType === 'number' ? Number(betValue) === number : betValue === color;
+    let number = Math.floor(Math.random() * 11);
+    let color = number === 0 ? 'green' : number % 2 === 0 ? 'red' : 'black';
+    let won = betType === 'number' ? Number(betValue) === number : betValue === color;
+    if (!won && betType === 'color' && compHas('roulette_color_luck') > 0 && Math.random() < Math.min(0.05, compHas('roulette_color_luck'))) {
+      const winningNumbers = betValue === 'red' ? [0, 2, 4, 6, 8, 10] : [1, 3, 5, 7, 9];
+      number = winningNumbers[Math.floor(Math.random() * winningNumbers.length)];
+      color = number === 0 ? 'green' : number % 2 === 0 ? 'red' : 'black';
+      won = true;
+    }
     const payout = won ? stake * (betType === 'number' ? 10 : 2) : 0;
     setTimeout(() => {
       if (payout) gain(payout);
@@ -3115,9 +3163,9 @@ function gameMemory(api) {
 /* --- 6. Roue de la fortune --- */
 function gameWheel(api) {
   const max = gameMax();
-  const SEG = [{ f: 0.2 }, { f: 0.6 }, { death: true }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { life: true }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }];
-  const COLORS = ['#c2702e', '#8a4c1c', '#000000', '#d9954a', '#ffb347', '#a5602a', '#ff00ff', '#e0a458', '#ffd166', '#7a3e1d'];
-  api.body.innerHTML = '<p class="game-hint">Tentez votre chance ! Un seul tour de roue, un lot garanti.</p>' +
+  const SEG = [{ f: 0.2 }, { f: 0.6 }, { death: true }, { f: 0.3 }, { f: 0.15, fz: true }, { f: 1 }, { life: true }, { f: 0.4 }, { f: 1.5, jackpot: true }, { f: 0.5 }, { f: 0.4, sugar: true }, { f: 0.25, fingers: true }];
+  const COLORS = ['#c2702e', '#8a4c1c', '#000000', '#d9954a', '#ffb347', '#a5602a', '#ff00ff', '#e0a458', '#ffd166', '#7a3e1d', '#5cae72', '#6c83df'];
+  api.body.innerHTML = '<p class="game-hint">Tentez votre chance ! Cookies, frénésie ou bonus temporaires : un lot garanti.</p>' +
     '<div class="wheel-wrap"><div class="wheel-pointer">▼</div><canvas width="320" height="320"></canvas></div>' +
     '<div class="center"><button class="big-btn w-btn">Tourner la roue !</button></div>';
   const cv = api.body.querySelector('canvas'), g = cv.getContext('2d');
@@ -3152,7 +3200,7 @@ function gameWheel(api) {
       g.fillStyle = '#1b0f09';
       g.font = 'bold 14px Fredoka, sans-serif';
       const s = SEG[i];
-      g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.fz ? '⚡ Frénésie' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * s.f), 140, 0);
+      g.fillText(s.death ? '☠️' : s.life ? '🌈 x2' : s.fz ? '⚡ Frénésie' : s.sugar ? '🍀 +20% 2 min' : s.fingers ? '✨ Clic ×3 30s' : (s.jackpot ? '💰 ' : '') + fmtCompact(max * s.f), 140, 0);
       g.restore();
     }
     g.beginPath();
@@ -3179,6 +3227,8 @@ function gameWheel(api) {
       draw(final * (1 - Math.pow(1 - k, 4)));
       if (k < 1) { raf = requestAnimationFrame(frame); return; }
       if (s.fz && Date.now() >= S.fz.until) startFrenzy();
+      if (s.sugar) { S.mysteryGift.wheelProductionUntil = Date.now() + 120000; recalc(); }
+      if (s.fingers) { S.mysteryGift.wheelClickUntil = Date.now() + 30000; }
       if (s.death) {
         const lastThree = BUILDINGS.filter(b => S.owned[b.id] > 0).slice(-3);
         for (const b of lastThree) {
@@ -3194,7 +3244,7 @@ function gameWheel(api) {
         }
         recalc();
       }
-      setTimeout(() => api.end(s.f || 0, s.death ? '☠️ LA MORT QUI TUE (-50% des 3 derniers bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
+      setTimeout(() => api.end(s.f || 0, s.death ? '☠️ LA MORT QUI TUE (-50% des 3 derniers bâtiments)' : s.life ? '🌈 LA VIE QUI VIE (Derniers x2)' : s.fz ? 'Frénésie déclenchée, et un petit bonus !' : s.sugar ? '🍀 Bénédiction sucrée : production +20% pendant 2 minutes.' : s.fingers ? '✨ Doigts de fée : clics ×3 pendant 30 secondes.' : s.jackpot ? '💰 JACKPOT !' : 'La roue a parlé.'), 600);
     }
     raf = requestAnimationFrame(frame);
   });
@@ -3883,6 +3933,7 @@ function loop() {
   updateGolden(now);
   updateEvents(now);
   updateMysteryGift(now);
+  updateMysteryEffectBars(now);
   updateMysteryVisuals(now);
   document.body.classList.toggle('frenzy', now < S.fz.until);
   document.body.classList.toggle('clickfrenzy', now < clickFrenzyUntil);
@@ -3970,6 +4021,15 @@ function initFlappy() {
   const disabledMsg = document.getElementById('flappyDisabledMsg');
   const flappyMenu = document.getElementById('flappyMenu');
   const flappyProgress = document.getElementById('flappyProgress');
+  const showFlappyResult = (won, remaining, detail) => {
+    document.getElementById('flappyResultPopup')?.remove();
+    const popup = document.createElement('div');
+    popup.id = 'flappyResultPopup';
+    popup.className = 'flappy-result-backdrop';
+    popup.innerHTML = `<section class="flappy-result-card ${won ? 'won' : 'lost'}"><div class="flappy-result-icon">${won ? '🏆' : '💥'}</div><h2>${won ? 'Victoire !' : 'Perdu !'}</h2><p>${detail}</p>${won ? '<p class="flappy-result-reward">⌨️ Pouvoir de la touche Entrée débloqué</p>' : `<p class="flappy-result-time">Temps restant : <b>${remaining.toFixed(1)} s</b></p>`}<button type="button" class="big-btn" data-flappy-result-close>Continuer</button></section>`;
+    popup.addEventListener('click', (event) => { if (event.target === popup || event.target.closest('[data-flappy-result-close]')) popup.remove(); });
+    document.body.appendChild(popup);
+  };
   
   let raf;
   let playing = false, startTime = 0;
@@ -4257,11 +4317,13 @@ function initFlappy() {
   function die(msg) {
     playing = false;
     window.__flappyPlaying = false;
-    if (saveGameRecord('flappy', Math.min(currentTargetTime, (Date.now()-startTime)/1000), 'Temps survécu', 'max')) save();
+    const survived = Math.min(currentTargetTime, (Date.now()-startTime)/1000);
+    if (saveGameRecord('flappy', survived, 'Temps survécu', 'max')) save();
     overlay.style.display = 'flex';
     updateBtn();
     status.textContent = msg;
     status.classList.add('is-danger');
+    showFlappyResult(false, Math.max(0, currentTargetTime - survived), msg);
     updateDots();
   }
   
@@ -4271,6 +4333,7 @@ function initFlappy() {
     overlay.style.display = 'flex';
     status.textContent = 'VICTOIRE ! POUVOIR DE LA TOUCHE ENTRÉE DÉBLOQUÉ !';
     status.classList.remove('is-danger');
+    showFlappyResult(true, 0, `Vous avez esquivé tous les faisceaux pendant ${currentTargetTime} secondes !`);
     const now = Date.now();
     saveGameRecord('flappy', currentTargetTime, 'Temps survécu', 'max');
     const maxAttempts = 3 + templeExtraAttempts();
@@ -4316,6 +4379,18 @@ const TEMPLE_UPGRADES = [
   { id: 'gold_luck', cat: 'economy', name: '🍀 Chance Dorée', cost: 250, desc: 'La pluie de cookies arrive deux fois plus vite', legendDesc: 'Pluie de cookies quatre fois plus rapide', apply: () => {} },
   { id: 'legend', cat: 'legend', name: '👑 Légende Absolue', cost: 200, desc: 'Débloque le niveau ×2 de chaque amélioration du Temple. Chaque amélioration passe ensuite au niveau ×2 pour 10 pépites.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); updateTempleAscensionInfo(); } },
 ];
+ACHIEVEMENTS.push(...TEMPLE_UPGRADES.map((upgrade) => ({
+  icon: '🛕',
+  name: 'Temple : ' + upgrade.name.replace(/^\S+\s*/, ''),
+  desc: 'Acheter l’amélioration « ' + upgrade.name.replace(/^\S+\s*/, '') + ' » du Temple des Légendes.',
+  test: () => Boolean(S.temple && S.temple.includes(upgrade.id))
+})));
+ACHIEVEMENTS.push({
+  icon: '👑',
+  name: 'Toutes les légendes',
+  desc: 'Acheter toutes les améliorations du Temple des Légendes.',
+  test: () => TEMPLE_UPGRADES.every((upgrade) => S.temple && S.temple.includes(upgrade.id))
+});
 function templeUpgradeName(u) { return u.legendName && templeX2(u.id) ? u.legendName : u.name; }
 
 // Temple bonuses applied in production calc
@@ -5069,6 +5144,7 @@ function companionEffectText(c, val) {
   if (type === 'extra_reward_chance') return `À chaque mini-jeu : ${Math.min(50, numericValue)}% de chance de doubler les cookies`;
   if (type === 'first_discovery_bonus') return `Première victoire de chaque mini-jeu : +${numericValue}% de cookies`;
   if (type === 'jackpot_luck') return `Roulette : +${Math.min(15, numericValue)} points de chance de gagner`;
+  if (type === 'roulette_color_luck') return `Rouge ou noir : +${Math.min(5, numericValue)} points de chance de gagner`;
   if (type === 'casino_discount') return `Recharges du casino : coût réduit de ${Math.round(numericValue * 0.5)}%`;
   if (type === 'casino_cost_reduce') return `Recharges du casino : coût réduit de ${(numericValue * 0.15).toFixed(1)}%`;
   if (type === 'casino_free') return `${templeCasinoFreeBets()} mises bonus toutes les 15 minutes`;
@@ -5416,7 +5492,7 @@ function gachaCost(count = 1) {
   return Math.ceil(costPerPull * pulls * discount * (1 - drawDiscount));
 }
 function gachaLegendaryCost() {
-  return gachaCost(10) * 25;
+  return gachaCost(10) * 20;
 }
 function updateGachaButtons() {
   if (isGachaSpinning) return;
@@ -5801,12 +5877,12 @@ function companionEffectCategories(companion) {
   if (['arcade_speed', 'chrono_master', 'minigame_god', 'extra_reward_chance', 'first_discovery_bonus'].includes(type)) groups.push('minigames');
   if (type.startsWith('mystery_') || ['mystery_activate', 'mystery_vision'].includes(type)) groups.push('mystery');
   if (type.startsWith('golden_')) groups.push('golden');
-  if (type.startsWith('casino_') || type === 'jackpot_luck') groups.push('casino');
+  if (type.startsWith('casino_') || ['jackpot_luck', 'roulette_color_luck'].includes(type)) groups.push('casino');
   if (type === 'events') groups.push('events');
   if (['discount', 'building_discount'].includes(type)) groups.push('economy');
   if (type === 'gacha_discount') groups.push('economy');
   if (type === 'gacha_legendary') groups.push('gacha');
-  if (['luck_mult', 'extra_reward_chance', 'first_discovery_bonus', 'jackpot_luck'].includes(type)) groups.push('luck');
+  if (['luck_mult', 'extra_reward_chance', 'first_discovery_bonus', 'jackpot_luck', 'roulette_color_luck'].includes(type)) groups.push('luck');
   if (type === 'companion_no_cooldown') groups.push('companions');
   return groups.length ? groups : ['other'];
 }
@@ -5846,7 +5922,10 @@ function renderGachaPane() {
     if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'name-desc') return b.name.localeCompare(a.name, 'fr');
+    if (currentCompanionSort === 'owned-first') return Number(S.compData.unlocked.includes(b.id)) - Number(S.compData.unlocked.includes(a.id)) || rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    if (currentCompanionSort === 'level-asc') return (S.compData.levels[a.id] || 1) - (S.compData.levels[b.id] || 1) || rarityOrder[a.rarity] - rarityOrder[b.rarity];
     return rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
   };
   sortedCompanions.sort(compareCompanions);
@@ -6001,7 +6080,10 @@ function renderGachaPane() {
               <option value="rarity-desc" ${currentCompanionSort === 'rarity-desc' ? 'selected' : ''}>Rareté · mythique → commun</option>
               <option value="effect-asc" ${currentCompanionSort === 'effect-asc' ? 'selected' : ''}>Regrouper par effet</option>
               <option value="name-asc" ${currentCompanionSort === 'name-asc' ? 'selected' : ''}>Nom · A → Z</option>
+              <option value="name-desc" ${currentCompanionSort === 'name-desc' ? 'selected' : ''}>Nom · Z → A</option>
+              <option value="owned-first" ${currentCompanionSort === 'owned-first' ? 'selected' : ''}>Débloqués d’abord</option>
               <option value="level-desc" ${currentCompanionSort === 'level-desc' ? 'selected' : ''}>Niveau · plus élevé d’abord</option>
+              <option value="level-asc" ${currentCompanionSort === 'level-asc' ? 'selected' : ''}>Niveau · plus bas d’abord</option>
             </select><span class="companion-select-chevron" aria-hidden="true">⌄</span>
           </span></label>
         </div>
@@ -6181,7 +6263,7 @@ window.filterCompanionEffect = function(effect) {
   refreshCompanionCollectionAfterFilter();
 };
 window.sortGachaCompanions = function(sort) {
-  const validSorts = ['rarity-asc', 'rarity-desc', 'effect-asc', 'name-asc', 'level-desc'];
+  const validSorts = ['rarity-asc', 'rarity-desc', 'effect-asc', 'name-asc', 'name-desc', 'owned-first', 'level-desc', 'level-asc'];
   currentCompanionSort = validSorts.includes(sort) ? sort : 'rarity-asc';
   refreshCompanionCollectionAfterFilter();
 };
@@ -6255,11 +6337,12 @@ window.openCompanionDetail = function(cid) {
   else if (type === 'frenzy_dur' || type === 'golden_vision') explanation = `Chaque frénésie dure ${val}% plus longtemps.`;
   else if (type === 'events') explanation = `Les gains des événements aléatoires de bâtiments augmentent de ${val}%.`;
   else if (type === 'double_edged') explanation = `La production augmente de ${val}%, mais vos clics perdent ${S.temple && S.temple.includes('companions_boost') ? 75 : 50}% de puissance.`;
-  else if (type === 'gacha_legendary') explanation = `Un tirage unique coûte vingt-cinq fois le prix du tirage ×10 et garantit un compagnon légendaire ou mythique.`;
+  else if (type === 'gacha_legendary') explanation = `Un tirage unique coûte vingt fois le prix du tirage ×10 et garantit un compagnon légendaire ou mythique.`;
   else if (type === 'luck_mult') explanation = `Chaque gain de cookies a ${val}% de chance d’être doublé. Cela peut s’appliquer aux récompenses de jeux, cadeaux et événements.`;
   else if (type === 'extra_reward_chance') explanation = `À chaque mini-jeu, ${Math.min(50, val)}% de chance que la récompense en cookies soit doublée.`;
   else if (type === 'first_discovery_bonus') explanation = `La première victoire de chacun des mini-jeux dans cette partie rapporte ${val}% de cookies supplémentaires.`;
   else if (type === 'jackpot_luck') explanation = `Augmente de ${Math.min(15, val)} points de pourcentage vos chances de gagner à la roulette (maximum : 65%).`;
+  else if (type === 'roulette_color_luck') explanation = `Ajoute ${Math.min(5, val)} points de chance sur les paris rouge ou noir. Ne s’applique pas aux numéros.`;
   else if (type === 'casino_discount') explanation = `Le coût d’une recharge de tentative au casino baisse de ${Math.round(val * 0.5)}%.`;
   else if (type === 'casino_cost_reduce') explanation = `Le coût d’une recharge de tentative au casino baisse de ${(val * 0.15).toFixed(1)}%.`;
   else if (type === 'casino_free') explanation = `Ajoute ${templeCasinoFreeBets()} mises à votre série de 15 minutes. Ces mises restent payantes.`;
