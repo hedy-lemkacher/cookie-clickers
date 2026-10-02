@@ -1562,6 +1562,28 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 .companion-card:hover {
   transform: translateY(-2px);
 }
+.companion-favorite {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 209, 102, .4);
+  border-radius: 50%;
+  color: #dfe6e9;
+  background: rgba(0, 0, 0, .55);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+.companion-favorite:hover, .companion-favorite.active {
+  color: #ffd166;
+  border-color: #ffd166;
+  background: rgba(91, 60, 12, .8);
+  box-shadow: 0 0 12px rgba(255, 209, 102, .25);
+}
 .companion-card.locked {
   opacity: 0.45;
   filter: grayscale(0.85);

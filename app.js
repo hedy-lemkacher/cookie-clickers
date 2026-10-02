@@ -183,7 +183,7 @@ const COMPANIONS = [
 
   // Légendaires (Amis avec photo OU thématiques)
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
-  { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'legendaire', powerType: 'golden_vision', powerBase: 0.50, powerStep: 0.10, desc: 'Durée de toutes les frénésies +{val}%' },
+  { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
@@ -383,7 +383,7 @@ function freshState() {
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, lastResult: null },
     mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
-    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [] },
+    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
@@ -405,6 +405,16 @@ function worldRecord(name, mode, goal, state) {
   return { id: newWorldId(), name, mode, goal: mode === 'speedrun' ? goal : null, speedrun: { startedAt: 0, durationMs: 0 }, createdAt: Date.now(), state: state || freshState() };
 }
 function activeWorld() { return worlds.find((world) => world.id === activeWorldId) || null; }
+
+function retireAbdelGlasses(state) {
+  if (!state || !state.compData) return;
+  const data = state.compData;
+  data.unlocked = (Array.isArray(data.unlocked) ? data.unlocked : []).filter((id) => id !== 'c_lunettes');
+  data.equipped = (Array.isArray(data.equipped) ? data.equipped : []).filter((id) => id !== 'c_lunettes');
+  data.favorites = (Array.isArray(data.favorites) ? data.favorites : []).filter((id) => id !== 'c_lunettes');
+  if (data.levels) delete data.levels.c_lunettes;
+  if (data.shards) delete data.shards.c_lunettes;
+}
 
 function load() {
   for (const key of LEGACY_SAVE_KEYS) {
@@ -450,6 +460,8 @@ function load() {
       S.casino = Object.assign(freshState().casino, S.casino);
       S.mysteryGift = Object.assign(freshState().mysteryGift, S.mysteryGift);
       S.compData = Object.assign(freshState().compData, S.compData);
+      retireAbdelGlasses(S);
+      worlds.forEach((world) => retireAbdelGlasses(world.state));
       S.compData.slotCooldowns = Object.assign({}, S.compData.slotCooldowns);
       Object.keys(S.compData.levels || {}).forEach((id) => { S.compData.levels[id] = Math.max(1, Math.min(13, Number(S.compData.levels[id]) || 1)); });
       S.compData.slotCooldownBypassTouched = Array.isArray(S.compData.slotCooldownBypassTouched) ? S.compData.slotCooldownBypassTouched : [];
@@ -3234,6 +3246,7 @@ function renderAchPane() {
 function performAscension(g, keptCompId = null) {
   if (activeEvent) endEvent();
   const keep = {};
+  const companionFavorites = Array.isArray(S.compData && S.compData.favorites) ? S.compData.favorites.slice() : [];
   
   if (keptCompId && S.compData && S.compData.unlocked && S.compData.unlocked.includes(keptCompId)) {
     const lvl = (S.compData.levels && S.compData.levels[keptCompId]) || 1;
@@ -3255,6 +3268,7 @@ function performAscension(g, keptCompId = null) {
   keep.ascensions = S.ascensions + 1;
   keep.chips = (keep.chips || 0) + g;
   S = Object.assign(freshState(), keep);
+  S.compData.favorites = companionFavorites;
   S.milestone = 0;
   recalc();
   refreshAll();
@@ -5528,12 +5542,14 @@ window.upgradeCompanion = upgradeCompanion;
 
 let currentRarityFilter = 'all';
 let currentCompanionSort = 'rarity-asc';
+let currentCompanionView = 'all';
 
 function renderGachaPane() {
   const pane = document.getElementById('gachaPane');
   if (!pane) return;
   
   if (!S.compData) S.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+  if (!Array.isArray(S.compData.favorites)) S.compData.favorites = [];
   
   if (S.ascensions === 0 && !window.__adminMode) {
     pane.innerHTML = `
@@ -5671,6 +5687,8 @@ function renderGachaPane() {
     <div class="collection-section-header">
       <h3 style="margin:0;">Collection de Compagnons (${unlockedCount} / ${COMPANIONS.length})</h3>
       <div class="rarity-filter-bar">
+        <button class="rarity-filter-btn ${currentCompanionView === 'all' ? 'active' : ''}" onclick="showCompanionView('all')">📚 Tous</button>
+        <button class="rarity-filter-btn ${currentCompanionView === 'favorites' ? 'active' : ''}" onclick="showCompanionView('favorites')">⭐ Favoris (${S.compData.favorites.filter(id => S.compData.unlocked.includes(id)).length})</button>
         <button class="rarity-filter-btn ${currentRarityFilter === 'all' ? 'active' : ''}" onclick="filterGachaRarity('all')">Tous</button>
         <button class="rarity-filter-btn ${currentRarityFilter === 'commun' ? 'active' : ''}" onclick="filterGachaRarity('commun')">Communs</button>
         <button class="rarity-filter-btn ${currentRarityFilter === 'peu_commun' ? 'active' : ''}" onclick="filterGachaRarity('peu_commun')">Peu communs</button>
@@ -5692,7 +5710,10 @@ function renderGachaPane() {
   `;
   
   const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
-  const filteredCompanions = COMPANIONS.filter(c => currentRarityFilter === 'all' || c.rarity === currentRarityFilter);
+  const filteredCompanions = COMPANIONS.filter(c =>
+    (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
+    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter)
+  );
   filteredCompanions.sort((a, b) => {
     if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
@@ -5709,6 +5730,7 @@ function renderGachaPane() {
     const canUpgrade = !atMaxLevel && shards >= upgradeCost;
     
     if (unl) {
+      const isFavorite = S.compData.favorites.includes(c.id);
       let cardActionsHtml = '';
       if (maxSlots === 2) {
         const isEq0 = S.compData.equipped[0] === c.id;
@@ -5740,6 +5762,7 @@ function renderGachaPane() {
 
       html += `
         <div class="companion-card rarity-${c.rarity}">
+          <button class="companion-favorite ${isFavorite ? 'active' : ''}" data-favorite-id="${c.id}" type="button" aria-label="${isFavorite ? 'Retirer des' : 'Ajouter aux'} favoris" title="${isFavorite ? 'Retirer des' : 'Ajouter aux'} favoris">${isFavorite ? '★' : '☆'}</button>
           <div class="comp-card-top" data-comp-detail="${c.id}" style="cursor:pointer;" title="Cliquez pour les détails">
             <div class="comp-card-visual">
               ${renderCompanionVisual(c, 44)}
@@ -5800,6 +5823,9 @@ function renderGachaPane() {
     }
   }
   
+  if (currentCompanionView === 'favorites' && filteredCompanions.length === 0) {
+    html += '<div class="empty" style="grid-column:1/-1;padding:30px;">Aucun favori pour le moment. Ajoutez-en avec l’étoile affichée sur une carte de compagnon.</div>';
+  }
   html += `</div>`;
   pane.innerHTML = html;
   
@@ -5807,7 +5833,25 @@ function renderGachaPane() {
   if (btn1) btn1.addEventListener('click', () => spinGacha(1));
   const btn10 = document.getElementById('btnSpinGacha10');
   if (btn10) btn10.addEventListener('click', () => spinGacha(10));
+  pane.querySelectorAll('[data-favorite-id]').forEach((button) => button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCompanionFavorite(button.dataset.favoriteId);
+  }));
 }
+
+window.showCompanionView = function(view) {
+  currentCompanionView = view === 'favorites' ? 'favorites' : 'all';
+  renderGachaPane();
+};
+window.toggleCompanionFavorite = function(id) {
+  if (!S.compData || !Array.isArray(S.compData.unlocked) || !S.compData.unlocked.includes(id)) return;
+  if (!Array.isArray(S.compData.favorites)) S.compData.favorites = [];
+  S.compData.favorites = S.compData.favorites.includes(id)
+    ? S.compData.favorites.filter((favoriteId) => favoriteId !== id)
+    : [...S.compData.favorites, id];
+  save();
+  renderGachaPane();
+};
 
 window.filterGachaRarity = function(r) {
   currentRarityFilter = r;
