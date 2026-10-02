@@ -3,6 +3,7 @@
 const $ = (sel) => document.querySelector(sel);
 const rand = (a, b) => a + Math.random() * (b - a);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+let mysterySummonCountdownTimer = null;
 
 /* =====================================================================
    DONNÉES DU JEU
@@ -4995,7 +4996,6 @@ function renderCompanions() {
   if (typeof updateTempleAscensionInfo === 'function') updateTempleAscensionInfo();
 }
 
-let mysterySummonCountdownTimer = null;
 function renderMysteryGiftAction() {
   const action = document.getElementById('mystery-gift-action');
   if (!action) return;
