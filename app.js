@@ -5726,32 +5726,44 @@ function renderGachaPane() {
   const unlockedCount = S.compData.unlocked.length;
   html += `
     <div class="collection-section-header">
-      <h3 style="margin:0;">Collection de Compagnons (${unlockedCount} / ${COMPANIONS.length})</h3>
-      <div class="rarity-filter-bar">
-        <button class="rarity-filter-btn ${currentCompanionView === 'all' ? 'active' : ''}" onclick="showCompanionView('all')">📚 Tous</button>
-        <button class="rarity-filter-btn ${currentCompanionView === 'favorites' ? 'active' : ''}" onclick="showCompanionView('favorites')">⭐ Favoris (${S.compData.favorites.filter(id => S.compData.unlocked.includes(id)).length})</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'all' ? 'active' : ''}" onclick="filterGachaRarity('all')">Tous</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'commun' ? 'active' : ''}" onclick="filterGachaRarity('commun')">Communs</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'peu_commun' ? 'active' : ''}" onclick="filterGachaRarity('peu_commun')">Peu communs</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'rare' ? 'active' : ''}" onclick="filterGachaRarity('rare')">Rares</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'epique' ? 'active' : ''}" onclick="filterGachaRarity('epique')">Épiques</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'legendaire' ? 'active' : ''}" onclick="filterGachaRarity('legendaire')">Légendaires</button>
-        <button class="rarity-filter-btn ${currentRarityFilter === 'mythique' ? 'active' : ''}" onclick="filterGachaRarity('mythique')">Mythiques</button>
-        <label class="companion-sort-control">Effet
-          <select id="companionEffectSelect" onchange="filterCompanionEffect(this.value)">
-            <option value="all" ${currentCompanionEffectFilter === 'all' ? 'selected' : ''}>Tous les effets</option>
-            ${COMPANION_EFFECT_CATEGORIES.map((category) => `<option value="${category.id}" ${currentCompanionEffectFilter === category.id ? 'selected' : ''}>${category.label}</option>`).join('')}
-          </select>
-        </label>
-        <label class="companion-sort-control">Trier
-          <select id="companionSortSelect" onchange="sortGachaCompanions(this.value)">
-            <option value="rarity-asc" ${currentCompanionSort === 'rarity-asc' ? 'selected' : ''}>Rareté : commun → mythique</option>
-            <option value="rarity-desc" ${currentCompanionSort === 'rarity-desc' ? 'selected' : ''}>Rareté : mythique → commun</option>
-            <option value="effect-asc" ${currentCompanionSort === 'effect-asc' ? 'selected' : ''}>Effets : regroupés</option>
-            <option value="name-asc" ${currentCompanionSort === 'name-asc' ? 'selected' : ''}>Nom : A → Z</option>
-            <option value="level-desc" ${currentCompanionSort === 'level-desc' ? 'selected' : ''}>Niveau : plus élevé d’abord</option>
-          </select>
-        </label>
+      <div class="collection-heading">
+        <h3>Collection de compagnons</h3>
+        <span>${unlockedCount} / ${COMPANIONS.length} débloqués</span>
+      </div>
+      <div class="companion-tools">
+        <div class="companion-view-switch" role="group" aria-label="Collection ou favoris">
+          <button class="companion-view-button ${currentCompanionView === 'all' ? 'active' : ''}" onclick="showCompanionView('all')"><span>◈</span> Collection <b>${unlockedCount}</b></button>
+          <button class="companion-view-button ${currentCompanionView === 'favorites' ? 'active' : ''}" onclick="showCompanionView('favorites')"><span>★</span> Favoris <b>${S.compData.favorites.filter(id => S.compData.unlocked.includes(id)).length}</b></button>
+        </div>
+        <div class="companion-control-row">
+          <label class="companion-control"><span>Rareté</span><span class="companion-select-wrap">
+            <select id="companionRaritySelect" onchange="filterGachaRarity(this.value)">
+              <option value="all" ${currentRarityFilter === 'all' ? 'selected' : ''}>Toutes les raretés</option>
+              <option value="commun" ${currentRarityFilter === 'commun' ? 'selected' : ''}>Commun</option>
+              <option value="peu_commun" ${currentRarityFilter === 'peu_commun' ? 'selected' : ''}>Peu commun</option>
+              <option value="rare" ${currentRarityFilter === 'rare' ? 'selected' : ''}>Rare</option>
+              <option value="epique" ${currentRarityFilter === 'epique' ? 'selected' : ''}>Épique</option>
+              <option value="legendaire" ${currentRarityFilter === 'legendaire' ? 'selected' : ''}>Légendaire</option>
+              <option value="mythique" ${currentRarityFilter === 'mythique' ? 'selected' : ''}>Mythique</option>
+            </select><span class="companion-select-chevron" aria-hidden="true">⌄</span>
+          </span></label>
+          <label class="companion-control"><span>Effet</span><span class="companion-select-wrap">
+            <select id="companionEffectSelect" onchange="filterCompanionEffect(this.value)">
+              <option value="all" ${currentCompanionEffectFilter === 'all' ? 'selected' : ''}>Tous les effets</option>
+              ${COMPANION_EFFECT_CATEGORIES.map((category) => `<option value="${category.id}" ${currentCompanionEffectFilter === category.id ? 'selected' : ''}>${category.label}</option>`).join('')}
+            </select><span class="companion-select-chevron" aria-hidden="true">⌄</span>
+          </span></label>
+          <label class="companion-control"><span>Trier</span><span class="companion-select-wrap companion-sort-select">
+            <span class="companion-sort-icon" aria-hidden="true">↕</span>
+            <select id="companionSortSelect" onchange="sortGachaCompanions(this.value)">
+              <option value="rarity-asc" ${currentCompanionSort === 'rarity-asc' ? 'selected' : ''}>Rareté · commun → mythique</option>
+              <option value="rarity-desc" ${currentCompanionSort === 'rarity-desc' ? 'selected' : ''}>Rareté · mythique → commun</option>
+              <option value="effect-asc" ${currentCompanionSort === 'effect-asc' ? 'selected' : ''}>Regrouper par effet</option>
+              <option value="name-asc" ${currentCompanionSort === 'name-asc' ? 'selected' : ''}>Nom · A → Z</option>
+              <option value="level-desc" ${currentCompanionSort === 'level-desc' ? 'selected' : ''}>Niveau · plus élevé d’abord</option>
+            </select><span class="companion-select-chevron" aria-hidden="true">⌄</span>
+          </span></label>
+        </div>
       </div>
     </div>
     <div class="companion-grid">
