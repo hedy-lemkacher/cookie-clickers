@@ -182,7 +182,7 @@ const COMPANIONS = [
   { id: 'c_collectionneur', name: 'Collectionneur', rarity: 'epique', powerType: 'first_discovery_bonus', powerBase: 0.20, powerStep: 0.05, desc: 'Première victoire dans chaque mini-jeu : récompense +{val}%', style: { c: ['#fdcb6e', '#f39c12', '#e17055'], chip: '#d63031', edge: '#e17055', isCollector: true }, flavor: 'La première fois est toujours la plus précieuse.' },
 
   // Légendaires (Amis avec photo OU thématiques)
-  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte dix fois le tirage ×10' },
+  { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte quinze fois le tirage ×10' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.28, powerStep: 0.06, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
@@ -5257,7 +5257,7 @@ function gachaCost(count = 1) {
   return Math.ceil(costPerPull * pulls * discount * (1 - drawDiscount));
 }
 function gachaLegendaryCost() {
-  return gachaCost(10) * 10;
+  return gachaCost(10) * 15;
 }
 function updateGachaButtons() {
   if (isGachaSpinning) return;
@@ -5276,7 +5276,7 @@ function updateGachaButtons() {
   if (btnLegendary) {
     const cost = gachaLegendaryCost();
     btnLegendary.disabled = frenzy || !S.compData?.equipped.includes('c_blessure') || S.cookies < cost;
-    btnLegendary.textContent = frenzy ? '⚡ Indisponible pendant la frénésie' : `🌟 Tirage légendaire garanti · 10 × x10 (${fmt(cost)} 🍪)`;
+    btnLegendary.textContent = frenzy ? '⚡ Indisponible pendant la frénésie' : `🌟 Tirage légendaire garanti · 15 × x10 (${fmt(cost)} 🍪)`;
   }
 }
 
@@ -5735,7 +5735,7 @@ function renderGachaPane() {
         <button class="big-btn" id="btnSpinGacha10" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaCost(10) ? 'disabled' : ''} style="min-width:210px; font-size:15px; padding:12px 18px; background:linear-gradient(135deg, #e67e22, #f39c12); box-shadow:0 4px 15px rgba(243,156,18,0.4);">
           ${isGachaSpinning ? '👥 Tirage en cours...' : `✨ Tirer x10 ( ${fmt(gachaCost(10))} 🍪 )`}
         </button>
-        ${S.compData.equipped.includes('c_blessure') ? `<button class="big-btn legendary-draw-button" id="btnSpinLegendaryGacha" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaLegendaryCost() ? 'disabled' : ''} style="min-width:250px; font-size:14px; padding:12px 18px; background:linear-gradient(135deg,#4b2878,#a875e8 55%,#f3c667); box-shadow:0 4px 16px #8a58c655;">${isGachaSpinning ? '🌟 Tirage garanti en cours...' : `🌟 Légendaire ou mythique garanti · 10 × x10 (${fmt(gachaLegendaryCost())} 🍪)`}</button>` : ''}
+        ${S.compData.equipped.includes('c_blessure') ? `<button class="big-btn legendary-draw-button" id="btnSpinLegendaryGacha" ${isGachaSpinning || isGachaFrenzyActive() || S.cookies < gachaLegendaryCost() ? 'disabled' : ''} style="min-width:250px; font-size:14px; padding:12px 18px; background:linear-gradient(135deg,#4b2878,#a875e8 55%,#f3c667); box-shadow:0 4px 16px #8a58c655;">${isGachaSpinning ? '🌟 Tirage garanti en cours...' : `🌟 Légendaire ou mythique garanti · 15 × x10 (${fmt(gachaLegendaryCost())} 🍪)`}</button>` : ''}
       </div>
       <div style="margin-top:14px; font-size:12px; color:#ced6e0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <b style="color:#a4b0be;">Taux :</b>
@@ -6131,7 +6131,7 @@ window.openCompanionDetail = function(cid) {
   else if (type === 'frenzy_dur' || type === 'golden_vision') explanation = `Chaque frénésie dure ${val}% plus longtemps.`;
   else if (type === 'events') explanation = `Les gains des événements aléatoires de bâtiments augmentent de ${val}%.`;
   else if (type === 'double_edged') explanation = `La production augmente de ${val}%, mais vos clics perdent ${S.temple && S.temple.includes('companions_boost') ? 75 : 50}% de puissance.`;
-  else if (type === 'gacha_legendary') explanation = `Un tirage unique coûte dix fois le prix du tirage ×10 et garantit un compagnon légendaire ou mythique.`;
+  else if (type === 'gacha_legendary') explanation = `Un tirage unique coûte quinze fois le prix du tirage ×10 et garantit un compagnon légendaire ou mythique.`;
   else if (type === 'luck_mult') explanation = `Chaque gain de cookies a ${val}% de chance d’être doublé. Cela peut s’appliquer aux récompenses de jeux, cadeaux et événements.`;
   else if (type === 'extra_reward_chance') explanation = `À chaque mini-jeu, ${Math.min(50, val)}% de chance que la récompense en cookies soit doublée.`;
   else if (type === 'first_discovery_bonus') explanation = `La première victoire de chacun des mini-jeux dans cette partie rapporte ${val}% de cookies supplémentaires.`;
