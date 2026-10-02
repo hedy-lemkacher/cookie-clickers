@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=2.23">
+<link rel="stylesheet" href="styles.css?v=2.25">
 </head>
 <body>
 
@@ -39,7 +39,7 @@
       <div class="enter-power-label">POUVOIR DE LA TOUCHE ENTRÉE ACTIF ! <span id="enterPowerTime">60s</span></div>
       <div class="enter-power-bar"><i id="enterPowerFill"></i></div>
     </div>
-    <div class="bakery" id="bakery">La boulangerie de tm251297</div>
+    <div class="bakery" id="bakery">Ma boulangerie</div>
     <div class="counter">
       <div id="count">0</div>
       <div class="label">cookies</div>
@@ -180,8 +180,8 @@
         </div>
 
         <div id="templeTabUps">
-           <p id="templeChips" style="font-size:18px; font-weight:bold; color:#ffeb3b; margin:10px 0;"></p>
-           <div id="templeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;"></div>
+           <div id="templeChips" class="temple-status"></div>
+           <div id="templeGrid" class="temple-grid"></div>
         </div>
 
         <div id="templeTabAsc" style="display:none; text-align:left; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #55efc4;">
@@ -299,6 +299,13 @@
         </div>
         <div class="section">
           <ul style="line-height: 1.65; font-size: 15px;">
+            <li style="margin-bottom: 12px;"><b>👑 LÉGENDE ABSOLUE DOUBLE VRAIMENT TOUT</b> : Chaque amélioration du Temple passe ×2. Le Trio devient un <b>Quatuor Légendaire</b> avec 4 compagnons équipés. Copain pour toujours protège les slots A et B. Production, clics, durées de la touche Entrée, essais d’Esquive, Chronomaître, Chance Dorée, Compagnons renforcés et récompenses des jeux célestes sont tous doublés.</li>
+            <li style="margin-bottom: 12px;"><b>🛕 UN NOUVEAU TEMPLE DES LÉGENDES</b> : Les améliorations sont rangées par thème avec une barre de progression. Légende Absolue a sa grande carte animée. Chaque carte affiche son effet doublé.</li>
+            <li style="margin-bottom: 12px;"><b>🕊️ FINI LA TRICHE DANS LES COINS</b> : À l’Esquive Laser, les tirs couvrent toute l’arène. Rester collé à un bord ou un coin attire un tir ciblé sur toi.</li>
+            <li style="margin-bottom: 12px;"><b>🛡️ ANTI-AUTOCLICKER PLUS MALIN</b> : Le jeu repère le rythme parfait des machines et bloque les clics simulés. Un vrai joueur, même très rapide, n’est jamais bloqué. Premier signal suspect → avertissement de 3 s, récidive → blocage plus long.</li>
+            <li style="margin-bottom: 12px;"><b>✨ LE COOKIE DORÉ BRILLE ENFIN</b> : Dans le mini-jeu, le cookie doré est bien doré. Tous les cookies bougent dans tous les sens et rebondissent sur les bords.</li>
+            <li style="margin-bottom: 12px;"><b>🎁 8 NOUVEAUX CADEAUX MYSTÈRE</b> : Pile ou face, Aimant doré, Averse de cookies, Combo bouillant, Doigts en guimauve, Sieste des boulangers, Monde miroir et Cookie fugueur. Et « Temps suspendu » efface maintenant absolument tous les cooldowns et malus en cours.</li>
+            <li style="margin-bottom: 12px;"><b>🏷️ TA BOULANGERIE PORTE LE NOM DE TON MONDE</b> : Le nom affiché reprend le nom donné au monde à sa création. Tu peux toujours le changer dans Style.</li>
             <li style="margin-bottom: 12px;"><b>🌌 LE CRÂNE D’AYOUB ET LE TROU NOIR ONT ÉCHANGÉ LEURS POUVOIRS</b> : Le Crâne d’Ayoub porte maintenant la puissance du Trou Noir Infini, et le Trou Noir hérite de l’effet du Crâne. La casquette d’Hedy rejoint aussi la rareté mythique.</li>
             <li style="margin-bottom: 12px;"><b>🔮 DEUX POUVOIRS POUR LES CADEAUX MYSTÈRES</b> : Ayoub au tableau révèle le contenu avant votre choix. Équipez le Panipuri de Vikash pour faire apparaître un beau bouton d’activation sous le cookie principal : il invoque un cadeau, puis affiche sa recharge de <b>10 minutes</b>. Le Conjurateur de cadeaux peut doubler n’importe quel gain selon sa chance.</li>
             <li style="margin-bottom: 12px;"><b>⚽ CHANGEMENTS D’ÉQUIPE SANS ATTENDRE</b> : Adam sur FIFA supprime le délai de changement des compagnons tant qu’il est équipé. Retirez-le, et les délais habituels reprennent.</li>
@@ -326,6 +333,7 @@
           <article class="card rules-card">
             <h3 class="card-title"><span>🍪 1. Produire des cookies</span></h3>
             <p>Cliquez sur le grand cookie pour en gagner à la main. La puissance du clic dépend notamment de vos curseurs et des améliorations. Chaque clic augmente votre combo si vous continuez à cliquer régulièrement ; le compteur indique le bonus actuel. Les améliorations de souris peuvent ajouter une part de votre production par seconde à chaque clic.</p>
+            <p>🛡️ <b>Anti-autoclicker</b> : les clics simulés par un script sont ignorés. Un rythme parfaitement régulier au milliseconde près ou plus de 30 clics par seconde déclenche un avertissement de 3 s, puis un blocage plus long en cas de récidive. Cliquer vite avec tes doigts ne déclenche jamais la protection.</p>
             <p>Achetez ensuite des bâtiments : <b>Curseurs, Grand-mères, Fermes, Mines, Usines, Banques, Temples, Tours de sorcier, Fusées, Maillots d’Adam, Méchants Chris, EBBY POSES, Vikash Le BG, Chancelleries, Moteurs Fractals, Tourelles Max et Boss LMK.</b> Ils produisent automatiquement des cookies chaque seconde. Le compteur « par seconde » affiche votre rythme de production.</p>
             <p>Le prix d’un bâtiment augmente de <b>15 % par exemplaire acheté</b>. Les boutons <b>×1, ×10, ×100 et Max</b> règlent la quantité achetée. Pour débloquer le bâtiment suivant, il faut posséder au moins <b>5 exemplaires du bâtiment précédent</b> et avoir cuit au moins 60 % de son prix de base. Les améliorations de la boutique renforcent votre production, vos clics, les événements ou les mini-jeux ; leur carte indique leur coût et leur condition de déblocage.</p>
           </article>
@@ -351,7 +359,7 @@
             <ul>
               <li><b>Évasion du labyrinthe :</b> trouvez la sortie (dès le début, recharge 12 min).</li>
               <li><b>Simon Cookie :</b> répétez la séquence (500 cookies cuits, 10 min).</li>
-              <li><b>Le Cookie Doré :</b> trouvez le bon cookie caché (50 000 cuits, 15 min).</li>
+              <li><b>Le Cookie Doré :</b> trouvez le cookie doré parmi 40 cookies qui bougent dans tous les sens (50 000 cuits, 15 min).</li>
               <li><b>Rush de clics :</b> cliquez vite pendant 8 secondes (250 000 cuits, 12 min).</li>
               <li><b>Sortie du four :</b> sortez les fournées au bon moment (5 millions cuits, 12 min).</li>
               <li><b>Vente de cookies :</b> servez les clients (25 millions cuits, 15 min).</li>
@@ -365,7 +373,7 @@
           <article class="card rules-card">
             <h3 class="card-title"><span>🎳 Jeux célestes et Esquive laser</span></h3>
             <p>Après avoir débloqué leurs améliorations au Temple (5 pépites chacune), vous pouvez jouer au <b>Bowling Céleste</b>, au <b>Panier Céleste</b> et au <b>Tir au But</b>. Ils ont chacun 3 essais et une recharge de base de 4 minutes, réductible avec certaines améliorations. Le bowling demande de viser la piste, le panier de tracer le tir du cookie-ballon et le tir au but de tromper le gardien.</p>
-            <p>Dans <b>Esquive laser</b>, déplacez le cookie avec la souris ou l’écran tactile et évitez tous les faisceaux jusqu’à la fin du temps. Les défis durent 10 s (calme, ×50), 30 s (tension, ×150) ou 60 s (survie, ×400). Vous avez 3 essais par heure ; le Temple peut en ajouter. Gagner débloque le pouvoir de la touche <b>Entrée</b> : maintenez cette touche pour cliquer automatiquement environ 20 fois par seconde. Le pouvoir dure 60 s (plus longtemps avec les améliorations du Temple) ; pendant ses 30 premières secondes, chaque clic profite aussi du multiplicateur du défi réussi. Aucun cadeau mystérieux n’apparaît pendant une partie d’Esquive.</p>
+            <p>Dans <b>Esquive laser</b>, déplacez le cookie avec la souris ou l’écran tactile et évitez tous les faisceaux jusqu’à la fin du temps. Les défis durent 10 s (calme, ×50), 30 s (tension, ×150) ou 60 s (survie, ×400). Rester collé à un bord ou un coin attire des tirs ciblés : bougez ! Vous avez 3 essais par heure ; le Temple peut en ajouter (1, ou 2 avec Légende Absolue). Gagner débloque le pouvoir de la touche <b>Entrée</b> : maintenez cette touche pour cliquer automatiquement environ 20 fois par seconde. Le pouvoir dure 60 s (plus longtemps avec les améliorations du Temple) ; pendant ses 30 premières secondes, chaque clic profite aussi du multiplicateur du défi réussi. Aucun cadeau mystérieux n’apparaît pendant une partie d’Esquive.</p>
           </article>
           <article class="card rules-card">
             <h3 class="card-title"><span>🎰 Casino et roue de la fortune</span></h3>
@@ -375,13 +383,13 @@
           <article class="card rules-card">
             <h3 class="card-title"><span>🎁 Cadeaux mystérieux</span></h3>
             <p>Un cadeau mystérieux arrive aléatoirement, en général toutes les <b>10 à 20 minutes</b>. Vous pouvez l’accepter ou le refuser ; le jeu vous indique ensuite ce que vous avez obtenu ou laissé passer.</p>
-            <p>Les effets possibles sont variés : clics ×150 pendant 20 s, 40 minutes de production offertes, recharges réinitialisées, recharges réduites de moitié pendant 3 min, bâtiment le plus avancé offert, production réduite de 30 % pendant 90 s, perte de 50 minutes de production, boutique scellée pendant 45 min ou arcade fermée pendant 30 min.</p>
+            <p>Les effets possibles sont variés : clics ×150 pendant 20 s, 40 minutes de production offertes, recharges réinitialisées, recharges réduites de moitié pendant 3 min, bâtiment le plus avancé offert, production réduite de 30 % pendant 90 s, perte de 50 minutes de production, boutique scellée pendant 45 min, arcade fermée pendant 30 min, pile ou face (±20 min de production), aimant doré (cookie doré dans 5 s), averse de cookies (+5 min), combo bouillant (combo max gelé 30 s), doigts en guimauve (clics ÷2 pendant 45 s), sieste des boulangers (production à 10 % pendant 30 s), monde miroir (écran inversé 25 s) ou cookie fugueur (le cookie se balade 30 s). « Temps suspendu » termine tous les cooldowns et tous les malus en cours, boutique scellée et arcade fermée comprises.</p>
             <p><b>Ayoub au tableau</b>, s’il est équipé, révèle le contenu avant votre choix. <b>Le Panipuri de Vikash</b> ajoute un bouton sous le cookie pour invoquer immédiatement un cadeau, avec une recharge de 10 minutes. Un bouton du hamburger peut aussi activer un cadeau sur certains profils.</p>
           </article>
           <article class="card rules-card">
             <h3 class="card-title"><span>👥 Compagnons et tirages</span></h3>
             <p>Après votre première ascension, les tirages permettent de collectionner des compagnons de rareté <b>Commun (53,41 %), Peu commun (26 %), Rare (14 %), Épique (6,2 %), Légendaire (0,35 %) ou Mythique (0,04 %)</b>. Un compteur garantit une rareté Épique ou mieux au 20<sup>e</sup> tirage. La Blessure d’Adam, équipée, débloque aussi un tirage spécial à vingt-cinq fois le prix du tirage ×10 : il donne un seul compagnon, garanti légendaire ou mythique. Adam sur FIFA et la Blessure d’Adam sont à niveau fixe.</p>
-            <p>Équipez jusqu’à 2 compagnons (3 avec l’amélioration correspondante du Temple). Les pouvoirs de même type ne se cumulent pas et sont légèrement réduits pour mieux équilibrer les doublons. Les lunettes d’Abdel sont mythiques et améliorent la vitesse des mini-jeux ainsi que la durée des frénésies. La casquette d’Hedy est mythique et réduit le coût des bâtiments et améliorations. Le Trésorier des tirages est un compagnon légendaire qui réduit un peu le coût des tirages lorsqu’il est équipé. La Blessure d’Adam est mythique : équipée, elle débloque un tirage spécial au prix de <b>3 tirages ×10</b>, pour obtenir un seul compagnon légendaire ou mythique garanti. La Blessure d’Adam et Adam sur FIFA ont un pouvoir fixe et ne gagnent pas de niveaux. Marquez vos compagnons préférés avec l’étoile ; filtrez la collection par rareté ou effet et triez-la par rareté, effet, nom ou niveau. Changer un compagnon déclenche normalement un délai par emplacement, de 30 minutes au départ, réduit par les améliorations de la boutique. Adam sur FIFA supprime ce délai tant qu’il est équipé. Un tirage simple coûte l’équivalent de <b>2 min 30 s de production automatique</b> (minimum 25 milliards) ; seuls les cookies produits automatiquement comptent, pas les clics. Les tirages sont indisponibles pendant une frénésie. Le tirage ×10 bénéficie d’une réduction de 12 %.</p>
+            <p>Équipez jusqu’à 2 compagnons (3 avec le Trio Légendaire du Temple, 4 avec le Quatuor obtenu grâce à Légende Absolue). Les pouvoirs de même type ne se cumulent pas et sont légèrement réduits pour mieux équilibrer les doublons. Les lunettes d’Abdel sont mythiques et améliorent la vitesse des mini-jeux ainsi que la durée des frénésies. La casquette d’Hedy est mythique et réduit le coût des bâtiments et améliorations. Le Trésorier des tirages est un compagnon légendaire qui réduit un peu le coût des tirages lorsqu’il est équipé. La Blessure d’Adam est mythique : équipée, elle débloque un tirage spécial au prix de <b>3 tirages ×10</b>, pour obtenir un seul compagnon légendaire ou mythique garanti. La Blessure d’Adam et Adam sur FIFA ont un pouvoir fixe et ne gagnent pas de niveaux. Marquez vos compagnons préférés avec l’étoile ; filtrez la collection par rareté ou effet et triez-la par rareté, effet, nom ou niveau. Changer un compagnon déclenche normalement un délai par emplacement, de 30 minutes au départ, réduit par les améliorations de la boutique. Adam sur FIFA supprime ce délai tant qu’il est équipé. Un tirage simple coûte l’équivalent de <b>2 min 30 s de production automatique</b> (minimum 25 milliards) ; seuls les cookies produits automatiquement comptent, pas les clics. Les tirages sont indisponibles pendant une frénésie. Le tirage ×10 bénéficie d’une réduction de 12 %.</p>
             </p>
           </article>
           <article class="card rules-card">
@@ -389,24 +397,25 @@
             <p>Le Temple contient <b>17 améliorations permanentes</b>. Elles restent achetées après les ascensions. En les achetant toutes une fois, il faut réunir <b>1 090 pépites célestes</b> au total :</p>
             <ul>
               <li><b>Bowling Céleste, Panier Céleste et Tir au But</b> — 5 pépites chacun : débloquent leurs mini-jeux.</li>
-              <li><b>Vision Absolue</b> — 5 : révèle la collection de compagnons verrouillés et leurs pouvoirs.</li>
-              <li><b>Trio Légendaire</b> — 15 : ouvre un troisième emplacement de compagnon.</li>
-              <li><b>Copain pour toujours</b> — 20 : conserve le compagnon du slot A après une ascension.</li>
-              <li><b>Esquive Augmentée</b> — 5 : ajoute un essai d’Esquive par heure.</li>
-              <li><b>Pouvoir Prolongé</b> — 10 : porte le pouvoir Entrée de 60 à 90 secondes.</li>
-              <li><b>Grande Frénésie</b> — 20 : prolonge la phase de frénésie Entrée de 30 à 45 secondes.</li>
-              <li><b>Prestige des Clics</b> — 30 : +5 % de puissance de clic ; <b>Arsenal Cosmique</b> — 50 : +10 % de production.</li>
-              <li><b>Légende Absolue</b> — 100 : double les effets des améliorations précédentes.</li>
-              <li><b>Savoir Universel</b> — 150 : +15 % de production ; <b>Clic Divin II</b> — 150 : +10 % de puissance de clic.</li>
-              <li><b>Chronomaître</b> — 200 : divise par deux la recharge des jeux célestes.</li>
-              <li><b>Chance Dorée</b> — 250 : fait arriver la pluie de cookies dorés plus souvent.</li>
-              <li><b>Compagnons renforcés</b> — 70 : multiplie par 1,5 les effets numériques des compagnons et donne une mise supplémentaire au Maître du Casino.</li>
+              <li><b>Vision Absolue</b> — 5 : révèle la collection de compagnons verrouillés et leurs pouvoirs (en couleur avec Légende Absolue).</li>
+              <li><b>Trio Légendaire</b> — 15 : ouvre un troisième emplacement de compagnon. Avec Légende Absolue → <b>Quatuor Légendaire</b>, 4 emplacements.</li>
+              <li><b>Copain pour toujours</b> — 20 : conserve le compagnon du slot A après une ascension (slots A et B avec Légende Absolue).</li>
+              <li><b>Esquive Augmentée</b> — 5 : ajoute un essai d’Esquive par heure (2 avec Légende Absolue).</li>
+              <li><b>Pouvoir Prolongé</b> — 10 : porte le pouvoir Entrée de 60 à 90 secondes (120 s avec Légende Absolue).</li>
+              <li><b>Grande Frénésie</b> — 20 : prolonge la phase de frénésie Entrée de 30 à 45 secondes (60 s avec Légende Absolue).</li>
+              <li><b>Prestige des Clics</b> — 30 : +5 % de puissance de clic (+10 %) ; <b>Arsenal Cosmique</b> — 50 : +10 % de production (+20 %).</li>
+              <li><b>Légende Absolue</b> — 100 : double les effets de toutes les autres améliorations du Temple, y compris celles achetées après.</li>
+              <li><b>Savoir Universel</b> — 150 : +15 % de production (+30 %) ; <b>Clic Divin II</b> — 150 : +10 % de puissance de clic (+20 %).</li>
+              <li><b>Chronomaître</b> — 200 : divise par deux la recharge des jeux célestes (par quatre avec Légende Absolue).</li>
+              <li><b>Chance Dorée</b> — 250 : la pluie de cookies arrive deux fois plus vite (quatre fois avec Légende Absolue).</li>
+              <li><b>Compagnons renforcés</b> — 70 : multiplie par 1,5 les effets numériques des compagnons (×2 avec Légende Absolue) et donne une mise supplémentaire au Maître du Casino (deux avec Légende Absolue).</li>
+              <li><b>Jeux célestes</b> : leurs récompenses sont doublées avec Légende Absolue.</li>
             </ul>
           </article>
           <article class="card rules-card">
             <h3 class="card-title"><span>😇 Ascension et pépites célestes</span></h3>
             <p>Le Temple se débloque après avoir cuit <b>25 milliards de cookies au total</b>. Dans l’onglet Ascension, la barre indique votre progression et le nombre de pépites que vous gagneriez maintenant. Ascender remet à zéro la banque, les bâtiments et les améliorations classiques de la partie, mais conserve vos pépites, le Temple, vos succès, votre style et vos records.</p>
-            <p>Chaque pépite céleste conservée donne <b>+1 % de production</b>. Une ascension rapporte au maximum <b>70 nouvelles pépites</b>, qui s’ajoutent à votre total : avec 30 pépites avant une ascension maximale, vous en aurez 100 après. Les paliers deviennent plus exigeants à chaque ascension. Les achats du Temple, eux, restent acquis. « Copain pour toujours » conserve après l’ascension le compagnon du slot A.</p>
+            <p>Chaque pépite céleste conservée donne <b>+1 % de production</b>. Une ascension rapporte au maximum <b>70 nouvelles pépites</b>, qui s’ajoutent à votre total : avec 30 pépites avant une ascension maximale, vous en aurez 100 après. Les paliers deviennent plus exigeants à chaque ascension. Les achats du Temple, eux, restent acquis. « Copain pour toujours » conserve après l’ascension le compagnon du slot A, et aussi celui du slot B avec Légende Absolue.</p>
             <p>Pour atteindre la victoire finale, achetez <b>toutes les améliorations proposées dans le menu du Temple des Légendes</b>. Les coûts sont indiqués sur chaque carte : certaines demandent de nombreuses ascensions.</p>
           </article>
           <article class="card rules-card">
@@ -500,7 +509,7 @@
   </div>
 </div>
 
-<script src="app.js?v=2.23"></script>
+<script src="app.js?v=2.25"></script>
 
 </body>
 </html>

@@ -185,7 +185,7 @@ const COMPANIONS = [
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte vingt-cinq fois le tirage ×10' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.28, powerStep: 0.06, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
-  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
+  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés, quatre avec Légende Absolue)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
   { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
@@ -330,6 +330,7 @@ const ACHIEVEMENTS = [
   { icon: '🎰', name: 'Premier Recrutement',  desc: 'Débloquer votre premier compagnon.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 1 },
   { icon: '🛡️', name: 'Duo de Choc',          desc: 'Équiper deux compagnons en même temps.',                 test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 2 },
   { icon: '⚔️', name: 'Trio Invincible',      desc: 'Équiper trois compagnons en même temps.',                test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 3 },
+  { icon: '🎻', name: 'Quatuor Invincible',   desc: 'Équiper quatre compagnons en même temps.',               test: () => S.compData && S.compData.equipped && S.compData.equipped.filter(Boolean).length >= 4 },
   { icon: '💎', name: 'Évolution Gourmande',  desc: 'Améliorer un compagnon au niveau 3 ou plus.',             test: () => S.compData && S.compData.levels && Object.values(S.compData.levels).some(lvl => lvl >= 3) },
   { icon: '🌟', name: 'Collectionneur Averti', desc: 'Débloquer 10 compagnons différents.',                    test: () => S.compData && S.compData.unlocked && S.compData.unlocked.length >= 10 },
   { icon: '👑', name: 'Compagnon Légendaire', desc: 'Débloquer un compagnon de rareté Légendaire ou Mythique.', test: () => S.compData && S.compData.unlocked && S.compData.unlocked.some(id => { const c = COMPANIONS.find(x => x.id === id); return c && (c.rarity === 'legendaire' || c.rarity === 'mythique'); }) },
@@ -385,7 +386,8 @@ const COOKIE_THEMES = [
 const SAVE_KEY = 'cookie-clicker-worlds-v3';
 const LEGACY_SAVE_KEYS = ['cookie-clicker-tm251297', 'cookie-clicker', 'cookie-clicker-worlds-v2'];
 const SPEEDRUN_GOAL = 500000;
-const DEFAULT_CUSTOM = { name: 'La boulangerie de tm251297', bg: 'choco', bgCustom: '#7a4a18', cookie: 'classic', cookieCustom: '#dc9a4f', rain: true, numfmt: 'words' };
+const LEGACY_BAKERY_NAME = 'La boulangerie de tm251297';
+const DEFAULT_CUSTOM = { name: 'Ma boulangerie', bg: 'choco', bgCustom: '#7a4a18', cookie: 'classic', cookieCustom: '#dc9a4f', rain: true, numfmt: 'words' };
 
 function freshState() {
   const now = Date.now();
@@ -398,7 +400,7 @@ function freshState() {
     mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0, mysteryHistory: [],
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
     casino: { windowStart: 0, bets: 0, totalBets: 0, totalWins: 0, bestWinStreak: 0, wheelSpins: 0, lastResult: null },
-    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
+    mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0, slowClickUntil: 0, napUntil: 0, mirrorUntil: 0, dodgeUntil: 0, comboFreezeUntil: 0 },
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, lifetimePulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
@@ -418,7 +420,10 @@ function newWorldId() {
     : 'world-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 }
 function worldRecord(name, mode, goal, state) {
-  return { id: newWorldId(), name, mode, goal: mode === 'speedrun' ? goal : null, speedrun: { startedAt: 0, durationMs: 0 }, createdAt: Date.now(), state: state || freshState() };
+  const worldState = state || freshState();
+  // The bakery takes the name given to its world.
+  if (worldState.custom && (!worldState.custom.name || worldState.custom.name === LEGACY_BAKERY_NAME || worldState.custom.name === DEFAULT_CUSTOM.name)) worldState.custom.name = name;
+  return { id: newWorldId(), name, mode, goal: mode === 'speedrun' ? goal : null, speedrun: { startedAt: 0, durationMs: 0 }, createdAt: Date.now(), state: worldState };
 }
 function activeWorld() { return worlds.find((world) => world.id === activeWorldId) || null; }
 
@@ -449,7 +454,11 @@ function load() {
       if (Array.isArray(d.worlds)) {
         worlds = d.worlds.slice(0, 5);
         speedrunRecords = d.speedrunRecords || [];
-        worlds.forEach((world) => { world.speedrun = Object.assign({ startedAt: 0, durationMs: 0 }, world.speedrun); });
+        worlds.forEach((world) => {
+          world.speedrun = Object.assign({ startedAt: 0, durationMs: 0 }, world.speedrun);
+          const custom = world.state && world.state.custom;
+          if (custom && (!custom.name || custom.name === LEGACY_BAKERY_NAME)) custom.name = world.name;
+        });
         activeWorldId = d.activeWorldId || (worlds[0] && worlds[0].id);
         const world = activeWorld();
         if (world) S = Object.assign(freshState(), world.state);
@@ -590,7 +599,7 @@ function resetCasinoWindow() {
   }
 }
 function casinoColor(number) { return number % 2 === 0 ? 'rouge' : 'noir'; }
-function casinoMaxBets() { return 5 + (compHasSpecial("casino_free") ? (S.temple && S.temple.includes("companions_boost") ? 3 : 2) : 0); }
+function casinoMaxBets() { return 5 + (compHasSpecial("casino_free") ? templeCasinoFreeBets() : 0); }
 function casinoRemaining() { resetCasinoWindow(); return Math.max(0, casinoMaxBets() - S.casino.bets); }
 function casinoTimeLeft() { resetCasinoWindow(); return Math.max(0, CASINO_WINDOW - (Date.now() - S.casino.windowStart)); }
 function casinoUnlimited() { 
@@ -1187,7 +1196,8 @@ function baseCps() {
 function steadyCps() { let s = 0; for (const b of BUILDINGS) s += owned(b.id) * buildingCps(b, true); return s; }
 function frenzyMult() { return Date.now() < S.fz.until ? S.fz.mult : 1; }
 function cps() {
-  const productionFactor = S.mysteryGift && Date.now() < S.mysteryGift.productionUntil ? 0.7 : 1;
+  const gift = S.mysteryGift, now = Date.now();
+  const productionFactor = gift && now < (gift.napUntil || 0) ? 0.1 : gift && now < gift.productionUntil ? 0.7 : 1;
   return baseCps() * frenzyMult() * productionFactor;
 }
 
@@ -1220,7 +1230,8 @@ addEventListener('keydown', (e) => {
         clickTimes = [];
         fastClickWarnings = 0;
         lastRawClick = 0;
-        cookieBtn.click();
+        clickIntervals = [];
+        triggerCookieClick(cookieBtn);
         clickBlockedUntil = oldBlocked;
         if (inFrenzy) {
           clickFrenzyUntil = prevFrenzyUntil;
@@ -1244,40 +1255,65 @@ function clickBase() {
 }
 function clickPower() {
   if (S.booMode) return 999e21;
-  const mysteryClick = S.mysteryGift && Date.now() < S.mysteryGift.clickUntil ? 150 : 1;
+  const gift = S.mysteryGift, now = Date.now();
+  const mysteryClick = (gift && now < gift.clickUntil ? 150 : 1) * (gift && now < (gift.slowClickUntil || 0) ? 0.5 : 1);
   return clickBase() * comboMult() * (Date.now() < clickFrenzyUntil ? clickFrenzyMult : 1) * mysteryClick;
 }
 let lastRawClick = 0, fastClickWarnings = 0;
-function allowClick() {
+let clickIntervals = [], botStrikes = 0, lastBotStrikeAt = 0;
+// Internal triggers (Enter power, keyboard) call cookieBtn.click() and must bypass the trust check.
+let internalCookieClick = false;
+function triggerCookieClick(btn) {
+  internalCookieClick = true;
+  try { btn.click(); } finally { internalCookieClick = false; }
+}
+function flagBot(now, reason) {
+  botStrikes = now - lastBotStrikeAt < 60000 ? botStrikes + 1 : 1;
+  lastBotStrikeAt = now;
+  clickTimes = [];
+  clickIntervals = [];
+  if (botStrikes === 1) {
+    clickBlockedUntil = now + 3000;
+    toast('🛡️', 'Rythme suspect', reason + ' Pause de 3 s.');
+  } else {
+    clickBlockedUntil = now + Math.min(60000, 15000 * (botStrikes - 1));
+    toast('🛡️', 'Autoclicker détecté', reason + ' Blocage de ' + Math.round((clickBlockedUntil - now) / 1000) + ' s.');
+  }
+}
+function allowClick(e) {
   const now = Date.now();
   // Admin mode: no restrictions at all
   if (window.__adminMode) return true;
+  // Scripted clicks (console, extensions) are not trusted by the browser.
+  if (e && e.isTrusted === false && !internalCookieClick) return false;
   if (now < clickBlockedUntil) return false;
-  
+
   const diff = now - lastRawClick;
   lastRawClick = now;
-  
-  if (diff < 10) {
+
+  // Two fingers on a phone hit almost at the same time: ignore the duplicate without punishing.
+  if (diff < 15) {
     fastClickWarnings++;
-    if (fastClickWarnings >= 8) {
-      clickBlockedUntil = now + 5000;
-      clickTimes = [];
-      fastClickWarnings = 0;
-      toast('🛡️', 'Autoclicker détecté', 'Vitesse anormale. Blocage de 5 s.');
-      return false;
-    }
+    if (fastClickWarnings >= 25) { fastClickWarnings = 0; flagBot(now, 'Clics simultanés en rafale.'); }
     return false;
-  } else if (fastClickWarnings > 0 && diff > 200) {
-    fastClickWarnings--;
   }
-  
+  if (fastClickWarnings > 0 && diff > 120) fastClickWarnings--;
+
+  // A human hand never keeps the same rhythm: autoclickers do, to the millisecond.
+  if (diff < 400) {
+    clickIntervals.push(diff);
+    if (clickIntervals.length > 30) clickIntervals.shift();
+  } else {
+    clickIntervals = [];
+  }
+  if (clickIntervals.length >= 24) {
+    const mean = clickIntervals.reduce((a, b) => a + b, 0) / clickIntervals.length;
+    const sd = Math.sqrt(clickIntervals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / clickIntervals.length);
+    if (sd < 3.5 && sd / mean < 0.05) { flagBot(now, 'Rythme parfaitement régulier.'); return false; }
+  }
+
   clickTimes = clickTimes.filter((time) => now - time < 1000);
-  if (clickTimes.length >= 35) {
-    clickBlockedUntil = now + 20000;
-    clickTimes = [];
-    toast('🛡️', 'Protection anti-spam', 'Trop de clics ! Blocage de 20 secondes.');
-    return false;
-  }
+  if (clickTimes.length >= 30) { flagBot(now, 'Plus de 30 clics par seconde.'); return false; }
   clickTimes.push(now);
   return true;
 }
@@ -1446,8 +1482,12 @@ function mysteryGiftDelay() {
 const MYSTERY_EFFECTS = [
   { id: 'click150', icon: '👆', title: 'Pouvoir des clics', text: 'Vos clics valent ×150 pendant 20 secondes.', apply: (gift, now) => { gift.clickUntil = now + 20000; } },
   { id: 'gain40', icon: '🎁', title: 'Réserve providentielle', text: 'Vous gagnez immédiatement 40 minutes de production.', apply: () => gain(steadyCps() * 2400) },
-  { id: 'resetCooldowns', icon: '⏱️', title: 'Temps suspendu', text: 'Tous les cooldowns en cours sont terminés.', apply: () => {
+  { id: 'resetCooldowns', icon: '⏱️', title: 'Temps suspendu', text: 'Absolument tous les cooldowns et malus en cours sont terminés : mini-jeux, Esquive Laser, casino, roue, cadeau du jour, compagnons, boutique scellée, arcade fermée.', apply: (gift) => {
     Object.keys(S.games).forEach((id) => { S.games[id] = Array.isArray(S.games[id]) ? [] : 0; });
+    // Every penalty left by an earlier mystery gift ends too.
+    ['productionUntil', 'buildingLockUntil', 'gamesLockUntil', 'slowClickUntil', 'napUntil', 'mirrorUntil', 'dodgeUntil'].forEach((key) => { gift[key] = 0; });
+    gift.manualNext = 0;
+    if (S.compData) { S.compData.slotCooldowns = {}; S.compData.slotCooldownBypassTouched = []; }
     S.daily = 0;
     S.casino.bets = 0;
     S.casino.windowStart = Date.now();
@@ -1472,8 +1512,31 @@ const MYSTERY_EFFECTS = [
   { id: 'productionPenalty', icon: '🕯️', title: 'Four ralenti', text: 'Votre production est réduite de 30 % pendant 1 min 30.', apply: (gift, now) => { gift.productionUntil = now + 90000; } },
   { id: 'loss50', icon: '🌪️', title: 'Taxe mystérieuse', text: 'Vous perdez 50 minutes de production.', apply: () => { S.cookies = Math.max(0, S.cookies - steadyCps() * 3000); } },
   { id: 'buildingLock', icon: '🔒', title: 'Boutique scellée', text: 'Les achats de bâtiments sont bloqués pendant 45 minutes.', apply: (gift, now) => { gift.buildingLockUntil = now + 2700000; } },
-  { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } }
+  { id: 'gamesLock', icon: '🎮', title: 'Arcade fermée', text: 'Les mini-jeux sont bloqués pendant 30 minutes.', apply: (gift, now) => { gift.gamesLockUntil = now + 1800000; } },
+  { id: 'coinFlip', icon: '🪙', title: 'Pile ou face', text: 'Une pièce tourne : pile, +20 minutes de production. Face, -20 minutes.', apply: () => {
+    const amount = steadyCps() * 1200;
+    if (Math.random() < 0.5) { gain(amount); toast('🪙', 'Pile !', '+' + fmt(amount) + ' cookies'); }
+    else { S.cookies = Math.max(0, S.cookies - amount); toast('🪙', 'Face...', '-' + fmt(amount) + ' cookies'); }
+  } },
+  { id: 'goldMagnet', icon: '🧲', title: 'Aimant doré', text: 'Un cookie doré tombe du ciel dans 5 secondes. Soyez prêt !', apply: () => { goldenNext = Date.now() + 5000; } },
+  { id: 'cookieRain', icon: '🌧️', title: 'Averse de cookies', text: 'Il pleut des cookies : +5 minutes de production.', apply: () => { gain(steadyCps() * 300); spawnRain(150); } },
+  { id: 'comboHot', icon: '🔥', title: 'Combo bouillant', text: 'Votre combo passe au maximum et ne redescend pas pendant 30 secondes.', apply: (gift, now) => {
+    combo = (comboCap() - 1) / (0.02 * (1 + (typeof compHas === 'function' ? compHas('combo_power') : 0)));
+    lastClick = now;
+    gift.comboFreezeUntil = now + 30000;
+  } },
+  { id: 'slowClicks', icon: '🐌', title: 'Doigts en guimauve', text: 'Vos clics valent deux fois moins pendant 45 secondes.', apply: (gift, now) => { gift.slowClickUntil = now + 45000; } },
+  { id: 'nap', icon: '😴', title: 'Sieste des boulangers', text: 'Toute la boulangerie dort : production à 10 % pendant 30 secondes.', apply: (gift, now) => { gift.napUntil = now + 30000; } },
+  { id: 'mirror', icon: '🪞', title: 'Monde miroir', text: 'Tout l\'écran passe à l\'envers gauche-droite pendant 25 secondes.', apply: (gift, now) => { gift.mirrorUntil = now + 25000; } },
+  { id: 'dodgeCookie', icon: '🏃', title: 'Cookie fugueur', text: 'Le gros cookie prend peur et se balade partout pendant 30 secondes.', apply: (gift, now) => { gift.dodgeUntil = now + 30000; } }
 ];
+function updateMysteryVisuals(now) {
+  const gift = S.mysteryGift || {};
+  const app = document.querySelector('.app');
+  const zone = document.querySelector('.cookie-zone');
+  if (app) app.classList.toggle('gift-mirror', now < (gift.mirrorUntil || 0));
+  if (zone) zone.classList.toggle('gift-dodge', now < (gift.dodgeUntil || 0));
+}
 const MYSTERY_PROMPTS = [
   'Je ne sais pas ce qu\'il y a dedans. Et je préfère ne pas savoir.',
   'Un cadeau enveloppé de secrets et de questions sans réponses.',
@@ -1667,13 +1730,13 @@ cookieBtn.addEventListener('focus', () => cookieBtn.blur());
 cookieBtn.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.repeat) return;
   e.preventDefault();
-  cookieBtn.click();
+  triggerCookieClick(cookieBtn);
 });
 cookieBtn.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') e.preventDefault();
 });
 cookieBtn.addEventListener('click', (e) => {
-  if (!allowClick()) return;
+  if (!allowClick(e)) return;
   const now = Date.now();
   combo++;
   lastClick = now;
@@ -1699,7 +1762,7 @@ addEventListener('keydown', (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
   e.preventDefault();
-  cookieBtn.click();
+  triggerCookieClick(cookieBtn);
 });
 
 /* =====================================================================
@@ -1964,7 +2027,7 @@ function updateFrenzy(now) {
 const golden = $('#golden');
 const goldenDelay = () => {
   const freqBonus = (typeof compHas === 'function' ? compHas('golden_freq') : 0);
-  return rand(300, 900) * Math.pow(0.8, countUps('gold')) * (S.temple && S.temple.includes('gold_luck') ? 0.5 : 1) / (1 + freqBonus) * 1000;
+  return rand(300, 900) * Math.pow(0.8, countUps('gold')) * templeGoldLuckFactor() / (1 + freqBonus) * 1000;
 };
 let goldenNext = Date.now() + rand(30, 90) * 1000, goldenEnd = 0;
 let activeGoldenCookies = [];
@@ -2216,7 +2279,7 @@ const celestialCooldown = (g) => {
   if (S.ups.includes('celestial_cd1')) mult -= 0.25;
   if (S.ups.includes('celestial_cd2')) mult -= 0.25;
   if (S.ups.includes('celestial_cd3')) mult -= 0.25;
-  if (S.temple && S.temple.includes('chrono')) mult *= 0.5;
+  mult *= templeChronoFactor();
   const arcadeSpeedBonus = (typeof compHas === 'function' ? compHas('arcade_speed') : 0);
   return Math.max(60000, g.cd * 60 * mult / (1 + arcadeSpeedBonus) * 1000 * mysteryCooldownFactor());
 };
@@ -2422,7 +2485,7 @@ function finishGame(state, frac, detail) {
   if (state.cleanup) state.cleanup();
   const g = state.g;
   frac = Math.max(0, Math.min(g.over ? 1.5 : 1, frac || 0));
-  let reward = Math.round(gameMax() * frac * (g.weight || 1) * (1 + compHas('minigame_god')));
+  let reward = Math.round(gameMax() * frac * (g.weight || 1) * (1 + compHas('minigame_god')) * (g.id.startsWith('celestial') ? templeCelestialRewardFactor() : 1));
   let rewardNote = '';
   if (reward > 0 && Math.random() < Math.min(0.5, compHas('extra_reward_chance'))) {
     reward *= 2;
@@ -2602,19 +2665,25 @@ function gameSimon(api) {
 
 
 function gameFind(api) {
-  let time = 8, timer = 0, alive = true;
+  let time = 8, timer = 0, alive = true, raf = 0, lastAt = 0;
   const startAt = Date.now();
   const count = 40;
-  let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps.</p><div style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
+  let html = '<p class="game-hint">Trouvez l\'unique cookie doré avant la fin du temps. Attention, ils bougent !</p><div class="find-arena" style="position:relative;width:100%;height:200px;background:#2c1b18;border-radius:10px;overflow:hidden;">';
   const goldenIdx = Math.floor(Math.random() * count);
+  const movers = [];
   for (let i=0; i<count; i++) {
     const isG = i === goldenIdx;
     const x = Math.random() * 90, y = Math.random() * 85;
-    html += '<button data-find="'+(isG?1:0)+'" style="position:absolute;left:'+x+'%;top:'+y+'%;font-size:24px;background:none;border:none;cursor:pointer;filter:'+(isG?'hue-rotate(40deg) brightness(1.5)':'none')+'">🍪</button>';
+    // Every cookie drifts in its own random direction and bounces off the walls.
+    const angle = Math.random() * Math.PI * 2, speed = 10 + Math.random() * 18;
+    movers.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+    const goldStyle = 'filter:sepia(1) saturate(7) hue-rotate(2deg) brightness(1.35) drop-shadow(0 0 4px #ffd700) drop-shadow(0 0 9px #ffb300);';
+    html += '<button data-find="'+(isG?1:0)+'" style="position:absolute;left:'+x+'%;top:'+y+'%;font-size:24px;background:none;border:none;cursor:pointer;padding:0;'+(isG?goldStyle:'')+'">🍪</button>';
   }
   html += '</div>';
   api.body.innerHTML = html;
-  api.body.querySelectorAll('[data-find]').forEach(b => b.addEventListener('click', () => {
+  const buttons = Array.from(api.body.querySelectorAll('[data-find]'));
+  buttons.forEach(b => b.addEventListener('click', () => {
     if (!alive) return;
     if (b.dataset.find === "1") {
       b.style.transform = 'scale(2)';
@@ -2624,9 +2693,23 @@ function gameFind(api) {
       b.style.opacity = '0.2';
     }
   }));
+  const step = (now) => {
+    if (!alive) return;
+    const dt = lastAt ? Math.min(0.05, (now - lastAt) / 1000) : 0;
+    lastAt = now;
+    movers.forEach((m, i) => {
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.x < 0) { m.x = 0; m.vx = Math.abs(m.vx); } else if (m.x > 90) { m.x = 90; m.vx = -Math.abs(m.vx); }
+      if (m.y < 0) { m.y = 0; m.vy = Math.abs(m.vy); } else if (m.y > 85) { m.y = 85; m.vy = -Math.abs(m.vy); }
+      buttons[i].style.left = m.x + '%';
+      buttons[i].style.top = m.y + '%';
+    });
+    raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
   timer = setInterval(() => { time--; api.info('Cherchez... ' + time + ' s'); if (time <= 0) api.end(0, 'Temps écoulé, introuvable'); }, 1000);
   api.info('Cherchez... 8 s');
-  return () => { alive = false; clearInterval(timer); };
+  return () => { alive = false; clearInterval(timer); cancelAnimationFrame(raf); };
 }
 
 function gameRush(api) {
@@ -3266,31 +3349,40 @@ function renderAchPane() {
     (g > 0
       ? '<p>Une ascension maintenant vous rapporterait <b>+' + g + '</b> pépite' + (g > 1 ? 's' : '') + ' (+' + g + ' % de production).</p>'
       : '<p>Fais cuire des cookies pour commencer à remplir les objectifs ci-dessous.</p>') +
-    (S.temple && S.temple.includes('keep_friend')
-      ? (S.compData && S.compData.equipped && S.compData.equipped[0]
-        ? '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> ' + (COMPANIONS.find((c) => c.id === S.compData.equipped[0])?.name || 'Le compagnon du slot A') + ' sera conservé après l’ascension.</p>'
-        : '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> équipez un compagnon dans le slot A pour le conserver après l’ascension.</p>')
-      : '') + ascensionProgressMarkup();
+    keepFriendStatusMarkup() + ascensionProgressMarkup();
   $('#ascBtn').disabled = g < 1;
   if(document.getElementById('templeChipsCurrent')) document.getElementById('templeChipsCurrent').textContent = '✨ Pépites célestes actuelles : ' + S.chips;
 }
 
-function performAscension(g, keptCompId = null) {
+// Companions protected by "Copain pour toujours" (slot A, plus slot B with Légende Absolue).
+function keptCompanionIds() {
+  const count = typeof keptCompanionSlots === 'function' ? keptCompanionSlots() : 0;
+  const equipped = S.compData && Array.isArray(S.compData.equipped) ? S.compData.equipped : [];
+  return equipped.slice(0, count).filter(Boolean);
+}
+function keepFriendStatusMarkup() {
+  const count = typeof keptCompanionSlots === 'function' ? keptCompanionSlots() : 0;
+  if (!count) return '';
+  const slots = count > 1 ? 'les slots A et B' : 'le slot A';
+  const names = keptCompanionIds().map((id) => COMPANIONS.find((c) => c.id === id)?.name).filter(Boolean);
+  return names.length
+    ? '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> ' + names.join(' et ') + ' ' + (names.length > 1 ? 'seront conservés' : 'sera conservé') + ' après l’ascension.</p>'
+    : '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> équipez un compagnon dans ' + slots + ' pour le conserver après l’ascension.</p>';
+}
+
+function performAscension(g, keptCompIds = []) {
   if (activeEvent) endEvent();
   const keep = {};
   const companionFavorites = Array.isArray(S.compData && S.compData.favorites) ? S.compData.favorites.slice() : [];
+  const keptIds = (Array.isArray(keptCompIds) ? keptCompIds : [keptCompIds])
+    .filter((id) => id && S.compData && S.compData.unlocked && S.compData.unlocked.includes(id));
   
-  if (keptCompId && S.compData && S.compData.unlocked && S.compData.unlocked.includes(keptCompId)) {
-    const lvl = (S.compData.levels && S.compData.levels[keptCompId]) || 1;
-    const sh = (S.compData.shards && S.compData.shards[keptCompId]) || 0;
-    keep.compData = {
-      unlocked: [keptCompId],
-      equipped: [keptCompId],
-      shards: { [keptCompId]: sh },
-      levels: { [keptCompId]: lvl },
-      pulls: 0,
-      pityTracker: 0
-    };
+  if (keptIds.length) {
+    keep.compData = { unlocked: keptIds.slice(), equipped: keptIds.slice(), shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
+    keptIds.forEach((id) => {
+      keep.compData.levels[id] = (S.compData.levels && S.compData.levels[id]) || 1;
+      keep.compData.shards[id] = (S.compData.shards && S.compData.shards[id]) || 0;
+    });
   } else {
     keep.compData = { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0 };
   }
@@ -3317,7 +3409,7 @@ function performAscension(g, keptCompId = null) {
   if (typeof renderCompanions === 'function') renderCompanions();
   if (typeof renderGachaPane === 'function') renderGachaPane();
   save();
-  const keptName = keptCompId ? (COMPANIONS.find(x => x.id === keptCompId)?.name || 'Votre compagnon') : null;
+  const keptName = keptIds.length ? keptIds.map((id) => COMPANIONS.find(x => x.id === id)?.name || 'Votre compagnon').join(' et ') : null;
   toast('😇', 'Ascension Réussie !', `Vous avez maintenant ${S.chips} pépites célestes !` + (keptName ? ` 🤝 ${keptName} vous a accompagné !` : ''));
   celebrate();
 }
@@ -3326,14 +3418,14 @@ $('#ascBtn').addEventListener('click', () => {
   const g = chipsPotential();
   if (g < 1) return;
   const hasKeepFriend = Boolean(S.temple && S.temple.includes('keep_friend'));
-  const slotAId = hasKeepFriend && S.compData && Array.isArray(S.compData.equipped) ? S.compData.equipped[0] : null;
-  const slotA = slotAId ? COMPANIONS.find((companion) => companion.id === slotAId) : null;
+  const keptIds = keptCompanionIds();
+  const keptNames = keptIds.map((id) => COMPANIONS.find((companion) => companion.id === id)?.name).filter(Boolean);
   const keepMessage = hasKeepFriend
-    ? slotA ? '\n\n🛡️ Copain pour toujours : « ' + slotA.name + ' », équipé dans le slot A, sera conservé.' : '\n\n🛡️ Copain pour toujours est activé, mais le slot A est vide : aucun compagnon ne sera conservé.'
+    ? keptNames.length ? '\n\n🛡️ Copain pour toujours : « ' + keptNames.join(' » et « ') + ' » ' + (keptNames.length > 1 ? 'seront conservés.' : 'sera conservé.') : '\n\n🛡️ Copain pour toujours est activé, mais aucun compagnon protégé n’est équipé.'
     : '';
   if (!confirm('Faire une ascension ?\n\nVos cookies, bâtiments et améliorations classiques repartent de zéro. Vous conservez ' + S.chips +
     ' pépite(s) céleste(s) et en gagnez ' + g + ' de plus, soit +' + g + ' % de production supplémentaire.' + keepMessage)) return;
-  performAscension(g, slotA ? slotA.id : null);
+  performAscension(g, keptIds);
 });
 $('#reset').addEventListener('click', () => {
   if (!confirm('Effacer complètement votre partie ? Tout sera perdu, même les succès.')) return;
@@ -3500,7 +3592,7 @@ function applyStyle() {
   if (chipsHi) chipsHi.setAttribute('fill', shade(ck.chip, lum(ck.chip) > 0.5 ? -0.25 : 0.3));
   drawSprite(ck);
   
-  $('#bakery').textContent = String(S.custom.name || '').trim() || DEFAULT_CUSTOM.name;
+  $('#bakery').textContent = String(S.custom.name || '').trim() || (activeWorld() && activeWorld().name) || DEFAULT_CUSTOM.name;
   
   // Toggle UI visibility in the style pane
   const c = S.custom;
@@ -3764,12 +3856,14 @@ function loop() {
   gain(cps() * dt);
   checkSpeedrun();
   S.playTime += dt;
-  if (now - lastClick > 700) combo = Math.max(0, combo - dt * 40);
+  const comboFrozen = S.mysteryGift && now < (S.mysteryGift.comboFreezeUntil || 0);
+  if (now - lastClick > 700 && !comboFrozen) combo = Math.max(0, combo - dt * 40);
   updateFrenzy(now);
   updateGachaButtons();
   updateGolden(now);
   updateEvents(now);
   updateMysteryGift(now);
+  updateMysteryVisuals(now);
   document.body.classList.toggle('frenzy', now < S.fz.until);
   document.body.classList.toggle('clickfrenzy', now < clickFrenzyUntil);
   drawRain(Math.min(dt, 0.1));
@@ -3864,7 +3958,7 @@ function initFlappy() {
   let lasers = []; 
   let currentTargetTime = 10;
   let currentTargetMult = 50;
-  let lastSpawnAt = 0, lastFrameAt = 0;
+  let lastSpawnAt = 0, lastFrameAt = 0, campTime = 0, lastCampShotAt = 0;
   
   if (!Array.isArray(S.games['flappy'])) S.games['flappy'] = [];
   let buyBtn = document.getElementById('flappyBuyBtn');
@@ -3936,6 +4030,8 @@ function initFlappy() {
     trail = [];
     lastSpawnAt = 0;
     lastFrameAt = 0;
+    campTime = 0;
+    lastCampShotAt = 0;
     startTime = Date.now();
     
     if (!S.hdyMode) S.games['flappy'].push(Date.now());
@@ -4013,6 +4109,18 @@ function initFlappy() {
       for (let i=0;i<5;i++) { ctx.fillStyle = i%2 ? '#ff5377' : '#72f4ff'; ctx.fillRect(x-5, horizon+20+i*45, 10, 5); }
     }
 
+    // Anti-camping: staying near an edge or a corner makes the arena aim at the player.
+    const edgeMargin = 95;
+    const nearEdgeX = mouseX < edgeMargin || mouseX > W - edgeMargin;
+    const nearEdgeY = mouseY < edgeMargin || mouseY > H - edgeMargin;
+    if (nearEdgeX || nearEdgeY) campTime += dt; else campTime = Math.max(0, campTime - dt * 2);
+    if (campTime > 1.1 && frameNow - lastCampShotAt > 900 - difficulty * 300) {
+      const aimX = nearEdgeX || !nearEdgeY;
+      lasers.push({ axis: aimX ? 'x' : 'y', pos: aimX ? mouseX : mouseY, state: 'warn', timer: .62 - difficulty*.15, width: 46 - difficulty*10, phase: 0, camp: true });
+      if (nearEdgeX && nearEdgeY) lasers.push({ axis: 'y', pos: mouseY, state: 'warn', timer: .62 - difficulty*.15, width: 46 - difficulty*10, phase: 0, camp: true });
+      lastCampShotAt = frameNow;
+    }
+
     const maxActiveLasers = elapsed >= 45 ? 15 : elapsed >= 30 ? 10 : elapsed >= 10 ? 6 : 5;
     const spawnInterval = elapsed >= 45 ? 190 : elapsed >= 30 ? 320 : elapsed >= 10 ? 420 : 520;
     if (lasers.length < maxActiveLasers && frameNow - lastSpawnAt > spawnInterval) {
@@ -4020,11 +4128,11 @@ function initFlappy() {
       if (drone) {
         const direction = Math.random() < .5 ? 1 : -1;
         const vertical = Math.random() < .5;
-        lasers.push({ axis: vertical ? 'droneV' : 'drone', x: vertical ? W * (.12 + Math.random()*.76) : direction > 0 ? -34 : W + 34, y: vertical ? direction > 0 ? -34 : H + 34 : H * (.2 + Math.random()*.6), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis: vertical ? 'droneV' : 'drone', x: vertical ? W * (.04 + Math.random()*.92) : direction > 0 ? -34 : W + 34, y: vertical ? direction > 0 ? -34 : H + 34 : H * (.04 + Math.random()*.92), direction, speed: 420 + difficulty*130, state: 'warn', timer: .66 - difficulty*.1, phase: Math.random()*Math.PI*2 });
       } else {
         const axis = Math.random() > 0.5 ? 'x' : 'y';
         const span = axis === 'x' ? W : H;
-        lasers.push({ axis, pos: span * (0.14 + Math.random()*.72), state: 'warn', timer: .72 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
+        lasers.push({ axis, pos: span * (0.03 + Math.random()*.94), state: 'warn', timer: .72 - difficulty*.2, width: 44 - difficulty*12, phase: Math.random()*Math.PI*2 });
       }
       lastSpawnAt = frameNow;
     }
@@ -4162,59 +4270,66 @@ initFlappy();
 /* =====================================================================
    TEMPLE DES LÉGENDES
    ===================================================================== */
-const TEMPLE_UPGRADES = [
-  { id: 'celestial_bowling', name: '🎳 Bowling Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Bowling', apply: () => {} },
-  { id: 'celestial_basketball', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', apply: () => {} },
-  { id: 'celestial_football', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', apply: () => {} },
-  { id: 'vision_absolue', name: '👁️ Vision Absolue', cost: 5, desc: 'Voir tous les compagnons et leurs effets, même non débloqués (en noir et blanc)', apply: () => { if (typeof renderGachaPane === 'function') renderGachaPane(); } },
-  { id: 'comp_trio',  name: '🛡️ Trio Légendaire',      cost: 15,  desc: 'Débloque un 3ème emplacement de compagnon actif (3 compagnons équipés)', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); recalc(); } },
-  { id: 'keep_friend', name: '🛡️ Copain pour toujours', cost: 20, desc: 'Conserve le compagnon équipé dans le slot A après chaque ascension.', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); updateTempleAscensionInfo(); } },
-  { id: 'esquive+',   name: '⚡ Esquive Augmentée',   cost: 5,   desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)',   apply: () => {} },
-  { id: 'power+',     name: '⏱️ Pouvoir Prolongé',     cost: 10,  desc: 'Le buff Touche Entrée dure 90s au lieu de 60s',       apply: () => {} },
-  { id: 'frenzy+',    name: '🔥 Grande Frénésie',      cost: 20,  desc: 'Le bonus de la touche Entrée dure 45s au lieu de 30s',            apply: () => {} },
-  { id: 'click+',     name: '👆 Prestige des Clics',   cost: 30,  desc: '+5% de puissance de clic permanente',                 apply: () => { recalc(); } },
-  { id: 'prod+',      name: '🏭 Arsenal Cosmique',     cost: 50,  desc: '+10% de production globale permanente',               apply: () => { recalc(); } },
-  { id: 'legend',     name: '👑 Légende Absolue',      cost: 100, desc: 'Toutes les améliorations ci-dessus sont doublées',    apply: () => { recalc(); } },
-  { id: 'universal',  name: '🌌 Savoir Universel',     cost: 150, desc: '+15% de production globale permanente',               apply: () => { recalc(); } },
-  { id: 'divine_clk', name: '✨ Clic Divin II',        cost: 150, desc: '+10% de puissance de clic permanente',                apply: () => { recalc(); } },
-  { id: 'chrono',     name: '⏳ Chronomaître',         cost: 200, desc: 'Temps de recharge des jeux célestes divisé par 2',   apply: () => {} },
-  { id: 'gold_luck',  name: '🍀 Chance Dorée',         cost: 250, desc: 'La pluie de cookies arrive beaucoup plus vite',              apply: () => {} },
-  { id: 'companions_boost', name: '🍪 Compagnons renforcés', cost: 70, desc: 'Multiplie par 1,5 les effets numériques des compagnons. Le Maître du Casino gagne une mise bonus supplémentaire.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); } },
+const TEMPLE_CATEGORIES = [
+  { id: 'celestial', icon: '🎳', name: 'Jeux célestes', hint: 'Trois défis divins et leurs recharges.' },
+  { id: 'companions', icon: '👥', name: 'Compagnons', hint: 'Plus de place, plus de puissance, plus de fidélité.' },
+  { id: 'enter', icon: '⌨️', name: 'Esquive et touche Entrée', hint: 'Le pouvoir gagné à l’Esquive Laser.' },
+  { id: 'economy', icon: '📈', name: 'Production et clics', hint: 'Des bonus permanents sur toute la boulangerie.' }
 ];
+// legendDesc décrit l'effet doublé par Légende Absolue.
+const TEMPLE_UPGRADES = [
+  { id: 'celestial_bowling', cat: 'celestial', name: '🎳 Bowling Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Bowling', legendDesc: 'Récompenses du Bowling ×2', apply: () => {} },
+  { id: 'celestial_basketball', cat: 'celestial', name: '🏀 Panier Céleste', cost: 5, desc: 'Débloque le mini-jeu céleste de Basketball', legendDesc: 'Récompenses du Panier ×2', apply: () => {} },
+  { id: 'celestial_football', cat: 'celestial', name: '⚽ Tir au But', cost: 5, desc: 'Débloque le mini-jeu céleste de Football', legendDesc: 'Récompenses du Tir au But ×2', apply: () => {} },
+  { id: 'vision_absolue', cat: 'companions', name: '👁️ Vision Absolue', cost: 5, desc: 'Voir tous les compagnons et leurs effets, même non débloqués (en noir et blanc)', legendDesc: 'Les compagnons verrouillés s’affichent en couleur', apply: () => { if (typeof renderGachaPane === 'function') renderGachaPane(); } },
+  { id: 'comp_trio', cat: 'companions', name: '🛡️ Trio Légendaire', legendName: '🛡️ Quatuor Légendaire', cost: 15, desc: 'Débloque un 3ème emplacement de compagnon actif (3 compagnons équipés)', legendDesc: 'Quatuor : 4 compagnons équipés', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); recalc(); } },
+  { id: 'keep_friend', cat: 'companions', name: '🛡️ Copain pour toujours', legendName: '🛡️ Copains pour toujours', cost: 20, desc: 'Conserve le compagnon équipé dans le slot A après chaque ascension.', legendDesc: 'Conserve les slots A et B', apply: () => { if (typeof renderCompanions === 'function') renderCompanions(); updateTempleAscensionInfo(); } },
+  { id: 'companions_boost', cat: 'companions', name: '🍪 Compagnons renforcés', cost: 70, desc: 'Multiplie par 1,5 les effets numériques des compagnons. Le Maître du Casino gagne une mise bonus supplémentaire.', legendDesc: 'Effets ×2 et deux mises bonus', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); } },
+  { id: 'esquive+', cat: 'enter', name: '⚡ Esquive Augmentée', cost: 5, desc: '+1 essai/heure sur Esquive Laser (4 au lieu de 3)', legendDesc: '+2 essais/heure (5 au lieu de 3)', apply: () => {} },
+  { id: 'power+', cat: 'enter', name: '⏱️ Pouvoir Prolongé', cost: 10, desc: 'Le buff Touche Entrée dure 90s au lieu de 60s', legendDesc: 'Touche Entrée : 120 s au lieu de 60 s', apply: () => {} },
+  { id: 'frenzy+', cat: 'enter', name: '🔥 Grande Frénésie', cost: 20, desc: 'Le bonus de la touche Entrée dure 45s au lieu de 30s', legendDesc: 'Frénésie Entrée : 60 s au lieu de 30 s', apply: () => {} },
+  { id: 'click+', cat: 'economy', name: '👆 Prestige des Clics', cost: 30, desc: '+5% de puissance de clic permanente', legendDesc: '+10 % de puissance de clic', apply: () => { recalc(); } },
+  { id: 'prod+', cat: 'economy', name: '🏭 Arsenal Cosmique', cost: 50, desc: '+10% de production globale permanente', legendDesc: '+20 % de production', apply: () => { recalc(); } },
+  { id: 'universal', cat: 'economy', name: '🌌 Savoir Universel', cost: 150, desc: '+15% de production globale permanente', legendDesc: '+30 % de production', apply: () => { recalc(); } },
+  { id: 'divine_clk', cat: 'economy', name: '✨ Clic Divin II', cost: 150, desc: '+10% de puissance de clic permanente', legendDesc: '+20 % de puissance de clic', apply: () => { recalc(); } },
+  { id: 'chrono', cat: 'celestial', name: '⏳ Chronomaître', cost: 200, desc: 'Temps de recharge des jeux célestes divisé par 2', legendDesc: 'Recharge des jeux célestes divisée par 4', apply: () => {} },
+  { id: 'gold_luck', cat: 'economy', name: '🍀 Chance Dorée', cost: 250, desc: 'La pluie de cookies arrive deux fois plus vite', legendDesc: 'Pluie de cookies quatre fois plus rapide', apply: () => {} },
+  { id: 'legend', cat: 'legend', name: '👑 Légende Absolue', cost: 100, desc: 'Double les effets de toutes les autres améliorations du Temple.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); updateTempleAscensionInfo(); } },
+];
+function templeUpgradeName(u) { return u.legendName && templeHas('legend') ? u.legendName : u.name; }
 
 // Temple bonuses applied in production calc
+function templeHas(id) { return Boolean(S.temple && S.temple.includes(id)); }
+// Légende Absolue doubles every other temple power.
+function legendFactor() { return templeHas('legend') ? 2 : 1; }
 function templeClickBonus() {
+  const L = legendFactor();
   let mult = 1;
-  if (S.temple && S.temple.includes('click+')) mult *= 1.05;
-  if (S.temple && S.temple.includes('legend')) mult *= 1.05;
-  if (S.temple && S.temple.includes('divine_clk')) mult *= 1.10;
+  if (templeHas('click+')) mult *= 1 + 0.05 * L;
+  if (templeHas('divine_clk')) mult *= 1 + 0.10 * L;
   return mult;
 }
 function templeProdBonus() {
+  const L = legendFactor();
   let mult = 1;
-  if (S.temple && S.temple.includes('prod+')) mult *= 1.10;
-  if (S.temple && S.temple.includes('legend')) mult *= 1.10;
-  if (S.temple && S.temple.includes('universal')) mult *= 1.15;
+  if (templeHas('prod+')) mult *= 1 + 0.10 * L;
+  if (templeHas('universal')) mult *= 1 + 0.15 * L;
   return mult;
 }
 function templeEnterDuration() {
-  let dur = 60000;
-  if (S.temple && S.temple.includes('power+')) dur = 90000;
-  if (S.temple && S.temple.includes('legend')) dur += 30000;
-  return dur;
+  return 60000 + (templeHas('power+') ? 30000 * legendFactor() : 0);
 }
 function templeFrenzyDuration() {
-  let dur = 30000;
-  if (S.temple && S.temple.includes('frenzy+')) dur = 45000;
-  if (S.temple && S.temple.includes('legend')) dur += 15000;
-  return dur;
+  return 30000 + (templeHas('frenzy+') ? 15000 * legendFactor() : 0);
 }
 function templeExtraAttempts() {
-  let extra = 0;
-  if (S.temple && S.temple.includes('esquive+')) extra += 1;
-  if (S.temple && S.temple.includes('legend')) extra += 1;
-  return extra;
+  return templeHas('esquive+') ? legendFactor() : 0;
 }
+function templeChronoFactor() { return templeHas('chrono') ? Math.pow(0.5, legendFactor()) : 1; }
+function templeGoldLuckFactor() { return templeHas('gold_luck') ? Math.pow(0.5, legendFactor()) : 1; }
+function templeCompanionBoost() { return templeHas('companions_boost') ? 1 + 0.5 * legendFactor() : 1; }
+function templeCasinoFreeBets() { return 2 + (templeHas('companions_boost') ? legendFactor() : 0); }
+function templeCelestialRewardFactor() { return legendFactor(); }
 
 function initTemple() {
   const chipsEl = document.getElementById('templeChips');
@@ -4242,19 +4357,37 @@ function initTemple() {
       return;
     }
 
-    chipsEl.textContent = '✨ Pépites célestes disponibles : ' + S.chips;
-    grid.innerHTML = '';
-    TEMPLE_UPGRADES.forEach(u => {
+    const legendOn = templeHas('legend');
+    const boughtCount = TEMPLE_UPGRADES.filter((u) => S.temple.includes(u.id)).length;
+    chipsEl.innerHTML = '<span class="temple-chip-count">✨ <b>' + S.chips + '</b> pépite' + (S.chips > 1 ? 's' : '') + ' céleste' + (S.chips > 1 ? 's' : '') + '</span>' +
+      '<span class="temple-progress"><span>' + boughtCount + ' / ' + TEMPLE_UPGRADES.length + ' améliorations</span><i><b style="width:' + (boughtCount / TEMPLE_UPGRADES.length * 100).toFixed(1) + '%"></b></i></span>';
+    const cardMarkup = (u) => {
       const owned = S.temple.includes(u.id);
       const canAfford = S.chips >= u.cost;
-      const card = document.createElement('div');
-      card.style.cssText = `padding:14px; border-radius:12px; background:${owned ? 'linear-gradient(135deg,#2e1f5e,#4a2e0a)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${owned ? '#9b59b6' : '#555'}; opacity:${owned || canAfford ? '1' : '0.5'};`;
-      card.innerHTML = `<div style="font-size:20px; font-weight:900; color:${owned ? '#ffeb3b' : '#fff'}; margin-bottom:6px;">${u.name}</div>
-        <div style="font-size:12px; color:#ccc; margin-bottom:10px;">${u.desc}</div>
-        <div style="font-size:13px; color:#ffb347; margin-bottom:8px;">Coût : ${u.cost} pépite(s)</div>
-        <button class="big-btn" data-temple="${u.id}" ${owned ? 'disabled' : ''} style="width:100%; font-size:13px; padding:8px;">${owned ? '✅ Acheté' : 'Acheter'}</button>`;
-      grid.appendChild(card);
+      const state = owned ? 'owned' : canAfford ? 'affordable' : 'locked';
+      const legendLine = u.legendDesc
+        ? '<div class="temple-legend-line ' + (legendOn ? 'on' : '') + '">👑 ' + (legendOn ? 'Doublé : ' : 'Avec Légende Absolue : ') + u.legendDesc + '</div>' : '';
+      return '<article class="temple-card is-' + state + (owned && legendOn && u.legendDesc ? ' is-doubled' : '') + '">' +
+        '<div class="temple-card-name">' + templeUpgradeName(u) + '</div>' +
+        '<p class="temple-card-desc">' + u.desc + '</p>' + legendLine +
+        '<div class="temple-card-foot"><span class="temple-cost">✨ ' + u.cost + '</span>' +
+        '<button class="temple-buy" data-temple="' + u.id + '" ' + (owned || !canAfford ? 'disabled' : '') + '>' + (owned ? '✅ Acquis' : canAfford ? 'Acheter' : '🔒 ' + (u.cost - S.chips) + ' manquante' + (u.cost - S.chips > 1 ? 's' : '')) + '</button></div>' +
+        '</article>';
+    };
+    const legend = TEMPLE_UPGRADES.find((u) => u.id === 'legend');
+    const legendOwned = S.temple.includes('legend');
+    let html = '<section class="temple-hero ' + (legendOwned ? 'is-owned' : S.chips >= legend.cost ? 'is-affordable' : '') + '">' +
+      '<div class="temple-hero-aura"></div><div class="temple-hero-crown">👑</div>' +
+      '<div class="temple-hero-body"><span class="temple-hero-kicker">AMÉLIORATION ULTIME</span><h4>Légende Absolue</h4>' +
+      '<p>' + legend.desc + ' Le Trio devient un Quatuor, Copain pour toujours protège deux slots, chaque bonus passe ×2.</p>' +
+      '<div class="temple-card-foot"><span class="temple-cost">✨ ' + legend.cost + '</span><button class="temple-buy" data-temple="legend" ' + (legendOwned || S.chips < legend.cost ? 'disabled' : '') + '>' + (legendOwned ? '👑 Légende active' : S.chips >= legend.cost ? 'Devenir une légende' : '🔒 ' + (legend.cost - S.chips) + ' manquante' + (legend.cost - S.chips > 1 ? 's' : '')) + '</button></div></div></section>';
+    TEMPLE_CATEGORIES.forEach((cat) => {
+      const ups = TEMPLE_UPGRADES.filter((u) => u.cat === cat.id);
+      const done = ups.filter((u) => S.temple.includes(u.id)).length;
+      html += '<section class="temple-section"><header><span class="temple-section-icon">' + cat.icon + '</span><div><h4>' + cat.name + '</h4><small>' + cat.hint + '</small></div><em>' + done + '/' + ups.length + '</em></header>' +
+        '<div class="temple-cards">' + ups.map(cardMarkup).join('') + '</div></section>';
     });
+    grid.innerHTML = html;
     grid.querySelectorAll('[data-temple]').forEach(b => b.addEventListener('click', () => {
       const u = TEMPLE_UPGRADES.find(x => x.id === b.dataset.temple);
       if (!u || S.temple.includes(u.id) || S.chips < u.cost) return;
@@ -4263,7 +4396,8 @@ function initTemple() {
       u.apply();
       save();
       renderTemple();
-      toast('🏆', 'Temple des Légendes', u.name + ' acheté !');
+      if (u.id === 'legend') celebrate();
+      toast(u.id === 'legend' ? '👑' : '🏆', 'Temple des Légendes', templeUpgradeName(u) + ' acheté !');
     }));
     if (typeof updateTempleAscensionInfo === 'function') updateTempleAscensionInfo();
   }
@@ -4272,8 +4406,12 @@ function initTemple() {
   document.getElementById('tabs').addEventListener('click', (e) => {
     if (e.target.closest('[data-tab]')?.dataset.tab === 'temple') renderTemple();
   });
+  // Re-render only when something changed, so card animations do not restart every tick.
+  let lastTempleKey = '';
   setInterval(() => {
-    if (document.querySelector('[data-tab="temple"].on')) renderTemple();
+    if (!document.querySelector('[data-tab="temple"].on')) return;
+    const key = S.chips + '|' + S.temple.join(',') + '|' + (window.__adminMode || S.bakedAll >= 25e9);
+    if (key !== lastTempleKey) { lastTempleKey = key; renderTemple(); }
   }, 5000);
 }
 initTemple();
@@ -4288,11 +4426,7 @@ function updateTempleAscensionInfo() {
   const pot = chipsPotential(), g = pot;
   const ascInfo = document.getElementById('ascInfo');
   if (ascInfo) {
-    const keepStatus = S.temple && S.temple.includes('keep_friend')
-      ? (S.compData && S.compData.equipped && S.compData.equipped[0]
-        ? '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> ' + (COMPANIONS.find((c) => c.id === S.compData.equipped[0])?.name || 'Le compagnon du slot A') + ' en slot A sera conservé après l’ascension.</p>'
-        : '<p class="keep-friend-status">🛡️ <b>Copain pour toujours activé :</b> équipez un compagnon en slot A pour le conserver après l’ascension.</p>')
-      : '';
+    const keepStatus = keepFriendStatusMarkup();
     ascInfo.innerHTML = (g > 0
       ? '<p style="color:#2ecc71;">Cette ascension vous rapportera <b>+' + g + ' pépite' + (g > 1 ? 's' : '') + '</b>, soit +' + g + ' % de production.</p>'
       : '<p style="color:#a4b0be;">Cuis des cookies pour remplir les objectifs de pépites ci-dessous.</p>') + keepStatus + ascensionProgressMarkup();
@@ -4900,7 +5034,7 @@ function companionEffectText(c, val) {
   if (type === 'jackpot_luck') return `Roulette : +${Math.min(15, numericValue)} points de chance de gagner`;
   if (type === 'casino_discount') return `Recharges du casino : coût réduit de ${Math.round(numericValue * 0.5)}%`;
   if (type === 'casino_cost_reduce') return `Recharges du casino : coût réduit de ${(numericValue * 0.15).toFixed(1)}%`;
-  if (type === 'casino_free') return `${S.temple && S.temple.includes('companions_boost') ? 3 : 2} mises bonus toutes les 15 minutes`;
+  if (type === 'casino_free') return `${templeCasinoFreeBets()} mises bonus toutes les 15 minutes`;
   if (type === 'mystery_blind_bonus') return `${Math.round(numericValue * 0.3)}% de chance de renforcer un cadeau accepté sans aperçu`;
   if (type === 'mystery_history') return 'Consulter les 20 derniers cadeaux mystérieux acceptés';
   if (type === 'mystery_vision') return 'Voir le contenu du cadeau mystérieux avant de choisir';
@@ -4918,7 +5052,7 @@ function companionVal(cId) {
   const c = COMPANIONS.find(x => x.id === cId);
   if (!c) return 0;
   const lvl = Math.min(13, S.compData && S.compData.levels ? (S.compData.levels[cId] || 1) : 1);
-  const templeBoost = S.temple && S.temple.includes('companions_boost') ? 1.5 : 1;
+  const templeBoost = templeCompanionBoost();
   const rarityBoost = { commun: 0.63, peu_commun: 0.63, rare: 0.63, epique: 0.65, legendaire: 0.69, mythique: 0.72 }[c.rarity] || 0.63;
   const sameEffectCount = COMPANIONS.filter((entry) => entry.powerType === c.powerType).length;
   const duplicateEffectBalance = sameEffectCount > 1 ? 0.9 : 1;
@@ -4962,7 +5096,27 @@ function compHasSpecial(powerType) {
 }
 
 function maxCompanionSlots() {
-  return (S.temple && S.temple.includes('comp_trio')) ? 3 : 2;
+  if (!(S.temple && S.temple.includes('comp_trio'))) return 2;
+  // Légende Absolue double le Trio : il devient un Quatuor.
+  return templeHas('legend') ? 4 : 3;
+}
+// Position names for each companion slot, by number of available slots.
+function companionSlotMeta(slotIdx, maxSlots) {
+  const layouts = {
+    2: [['Gauche', 'G', '🛡️'], ['Droite', 'D', '⚔️']],
+    3: [['Gauche', 'G', '🛡️'], ['Centre', 'C', '👑'], ['Droite', 'D', '⚔️']],
+    4: [['Gauche', 'G', '🛡️'], ['Centre gauche', 'CG', '👑'], ['Centre droit', 'CD', '💎'], ['Droite', 'D', '⚔️']]
+  };
+  const [side, tag, icon] = (layouts[maxSlots] || layouts[2])[slotIdx] || ['Slot ' + (slotIdx + 1), String(slotIdx + 1), '🛡️'];
+  return { side, tag: 'Slot ' + tag, icon, label: 'Slot ' + side + ' (' + (slotIdx + 1) + ')', short: 'Slot ' + (slotIdx + 1), name: 'Emplacement ' + (slotIdx + 1) + ' (' + side + ')' };
+}
+function companionGroupName(maxSlots) {
+  return maxSlots >= 4 ? 'Quatuor' : maxSlots === 3 ? 'Trio' : 'Duo';
+}
+// Nombre de compagnons conservés après l'ascension (doublé par Légende Absolue).
+function keptCompanionSlots() {
+  if (!templeHas('keep_friend')) return 0;
+  return templeHas('legend') ? 2 : 1;
 }
 window.maxCompanionSlots = maxCompanionSlots;
 
@@ -4983,19 +5137,8 @@ function renderCompanions() {
     const id = S.compData.equipped[slotIdx] || null;
     const slotCooldown = companionSlotCooldownLeft(slotIdx);
     const slotHint = slotCooldown ? '⏳ Modifiable dans ' + fmtTime(slotCooldown / 1000) : '👉 Cliquer pour modifier ou retirer';
-    let slotLabel = '';
-    let slotShort = '';
-    let slotIcon = '🛡️';
-
-    if (maxSlots === 2) {
-      slotLabel = slotIdx === 0 ? 'Slot Gauche (1)' : 'Slot Droite (2)';
-      slotShort = slotIdx === 0 ? 'Slot 1' : 'Slot 2';
-      slotIcon = slotIdx === 0 ? '🛡️' : '⚔️';
-    } else {
-      if (slotIdx === 0) { slotLabel = 'Slot Gauche (1)'; slotShort = 'Slot 1'; slotIcon = '🛡️'; }
-      else if (slotIdx === 1) { slotLabel = 'Slot Centre (2)'; slotShort = 'Slot 2'; slotIcon = '👑'; }
-      else { slotLabel = 'Slot Droite (3)'; slotShort = 'Slot 3'; slotIcon = '⚔️'; }
-    }
+    const slotMeta = companionSlotMeta(slotIdx, maxSlots);
+    const slotLabel = slotMeta.label, slotShort = slotMeta.short, slotIcon = slotMeta.icon;
     
     if (id) {
       const c = COMPANIONS.find(x => x.id === id);
@@ -5004,7 +5147,7 @@ function renderCompanions() {
         const lvl = Math.min(13, S.compData.levels[id] || 1);
         const friendClass = (c.isFriend && c.img) ? 'is-friend-photo' : '';
         const rarityInfo = RARITIES[c.rarity] || { name: c.rarity, color: '#bdc3c7' };
-        const keepShield = slotIdx === 0 && S.temple && S.temple.includes('keep_friend')
+        const keepShield = slotIdx < keptCompanionSlots()
           ? '<span class="companion-keep-shield" title="Copain pour toujours activé : ce compagnon sera conservé après l’ascension." aria-label="Copain pour toujours activé : ce compagnon sera conservé après l’ascension.">🛡️</span>' : '';
         
         html += `
@@ -5032,7 +5175,7 @@ function renderCompanions() {
       }
     } else {
       // Slot vide avec le "+"
-      const emptyKeepShield = slotIdx === 0 && S.temple && S.temple.includes('keep_friend')
+      const emptyKeepShield = slotIdx < keptCompanionSlots()
         ? '<span class="companion-keep-shield" title="Copain pour toujours activé : équipez un compagnon dans le slot A pour le conserver après l’ascension." aria-label="Copain pour toujours activé : équipez un compagnon dans le slot A pour le conserver après l’ascension.">🛡️</span>' : '';
       html += `
         <div class="active-comp-wrapper" data-open-selector="${slotIdx}">
@@ -5088,12 +5231,7 @@ window.openCompanionSelector = function(slotIdx) {
   if (blockCompanionSlotIfCooling(slotIdx)) return;
   
   const maxSlots = maxCompanionSlots();
-  let slotName = '';
-  if (maxSlots === 2) {
-    slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
-  } else {
-    slotName = slotIdx === 0 ? 'Emplacement 1 (Gauche)' : (slotIdx === 1 ? 'Emplacement 2 (Centre)' : 'Emplacement 3 (Droite)');
-  }
+  const slotName = companionSlotMeta(slotIdx, maxSlots).name;
 
   const currentEquippedId = S.compData.equipped[slotIdx] || null;
   const unlocked = S.compData.unlocked || [];
@@ -5184,29 +5322,13 @@ function showGachaWinModal(result, isNew) {
   const rarityInfo = RARITIES[result.rarity] || { name: result.rarity, color: '#bdc3c7' };
   const maxSlots = maxCompanionSlots();
   
-  let equipButtonsHtml = '';
-  if (maxSlots === 2) {
-    equipButtonsHtml = `
-      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
-        🛡️ Équiper Slot G
-      </button>
-      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:12px; padding:10px 6px;">
-        ⚔️ Équiper Slot D
-      </button>
-    `;
-  } else {
-    equipButtonsHtml = `
-      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="0" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
-        🛡️ Slot G
-      </button>
-      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="1" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
-        👑 Slot C
-      </button>
-      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="2" style="background:#2f3542; border:1px solid #57606f; font-size:11px; padding:8px 4px;">
-        ⚔️ Slot D
-      </button>
-    `;
-  }
+  const equipButtonsHtml = Array.from({ length: maxSlots }, (_, slot) => {
+    const meta = companionSlotMeta(slot, maxSlots);
+    return `
+      <button class="big-btn" data-equip-id="${result.id}" data-equip-slot="${slot}" style="background:#2f3542; border:1px solid #57606f; font-size:${maxSlots === 2 ? 12 : 11}px; padding:${maxSlots === 2 ? '10px 6px' : '8px 4px'};">
+        ${meta.icon} ${maxSlots === 2 ? 'Équiper ' : ''}${meta.tag}
+      </button>`;
+  }).join('');
   
   mBody.innerHTML = `
     <div class="gacha-win-content">
@@ -5530,12 +5652,7 @@ function equipCompanionSlot(id, slotIndex) {
   if (!S.compData.slotCooldowns) S.compData.slotCooldowns = {};
   while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
   
-  let slotTxt = `Slot ${slotIndex + 1}`;
-  if (maxSlots === 2) {
-    slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : 'Slot Droite (2)';
-  } else {
-    slotTxt = (slotIndex === 0) ? 'Slot Gauche (1)' : (slotIndex === 1 ? 'Slot Centre (2)' : 'Slot Droite (3)');
-  }
+  const slotTxt = companionSlotMeta(slotIndex, maxSlots).label;
 
   const sourceSlot = S.compData.equipped.findIndex((equippedId, index) => equippedId === id && index !== slotIndex);
   const affectedSlots = sourceSlot >= 0 ? [slotIndex, sourceSlot] : [slotIndex];
@@ -5763,21 +5880,11 @@ function renderGachaPane() {
   for (let sIdx = 0; sIdx < maxSlots; sIdx++) {
     const sId = S.compData.equipped[sIdx] || null;
     const cObj = sId ? COMPANIONS.find(x => x.id === sId) : null;
-    const keepSlotMark = sIdx === 0 && S.temple && S.temple.includes('keep_friend')
+    const keepSlotMark = sIdx < keptCompanionSlots()
       ? '<span class="companion-keep-shield" title="Copain pour toujours activé : le compagnon du slot A sera conservé après l’ascension." aria-label="Copain pour toujours activé : le compagnon du slot A sera conservé après l’ascension.">🛡️</span>' : '';
     
-    let sTitle = '';
-    let sIcon = '🛡️';
-    let sBtnTag = 'Slot G';
-    if (maxSlots === 2) {
-      sTitle = sIdx === 0 ? 'Emplacement 1 (Gauche)' : 'Emplacement 2 (Droite)';
-      sIcon = sIdx === 0 ? '🛡️' : '⚔️';
-      sBtnTag = sIdx === 0 ? 'Slot G' : 'Slot D';
-    } else {
-      if (sIdx === 0) { sTitle = 'Emplacement 1 (Gauche)'; sIcon = '🛡️'; sBtnTag = 'Slot G'; }
-      else if (sIdx === 1) { sTitle = 'Emplacement 2 (Centre)'; sIcon = '👑'; sBtnTag = 'Slot C'; }
-      else { sTitle = 'Emplacement 3 (Droite)'; sIcon = '⚔️'; sBtnTag = 'Slot D'; }
-    }
+    const sMeta = companionSlotMeta(sIdx, maxSlots);
+    const sTitle = sMeta.name, sIcon = sMeta.icon, sBtnTag = sMeta.tag;
 
     activeSlotsHtml += `
       <div class="duo-slot-box ${cObj ? 'filled rarity-' + cObj.rarity : ''}">
@@ -5808,9 +5915,9 @@ function renderGachaPane() {
   html += `
     <div class="active-duo-section">
       <div class="active-duo-title">
-        <span>⚔️ Vos ${maxSlots} Compagnons Actifs (${maxSlots === 3 ? 'Trio Équipé' : 'Duo Équipé'})</span>
+        <span>⚔️ Vos ${maxSlots} Compagnons Actifs (${companionGroupName(maxSlots)} Équipé)</span>
         <small style="color:#a4b0be; font-size:12px; font-weight:normal;">
-          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : 'Équipez trois compagnons aux effets différents.'}
+          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : maxSlots === 3 ? 'Équipez trois compagnons aux effets différents. Légende Absolue ouvre un 4ème slot.' : 'Équipez quatre compagnons aux effets différents.'}
         </small>
       </div>
       <div class="active-duo-grid">
@@ -5879,34 +5986,14 @@ function renderGachaPane() {
     
     if (unl) {
       const isFavorite = S.compData.favorites.includes(c.id);
-      let cardActionsHtml = '';
-      if (maxSlots === 2) {
-        const isEq0 = S.compData.equipped[0] === c.id;
-        const isEq1 = S.compData.equipped[1] === c.id;
-        cardActionsHtml = `
-          <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Équiper ou retirer du Slot Gauche">
-            ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
-          </button>
-          <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Équiper ou retirer du Slot Droite">
-            ${isEq1 ? '✓ Slot D' : '⚔️ Slot D'}
-          </button>
-        `;
-      } else {
-        const isEq0 = S.compData.equipped[0] === c.id;
-        const isEq1 = S.compData.equipped[1] === c.id;
-        const isEq2 = S.compData.equipped[2] === c.id;
-        cardActionsHtml = `
-          <button class="btn-slot-equip ${isEq0 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="0" title="Slot Gauche">
-            ${isEq0 ? '✓ Slot G' : '🛡️ Slot G'}
-          </button>
-          <button class="btn-slot-equip ${isEq1 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="1" title="Slot Centre">
-            ${isEq1 ? '✓ Slot C' : '👑 Slot C'}
-          </button>
-          <button class="btn-slot-equip ${isEq2 ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="2" title="Slot Droite">
-            ${isEq2 ? '✓ Slot D' : '⚔️ Slot D'}
-          </button>
-        `;
-      }
+      const cardActionsHtml = Array.from({ length: maxSlots }, (_, slot) => {
+        const meta = companionSlotMeta(slot, maxSlots);
+        const isEq = S.compData.equipped[slot] === c.id;
+        return `
+          <button class="btn-slot-equip ${isEq ? 'active' : ''}" data-equip-id="${c.id}" data-equip-slot="${slot}" title="Équiper ou retirer du ${meta.label}">
+            ${isEq ? '✓ ' + meta.tag : meta.icon + ' ' + meta.tag}
+          </button>`;
+      }).join('');
 
       html += `
         <div class="companion-card rarity-${c.rarity}" data-companion-filter-card data-companion-id="${c.id}" data-rarity="${c.rarity}" data-effects="${effectTags}" data-effect-rank="${effectRank}" data-level="${lvl}" data-name="${c.name}" data-owned="true" data-favorite="${isFavorite}">
@@ -5923,7 +6010,7 @@ function renderGachaPane() {
           <div class="comp-effect-tag">${companionEffectLabel(c)}</div>
           <div class="comp-card-power">⚡ ${companionEffectText(c, Math.round(companionVal(c.id)*100))}</div>
           <div class="comp-shards-bar">${levelLocked ? '✨ Pouvoir fixe · pas de niveau' : atMaxLevel ? '🏆 Niveau maximum atteint · Éclats : ' + shards : '💎 Éclats : <b>' + shards + ' / ' + upgradeCost + '</b>'}</div>
-          <div class="comp-card-actions ${maxSlots === 3 ? 'trio-actions' : ''}">
+          <div class="comp-card-actions ${maxSlots === 3 ? 'trio-actions' : maxSlots >= 4 ? 'quatuor-actions' : ''}">
             ${cardActionsHtml}
           </div>
           ${canUpgrade ? `
@@ -5939,9 +6026,9 @@ function renderGachaPane() {
       if (hasVisionAbsolue) {
         // Vision Absolue: show companion in black and white with details
         html += `
-          <div class="companion-card locked vision-revealed" data-companion-filter-card data-companion-id="${c.id}" data-rarity="${c.rarity}" data-effects="${effectTags}" data-effect-rank="${effectRank}" data-level="1" data-name="${c.name}" data-owned="false" data-favorite="false">
+          <div class="companion-card locked vision-revealed ${templeHas('legend') ? 'vision-color' : ''}" data-companion-filter-card data-companion-id="${c.id}" data-rarity="${c.rarity}" data-effects="${effectTags}" data-effect-rank="${effectRank}" data-level="1" data-name="${c.name}" data-owned="false" data-favorite="false">
             <div class="comp-card-top" data-comp-detail="${c.id}" style="cursor:pointer;" title="Cliquez pour les détails">
-              <div class="comp-card-visual vision-locked">
+              <div class="comp-card-visual vision-locked ${templeHas('legend') ? 'vision-color' : ''}">
                 ${renderCompanionVisual(c, 44)}
               </div>
               <div class="comp-card-details">
@@ -6138,7 +6225,7 @@ window.openCompanionDetail = function(cid) {
   else if (type === 'jackpot_luck') explanation = `Augmente de ${Math.min(15, val)} points de pourcentage vos chances de gagner à la roulette (maximum : 65%).`;
   else if (type === 'casino_discount') explanation = `Le coût d’une recharge de tentative au casino baisse de ${Math.round(val * 0.5)}%.`;
   else if (type === 'casino_cost_reduce') explanation = `Le coût d’une recharge de tentative au casino baisse de ${(val * 0.15).toFixed(1)}%.`;
-  else if (type === 'casino_free') explanation = `Ajoute ${S.temple && S.temple.includes('companions_boost') ? 3 : 2} mises à votre série de 15 minutes. Ces mises restent payantes.`;
+  else if (type === 'casino_free') explanation = `Ajoute ${templeCasinoFreeBets()} mises à votre série de 15 minutes. Ces mises restent payantes.`;
   else if (type === 'speed') explanation = `Augmente votre production automatique globale de ${val}%.`;
   else if (type === 'minigame_god') explanation = `Toutes les récompenses en cookies des mini-jeux augmentent de ${val}%.`;
   else if (type === 'arcade_speed') explanation = `Réduit le temps d’attente entre deux parties : le délai est divisé par ${1 + val / 100}.`;
