@@ -185,7 +185,7 @@ const COMPANIONS = [
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'mythique', powerType: 'gacha_legendary', powerBase: 1, powerStep: 0, desc: 'Débloque un tirage unique qui garantit un compagnon légendaire ou mythique ; il coûte vingt-cinq fois le tirage ×10' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
   { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.28, powerStep: 0.06, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
-  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés, quatre avec Légende Absolue)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
+  { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés, quatre au niveau ×2 de Légende Absolue)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
   { id: 'c_chrono', name: 'Maître du Chronos', rarity: 'legendaire', powerType: 'chrono_master', powerBase: 0.50, powerStep: 0.12, desc: 'Vitesse mini-jeux et durée frénésies +{val}%', style: { c: ['#f1c40f', '#d35400', '#2c3e50'], chip: '#f39c12', edge: '#e67e22', isChrono: true } },
@@ -404,6 +404,7 @@ function freshState() {
     compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, lifetimePulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
+    templeX2: [], // temple upgrades levelled up to ×2 after Légende Absolue
     custom: Object.assign({}, DEFAULT_CUSTOM),
   };
 }
@@ -2485,7 +2486,7 @@ function finishGame(state, frac, detail) {
   if (state.cleanup) state.cleanup();
   const g = state.g;
   frac = Math.max(0, Math.min(g.over ? 1.5 : 1, frac || 0));
-  let reward = Math.round(gameMax() * frac * (g.weight || 1) * (1 + compHas('minigame_god')) * (g.id.startsWith('celestial') ? templeCelestialRewardFactor() : 1));
+  let reward = Math.round(gameMax() * frac * (g.weight || 1) * (1 + compHas('minigame_god')) * (g.id.startsWith('celestial') ? templeCelestialRewardFactor(g.id) : 1));
   let rewardNote = '';
   if (reward > 0 && Math.random() < Math.min(0.5, compHas('extra_reward_chance'))) {
     reward *= 2;
@@ -3388,7 +3389,7 @@ function performAscension(g, keptCompIds = []) {
   }
 
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'gameRecords', 'perfect', 'daily', 'dailyCount', 'mysterySeen', 'mysteryAccepted', 'mysteryRefused',
-   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
+   'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'templeX2', 'chips'].forEach((k) => { keep[k] = S[k]; });
   keep.compData.lifetimePulls = S.compData && S.compData.lifetimePulls || 0;
   keep.casino = {
     windowStart: 0, bets: 0, lastResult: null,
@@ -4294,42 +4295,43 @@ const TEMPLE_UPGRADES = [
   { id: 'divine_clk', cat: 'economy', name: '✨ Clic Divin II', cost: 150, desc: '+10% de puissance de clic permanente', legendDesc: '+20 % de puissance de clic', apply: () => { recalc(); } },
   { id: 'chrono', cat: 'celestial', name: '⏳ Chronomaître', cost: 200, desc: 'Temps de recharge des jeux célestes divisé par 2', legendDesc: 'Recharge des jeux célestes divisée par 4', apply: () => {} },
   { id: 'gold_luck', cat: 'economy', name: '🍀 Chance Dorée', cost: 250, desc: 'La pluie de cookies arrive deux fois plus vite', legendDesc: 'Pluie de cookies quatre fois plus rapide', apply: () => {} },
-  { id: 'legend', cat: 'legend', name: '👑 Légende Absolue', cost: 100, desc: 'Double les effets de toutes les autres améliorations du Temple.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); updateTempleAscensionInfo(); } },
+  { id: 'legend', cat: 'legend', name: '👑 Légende Absolue', cost: 200, desc: 'Débloque le niveau ×2 de chaque amélioration du Temple. Chaque amélioration passe ensuite au niveau ×2 pour 10 pépites.', apply: () => { recalc(); if (typeof renderCompanions === 'function') renderCompanions(); if (typeof renderGachaPane === 'function') renderGachaPane(); updateTempleAscensionInfo(); } },
 ];
-function templeUpgradeName(u) { return u.legendName && templeHas('legend') ? u.legendName : u.name; }
+function templeUpgradeName(u) { return u.legendName && templeX2(u.id) ? u.legendName : u.name; }
 
 // Temple bonuses applied in production calc
 function templeHas(id) { return Boolean(S.temple && S.temple.includes(id)); }
 // Légende Absolue doubles every other temple power.
-function legendFactor() { return templeHas('legend') ? 2 : 1; }
+// After Légende Absolue, each upgrade must be levelled up (10 chips) to get its ×2 effect.
+const TEMPLE_LEVEL_UP_COST = 10;
+function templeX2(id) { return templeHas('legend') && templeHas(id) && Array.isArray(S.templeX2) && S.templeX2.includes(id); }
+function legendFactor(id) { return templeX2(id) ? 2 : 1; }
 function templeClickBonus() {
-  const L = legendFactor();
   let mult = 1;
-  if (templeHas('click+')) mult *= 1 + 0.05 * L;
-  if (templeHas('divine_clk')) mult *= 1 + 0.10 * L;
+  if (templeHas('click+')) mult *= 1 + 0.05 * legendFactor('click+');
+  if (templeHas('divine_clk')) mult *= 1 + 0.10 * legendFactor('divine_clk');
   return mult;
 }
 function templeProdBonus() {
-  const L = legendFactor();
   let mult = 1;
-  if (templeHas('prod+')) mult *= 1 + 0.10 * L;
-  if (templeHas('universal')) mult *= 1 + 0.15 * L;
+  if (templeHas('prod+')) mult *= 1 + 0.10 * legendFactor('prod+');
+  if (templeHas('universal')) mult *= 1 + 0.15 * legendFactor('universal');
   return mult;
 }
 function templeEnterDuration() {
-  return 60000 + (templeHas('power+') ? 30000 * legendFactor() : 0);
+  return 60000 + (templeHas('power+') ? 30000 * legendFactor('power+') : 0);
 }
 function templeFrenzyDuration() {
-  return 30000 + (templeHas('frenzy+') ? 15000 * legendFactor() : 0);
+  return 30000 + (templeHas('frenzy+') ? 15000 * legendFactor('frenzy+') : 0);
 }
 function templeExtraAttempts() {
-  return templeHas('esquive+') ? legendFactor() : 0;
+  return templeHas('esquive+') ? legendFactor('esquive+') : 0;
 }
-function templeChronoFactor() { return templeHas('chrono') ? Math.pow(0.5, legendFactor()) : 1; }
-function templeGoldLuckFactor() { return templeHas('gold_luck') ? Math.pow(0.5, legendFactor()) : 1; }
-function templeCompanionBoost() { return templeHas('companions_boost') ? 1 + 0.5 * legendFactor() : 1; }
-function templeCasinoFreeBets() { return 2 + (templeHas('companions_boost') ? legendFactor() : 0); }
-function templeCelestialRewardFactor() { return legendFactor(); }
+function templeChronoFactor() { return templeHas('chrono') ? Math.pow(0.5, legendFactor('chrono')) : 1; }
+function templeGoldLuckFactor() { return templeHas('gold_luck') ? Math.pow(0.5, legendFactor('gold_luck')) : 1; }
+function templeCompanionBoost() { return templeHas('companions_boost') ? 1 + 0.5 * legendFactor('companions_boost') : 1; }
+function templeCasinoFreeBets() { return 2 + (templeHas('companions_boost') ? legendFactor('companions_boost') : 0); }
+function templeCelestialRewardFactor(gameId) { return legendFactor(gameId); }
 
 function initTemple() {
   const chipsEl = document.getElementById('templeChips');
@@ -4361,13 +4363,18 @@ function initTemple() {
     const boughtCount = TEMPLE_UPGRADES.filter((u) => S.temple.includes(u.id)).length;
     chipsEl.innerHTML = '<span class="temple-chip-count">✨ <b>' + S.chips + '</b> pépite' + (S.chips > 1 ? 's' : '') + ' céleste' + (S.chips > 1 ? 's' : '') + '</span>' +
       '<span class="temple-progress"><span>' + boughtCount + ' / ' + TEMPLE_UPGRADES.length + ' améliorations</span><i><b style="width:' + (boughtCount / TEMPLE_UPGRADES.length * 100).toFixed(1) + '%"></b></i></span>';
+    if (!Array.isArray(S.templeX2)) S.templeX2 = [];
     const cardMarkup = (u) => {
       const owned = S.temple.includes(u.id);
       const canAfford = S.chips >= u.cost;
       const state = owned ? 'owned' : canAfford ? 'affordable' : 'locked';
+      const doubled = templeX2(u.id);
+      const canLevel = owned && legendOn && !doubled && u.legendDesc;
       const legendLine = u.legendDesc
-        ? '<div class="temple-legend-line ' + (legendOn ? 'on' : '') + '">👑 ' + (legendOn ? 'Doublé : ' : 'Avec Légende Absolue : ') + u.legendDesc + '</div>' : '';
-      return '<article class="temple-card is-' + state + (owned && legendOn && u.legendDesc ? ' is-doubled' : '') + '">' +
+        ? '<div class="temple-legend-line ' + (doubled ? 'on' : '') + '">👑 ' + (doubled ? 'Niveau ×2 actif : ' : legendOn ? 'Niveau ×2 (' + TEMPLE_LEVEL_UP_COST + ' pépites) : ' : 'Niveau ×2 avec Légende Absolue : ') + u.legendDesc + '</div>' : '';
+      const levelUp = canLevel
+        ? '<button class="temple-level-up" data-temple-x2="' + u.id + '" ' + (S.chips < TEMPLE_LEVEL_UP_COST ? 'disabled' : '') + ' title="Passer au niveau ×2 pour ' + TEMPLE_LEVEL_UP_COST + ' pépites" aria-label="Passer au niveau ×2 pour ' + TEMPLE_LEVEL_UP_COST + ' pépites">⬆️<small>×2 · ' + TEMPLE_LEVEL_UP_COST + '✨</small></button>' : '';
+      return '<article class="temple-card is-' + state + (doubled ? ' is-doubled' : '') + (canLevel ? ' can-level' : '') + '">' + levelUp +
         '<div class="temple-card-name">' + templeUpgradeName(u) + '</div>' +
         '<p class="temple-card-desc">' + u.desc + '</p>' + legendLine +
         '<div class="temple-card-foot"><span class="temple-cost">✨ ' + u.cost + '</span>' +
@@ -4379,7 +4386,7 @@ function initTemple() {
     let html = '<section class="temple-hero ' + (legendOwned ? 'is-owned' : S.chips >= legend.cost ? 'is-affordable' : '') + '">' +
       '<div class="temple-hero-aura"></div><div class="temple-hero-crown">👑</div>' +
       '<div class="temple-hero-body"><span class="temple-hero-kicker">AMÉLIORATION ULTIME</span><h4>Légende Absolue</h4>' +
-      '<p>' + legend.desc + ' Le Trio devient un Quatuor, Copain pour toujours protège deux slots, chaque bonus passe ×2.</p>' +
+      '<p>' + legend.desc + ' Achetée avant ou après les autres bonus, elle fait apparaître une icône ⬆️ sur chaque amélioration acquise. Exemple : Trio → Quatuor, Copain pour toujours → deux slots protégés.</p>' +
       '<div class="temple-card-foot"><span class="temple-cost">✨ ' + legend.cost + '</span><button class="temple-buy" data-temple="legend" ' + (legendOwned || S.chips < legend.cost ? 'disabled' : '') + '>' + (legendOwned ? '👑 Légende active' : S.chips >= legend.cost ? 'Devenir une légende' : '🔒 ' + (legend.cost - S.chips) + ' manquante' + (legend.cost - S.chips > 1 ? 's' : '')) + '</button></div></div></section>';
     TEMPLE_CATEGORIES.forEach((cat) => {
       const ups = TEMPLE_UPGRADES.filter((u) => u.cat === cat.id);
@@ -4397,7 +4404,18 @@ function initTemple() {
       save();
       renderTemple();
       if (u.id === 'legend') celebrate();
-      toast(u.id === 'legend' ? '👑' : '🏆', 'Temple des Légendes', templeUpgradeName(u) + ' acheté !');
+      toast(u.id === 'legend' ? '👑' : '🏆', 'Temple des Légendes', templeUpgradeName(u) + ' acheté !' + (u.id !== 'legend' && legendOn && u.legendDesc ? ' Passe-le au niveau ×2 avec l’icône ⬆️.' : ''));
+    }));
+    grid.querySelectorAll('[data-temple-x2]').forEach(b => b.addEventListener('click', () => {
+      const u = TEMPLE_UPGRADES.find(x => x.id === b.dataset.templeX2);
+      if (!u || !templeHas('legend') || !S.temple.includes(u.id) || templeX2(u.id) || S.chips < TEMPLE_LEVEL_UP_COST) return;
+      S.chips -= TEMPLE_LEVEL_UP_COST;
+      S.templeX2.push(u.id);
+      u.apply();
+      recalc();
+      save();
+      renderTemple();
+      toast('⬆️', 'Niveau ×2', templeUpgradeName(u) + ' : ' + u.legendDesc);
     }));
     if (typeof updateTempleAscensionInfo === 'function') updateTempleAscensionInfo();
   }
@@ -4410,7 +4428,7 @@ function initTemple() {
   let lastTempleKey = '';
   setInterval(() => {
     if (!document.querySelector('[data-tab="temple"].on')) return;
-    const key = S.chips + '|' + S.temple.join(',') + '|' + (window.__adminMode || S.bakedAll >= 25e9);
+    const key = S.chips + '|' + S.temple.join(',') + '|' + (S.templeX2 || []).join(',') + '|' + (window.__adminMode || S.bakedAll >= 25e9);
     if (key !== lastTempleKey) { lastTempleKey = key; renderTemple(); }
   }, 5000);
 }
@@ -5098,7 +5116,7 @@ function compHasSpecial(powerType) {
 function maxCompanionSlots() {
   if (!(S.temple && S.temple.includes('comp_trio'))) return 2;
   // Légende Absolue double le Trio : il devient un Quatuor.
-  return templeHas('legend') ? 4 : 3;
+  return templeX2('comp_trio') ? 4 : 3;
 }
 // Position names for each companion slot, by number of available slots.
 function companionSlotMeta(slotIdx, maxSlots) {
@@ -5116,7 +5134,7 @@ function companionGroupName(maxSlots) {
 // Nombre de compagnons conservés après l'ascension (doublé par Légende Absolue).
 function keptCompanionSlots() {
   if (!templeHas('keep_friend')) return 0;
-  return templeHas('legend') ? 2 : 1;
+  return templeX2('keep_friend') ? 2 : 1;
 }
 window.maxCompanionSlots = maxCompanionSlots;
 
@@ -5917,7 +5935,7 @@ function renderGachaPane() {
       <div class="active-duo-title">
         <span>⚔️ Vos ${maxSlots} Compagnons Actifs (${companionGroupName(maxSlots)} Équipé)</span>
         <small style="color:#a4b0be; font-size:12px; font-weight:normal;">
-          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : maxSlots === 3 ? 'Équipez trois compagnons aux effets différents. Légende Absolue ouvre un 4ème slot.' : 'Équipez quatre compagnons aux effets différents.'}
+          ${maxSlots === 2 ? '(Débloquez un 3ème slot au Temple des Légendes !)' : maxSlots === 3 ? 'Équipez trois compagnons aux effets différents. Le niveau ×2 du Trio (Légende Absolue) ouvre un 4ème slot.' : 'Équipez quatre compagnons aux effets différents.'}
         </small>
       </div>
       <div class="active-duo-grid">
@@ -6026,9 +6044,9 @@ function renderGachaPane() {
       if (hasVisionAbsolue) {
         // Vision Absolue: show companion in black and white with details
         html += `
-          <div class="companion-card locked vision-revealed ${templeHas('legend') ? 'vision-color' : ''}" data-companion-filter-card data-companion-id="${c.id}" data-rarity="${c.rarity}" data-effects="${effectTags}" data-effect-rank="${effectRank}" data-level="1" data-name="${c.name}" data-owned="false" data-favorite="false">
+          <div class="companion-card locked vision-revealed ${templeX2('vision_absolue') ? 'vision-color' : ''}" data-companion-filter-card data-companion-id="${c.id}" data-rarity="${c.rarity}" data-effects="${effectTags}" data-effect-rank="${effectRank}" data-level="1" data-name="${c.name}" data-owned="false" data-favorite="false">
             <div class="comp-card-top" data-comp-detail="${c.id}" style="cursor:pointer;" title="Cliquez pour les détails">
-              <div class="comp-card-visual vision-locked ${templeHas('legend') ? 'vision-color' : ''}">
+              <div class="comp-card-visual vision-locked ${templeX2('vision_absolue') ? 'vision-color' : ''}">
                 ${renderCompanionVisual(c, 44)}
               </div>
               <div class="comp-card-details">

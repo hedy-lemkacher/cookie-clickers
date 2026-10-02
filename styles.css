@@ -2377,3 +2377,10 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
 @media (prefers-reduced-motion: reduce) {
   .temple-hero-aura, .temple-hero-crown, .temple-card, .temple-card::after, .temple-hero.is-affordable { animation: none !important; }
 }
+.temple-level-up { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 7px; border: 1px solid #ffd700; border-radius: 10px; background: linear-gradient(135deg, #6b4a00, #b8860b); color: #fff7cc; font: inherit; font-size: 16px; line-height: 1; cursor: pointer; box-shadow: 0 0 10px rgba(255, 215, 0, .45); animation: templeLevelBounce 1.6s ease-in-out infinite; }
+.temple-level-up small { font-size: 9px; font-weight: 800; letter-spacing: .02em; }
+.temple-level-up:hover:not(:disabled) { filter: brightness(1.2); transform: scale(1.08); }
+.temple-level-up:disabled { cursor: not-allowed; opacity: .55; animation: none; box-shadow: none; }
+.temple-card.can-level .temple-card-name { padding-right: 56px; }
+@keyframes templeLevelBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .temple-level-up { animation: none; } }
