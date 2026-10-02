@@ -184,7 +184,7 @@ const COMPANIONS = [
   // Légendaires (Amis avec photo OU thématiques)
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
-  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.15, powerStep: 0.03, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.25, powerStep: 0.05, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
@@ -5543,6 +5543,47 @@ window.upgradeCompanion = upgradeCompanion;
 let currentRarityFilter = 'all';
 let currentCompanionSort = 'rarity-asc';
 let currentCompanionView = 'all';
+let currentCompanionEffectFilter = 'all';
+const COMPANION_EFFECT_CATEGORIES = [
+  { id: 'frenzy', label: 'Frénésie' },
+  { id: 'production', label: 'Production globale' },
+  { id: 'clicks', label: 'Clics et combo' },
+  { id: 'buildings', label: 'Bâtiments' },
+  { id: 'minigames', label: 'Mini-jeux' },
+  { id: 'mystery', label: 'Cadeaux mystérieux' },
+  { id: 'golden', label: 'Cookies dorés' },
+  { id: 'casino', label: 'Casino' },
+  { id: 'events', label: 'Événements' },
+  { id: 'economy', label: 'Réductions' },
+  { id: 'luck', label: 'Chance et récompenses' },
+  { id: 'companions', label: 'Compagnons' }
+];
+function companionEffectCategories(companion) {
+  const type = companion.powerType || '';
+  const groups = [];
+  if (['frenzy_dur', 'golden_vision', 'chrono_master'].includes(type)) groups.push('frenzy');
+  if (['cps', 'cps_master', 'cps_brain', 'speed', 'all_buildings', 'divine_omni', 'double_edged', 'cps_click_hybrid'].includes(type)) groups.push('production');
+  if (['click', 'click_master', 'cps_click_hybrid', 'double_edged', 'combo_power'].includes(type)) groups.push('clicks');
+  if (type.startsWith('building_') && type !== 'building_discount') groups.push('buildings');
+  if (['arcade_speed', 'chrono_master', 'minigame_god', 'extra_reward_chance', 'first_discovery_bonus'].includes(type)) groups.push('minigames');
+  if (type.startsWith('mystery_') || ['mystery_activate', 'mystery_vision'].includes(type)) groups.push('mystery');
+  if (type.startsWith('golden_')) groups.push('golden');
+  if (type.startsWith('casino_') || type === 'jackpot_luck') groups.push('casino');
+  if (type === 'events') groups.push('events');
+  if (['discount', 'building_discount'].includes(type)) groups.push('economy');
+  if (['luck_mult', 'extra_reward_chance', 'first_discovery_bonus', 'jackpot_luck'].includes(type)) groups.push('luck');
+  if (type === 'companion_no_cooldown') groups.push('companions');
+  return groups.length ? groups : ['other'];
+}
+function companionEffectLabel(companion) {
+  const categories = companionEffectCategories(companion);
+  return COMPANION_EFFECT_CATEGORIES.find((category) => categories.includes(category.id))?.label || 'Autres effets';
+}
+function companionEffectSortRank(companion) {
+  const category = companionEffectLabel(companion);
+  const index = COMPANION_EFFECT_CATEGORIES.findIndex((item) => item.label === category);
+  return index < 0 ? COMPANION_EFFECT_CATEGORIES.length : index;
+}
 
 function renderGachaPane() {
   const pane = document.getElementById('gachaPane');
@@ -5696,10 +5737,17 @@ function renderGachaPane() {
         <button class="rarity-filter-btn ${currentRarityFilter === 'epique' ? 'active' : ''}" onclick="filterGachaRarity('epique')">Épiques</button>
         <button class="rarity-filter-btn ${currentRarityFilter === 'legendaire' ? 'active' : ''}" onclick="filterGachaRarity('legendaire')">Légendaires</button>
         <button class="rarity-filter-btn ${currentRarityFilter === 'mythique' ? 'active' : ''}" onclick="filterGachaRarity('mythique')">Mythiques</button>
+        <label class="companion-sort-control">Effet
+          <select id="companionEffectSelect" onchange="filterCompanionEffect(this.value)">
+            <option value="all" ${currentCompanionEffectFilter === 'all' ? 'selected' : ''}>Tous les effets</option>
+            ${COMPANION_EFFECT_CATEGORIES.map((category) => `<option value="${category.id}" ${currentCompanionEffectFilter === category.id ? 'selected' : ''}>${category.label}</option>`).join('')}
+          </select>
+        </label>
         <label class="companion-sort-control">Trier
           <select id="companionSortSelect" onchange="sortGachaCompanions(this.value)">
             <option value="rarity-asc" ${currentCompanionSort === 'rarity-asc' ? 'selected' : ''}>Rareté : commun → mythique</option>
             <option value="rarity-desc" ${currentCompanionSort === 'rarity-desc' ? 'selected' : ''}>Rareté : mythique → commun</option>
+            <option value="effect-asc" ${currentCompanionSort === 'effect-asc' ? 'selected' : ''}>Effets : regroupés</option>
             <option value="name-asc" ${currentCompanionSort === 'name-asc' ? 'selected' : ''}>Nom : A → Z</option>
             <option value="level-desc" ${currentCompanionSort === 'level-desc' ? 'selected' : ''}>Niveau : plus élevé d’abord</option>
           </select>
@@ -5712,9 +5760,11 @@ function renderGachaPane() {
   const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
   const filteredCompanions = COMPANIONS.filter(c =>
     (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
-    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter)
+    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter) &&
+    (currentCompanionEffectFilter === 'all' || companionEffectCategories(c).includes(currentCompanionEffectFilter))
   );
   filteredCompanions.sort((a, b) => {
+    if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
     if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
@@ -5772,6 +5822,7 @@ function renderGachaPane() {
               <div class="comp-card-rarity" style="color:${RARITIES[c.rarity].color};">${RARITIES[c.rarity].name} · Lvl ${lvl}</div>
             </div>
           </div>
+          <div class="comp-effect-tag">${companionEffectLabel(c)}</div>
           <div class="comp-card-power">⚡ ${companionEffectText(c, Math.round(companionVal(c.id)*100))}</div>
           <div class="comp-shards-bar">${atMaxLevel ? '🏆 Niveau maximum atteint · Éclats : ' + shards : '💎 Éclats : <b>' + shards + ' / ' + upgradeCost + '</b>'}</div>
           <div class="comp-card-actions ${maxSlots === 3 ? 'trio-actions' : ''}">
@@ -5857,8 +5908,12 @@ window.filterGachaRarity = function(r) {
   currentRarityFilter = r;
   renderGachaPane();
 };
+window.filterCompanionEffect = function(effect) {
+  currentCompanionEffectFilter = COMPANION_EFFECT_CATEGORIES.some((category) => category.id === effect) ? effect : 'all';
+  renderGachaPane();
+};
 window.sortGachaCompanions = function(sort) {
-  const validSorts = ['rarity-asc', 'rarity-desc', 'name-asc', 'level-desc'];
+  const validSorts = ['rarity-asc', 'rarity-desc', 'effect-asc', 'name-asc', 'level-desc'];
   currentCompanionSort = validSorts.includes(sort) ? sort : 'rarity-asc';
   renderGachaPane();
 };

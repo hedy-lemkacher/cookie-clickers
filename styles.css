@@ -1640,6 +1640,17 @@ input[type=color] { width: 46px; height: 34px; border: 1px solid var(--line); bo
   text-transform: uppercase;
   margin-top: 1px;
 }
+.comp-effect-tag {
+  align-self: flex-start;
+  margin: 1px 0 3px;
+  padding: 3px 7px;
+  border: 1px solid rgba(162, 155, 254, .3);
+  border-radius: 999px;
+  color: #c7c3ff;
+  background: rgba(108, 92, 231, .12);
+  font-size: 10px;
+  font-weight: 700;
+}
 .comp-card-power {
   font-size: 11px;
   color: #2ed573;
