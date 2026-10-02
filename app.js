@@ -184,7 +184,7 @@ const COMPANIONS = [
   // Légendaires (Amis avec photo OU thématiques)
   { id: 'c_blessure', name: 'La blessure d\'Adam', img: 'la_blessure_d_adam.png', isFriend: true, rarity: 'legendaire', powerType: 'double_edged', powerBase: 0.90, powerStep: 0.25, desc: 'Production +{val}%, mais clics -50%' },
   { id: 'c_lunettes', name: 'Les lunettes d\'Abdel', img: 'les_lunettes_d_abdel.png', isFriend: true, rarity: 'mythique', powerType: 'chrono_master', powerBase: 1, powerStep: 0.12, desc: 'Vitesse des mini-jeux et durée des frénésies +{val}%' },
-  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.25, powerStep: 0.05, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
+  { id: 'c_casquette', name: 'La casquette d\'Hedy', img: 'la_casquette_d_hedy.png', isFriend: true, rarity: 'mythique', powerType: 'discount', powerBase: 0.28, powerStep: 0.06, desc: 'Réduit le coût des bâtiments et améliorations de {val}%' },
   { id: 'c_maitre_casino', name: 'Maître du Casino', rarity: 'legendaire', powerType: 'casino_free', powerBase: 1, powerStep: 0, desc: 'Deux mises supplémentaires toutes les 15 minutes (trois avec Compagnons renforcés)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#e74c3c', edge: '#e74c3c', isCasinoMaster: true }, flavor: 'Deux essais de plus pour tenter votre chance.' },
   { id: 'c_chasseur_jackpot', name: 'Chasseur de Jackpot', rarity: 'legendaire', powerType: 'jackpot_luck', powerBase: 0.15, powerStep: 0.05, desc: 'Augmente vos chances de gagner à la roulette de {val} points (maximum 15)', style: { c: ['#ff6b6b', '#ee5a24', '#c0392b'], chip: '#f1c40f', edge: '#e74c3c', isJackpotHunter: true }, flavor: 'Il sent l\'or à des kilomètres.' },
   { id: 'c_phoenix', name: 'Cookie Phénix immortel', rarity: 'legendaire', powerType: 'cps_master', powerBase: 0.60, powerStep: 0.15, desc: 'Production globale +{val}% (Renaissance perpétuelle)', style: { c: ['#ff3838', '#ff793f', '#ffb142'], chip: '#ffffff', edge: '#cd201f', isPhoenix: true } },
@@ -339,6 +339,20 @@ const ACHIEVEMENTS = [
   { icon: '⚡', name: 'Chasseur de cadeaux',    desc: 'Réduire au maximum le délai des cadeaux mystères.',      test: () => countUps('mystery') >= 3 || (S.compData && S.compData.unlocked && S.compData.unlocked.includes('c_eclaireur_mystere')) },
   { icon: '🎁', name: 'Collection mystérieuse', desc: 'Accepter 10 cadeaux mystérieux.',                       test: () => S.mysteryAccepted >= 10 },
   { icon: '🎰', name: 'Maître de la Roulette', desc: 'Débloquer le Maître du Casino.',                    test: () => S.compData && S.compData.unlocked && S.compData.unlocked.includes('c_maitre_casino') },
+  // --- Défis de progression et de spécialité ---
+  { icon: '🪐', name: 'Dixième ascension', desc: 'Effectuer 10 ascensions au total.', test: () => (S.ascensions || 0) >= 10 },
+  { icon: '🛕', name: 'Temple éveillé', desc: 'Débloquer les trois défis célestes du Temple.', test: () => ['celestial_bowling', 'celestial_basketball', 'celestial_football'].every(id => S.temple && S.temple.includes(id)) },
+  { icon: '🏛️', name: 'Gardien des légendes', desc: 'Acheter toutes les améliorations du Temple des Légendes.', test: () => ['celestial_bowling', 'celestial_basketball', 'celestial_football', 'vision_absolue', 'comp_trio', 'keep_friend', 'esquive+', 'power+', 'frenzy+', 'click+', 'prod+', 'legend', 'universal', 'divine_clk', 'chrono', 'gold_luck', 'companions_boost'].every(id => S.temple && S.temple.includes(id)) },
+  { icon: '🎰', name: 'Équipe de la roulette', desc: 'Débloquer les quatre compagnons spécialisés dans le casino.', test: () => ['c_banquier_casino', 'c_joueur_casino', 'c_maitre_casino', 'c_chasseur_jackpot'].every(id => S.compData && S.compData.unlocked && S.compData.unlocked.includes(id)) },
+  { icon: '🎟️', name: 'Tirages en série', desc: 'Effectuer 100 tirages de compagnons au total.', test: () => S.compData && (S.compData.lifetimePulls || 0) >= 100 },
+  { icon: '🎟️', name: 'Collectionneur acharné', desc: 'Effectuer 500 tirages de compagnons au total.', test: () => S.compData && (S.compData.lifetimePulls || 0) >= 500 },
+  { icon: '🎟️', name: 'Roi des tirages', desc: 'Effectuer 1 000 tirages de compagnons au total.', test: () => S.compData && (S.compData.lifetimePulls || 0) >= 1000 },
+  { icon: '🎲', name: 'Le casino vous connaît', desc: 'Jouer 25 fois à la roulette.', test: () => S.casino && (S.casino.totalBets || 0) >= 25 },
+  { icon: '🃏', name: 'Accro du casino', desc: 'Jouer 100 fois à la roulette.', test: () => S.casino && (S.casino.totalBets || 0) >= 100 },
+  { icon: '💸', name: 'La maison tremble', desc: 'Jouer 500 fois à la roulette.', test: () => S.casino && (S.casino.totalBets || 0) >= 500 },
+  { icon: '🎡', name: 'Tour de chance', desc: 'Faire tourner la Roue de la Fortune 10 fois.', test: () => S.casino && (S.casino.wheelSpins || 0) >= 10 },
+  { icon: '🌠', name: 'La roue n’a plus de secrets', desc: 'Faire tourner la Roue de la Fortune 50 fois.', test: () => S.casino && (S.casino.wheelSpins || 0) >= 50 },
+  { icon: '🔥', name: 'Série gagnante', desc: 'Remporter 5 parties de roulette à la suite.', test: () => S.casino && (S.casino.bestWinStreak || 0) >= 5 },
 ];
 
 /* --- Personnalisation --- */
@@ -381,9 +395,9 @@ function freshState() {
     gamesPlayed: 0, games: {}, gameBest: {}, gameRecords: {}, perfect: 0, daily: 0, dailyCount: 0,
     mysterySeen: 0, mysteryAccepted: 0, mysteryRefused: 0, mysteryHistory: [],
     bestCombo: 1, bestClick: 0, chips: 0, ascensions: 0, milestone: -1, styled: false,
-    casino: { windowStart: 0, bets: 0, lastResult: null },
+    casino: { windowStart: 0, bets: 0, totalBets: 0, totalWins: 0, bestWinStreak: 0, wheelSpins: 0, lastResult: null },
     mysteryGift: { next: now + rand(600, 1200) * 1000, manualNext: 0, pending: false, effectId: '', clickUntil: 0, productionUntil: 0, buildingLockUntil: 0, gamesLockUntil: 0, cooldownUntil: 0 },
-    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
+    compData: { unlocked: [], equipped: [], shards: {}, levels: {}, pulls: 0, lifetimePulls: 0, pityTracker: 0, slotCooldowns: {}, slotCooldownBypassTouched: [], firstDiscoveryGames: [], favorites: [] },
     cheat: false, booMode: false, hdyMode: false,
     temple: [], // perm upgrades bought in Temple des Légendes
     custom: Object.assign({}, DEFAULT_CUSTOM),
@@ -860,6 +874,7 @@ function renderCasinoPane() {
       if (!canSpin) return;
       btn.disabled = true;
       S.casino.wheelNext = S.hdyMode ? 0 : Date.now() + 30 * 60 * 1000;
+      S.casino.wheelSpins = (S.casino.wheelSpins || 0) + 1;
       save();
       
       
@@ -943,6 +958,8 @@ function renderCasinoPane() {
           amount: gainVal > 0 ? gainVal : -lossVal,
           detail: gainVal > 0 ? 'La roue vous récompense.' : lossVal > 0 ? 'La roue vous fait perdre des cookies.' : 'Effet spécial activé.'
         });
+        checkAchievements();
+        save();
         
         setTimeout(() => renderCasinoPane(), 3000);
       }
@@ -965,6 +982,7 @@ function spinCasino() {
   const button = $('#casinoSpin'), wheel = $('#rouletteWheel');
   button.disabled = true;
   S.cookies -= stake;
+  S.casino.totalBets = (S.casino.totalBets || 0) + 1;
   if (!casinoUnlimited()) S.casino.bets++;
   let number = Math.floor(Math.random() * 10);
   let color = casinoColor(number);
@@ -986,8 +1004,12 @@ function spinCasino() {
     if (won) {
       if (!S.casino.combo) S.casino.combo = 0;
       S.casino.combo++;
+      S.casino.totalWins = (S.casino.totalWins || 0) + 1;
+      S.casino.currentWinStreak = (S.casino.currentWinStreak || 0) + 1;
+      S.casino.bestWinStreak = Math.max(S.casino.bestWinStreak || 0, S.casino.currentWinStreak);
     } else {
       S.casino.combo = 0;
+      S.casino.currentWinStreak = 0;
     }
     // Combo multiplier: scales with combo count AND bet size
     let comboMult = 1;
@@ -997,6 +1019,7 @@ function spinCasino() {
     }
     S.casino.lastResult = { number, color, won, payout, stake, comboMult, comboCount: S.casino.combo };
     casinoSelectedBet = null;
+    checkAchievements();
     save();
     renderCasinoPane();
     showCasinoOutcome({
@@ -3265,6 +3288,15 @@ function performAscension(g, keptCompId = null) {
 
   ['bakedAll', 'ach', 'custom', 'evSeen', 'evTotal', 'evViewed', 'gamesPlayed', 'games', 'gameBest', 'gameRecords', 'perfect', 'daily', 'dailyCount', 'mysterySeen', 'mysteryAccepted', 'mysteryRefused',
    'golden', 'frenzies', 'bestCombo', 'bestClick', 'clicks', 'handmade', 'playTime', 'styled', 'temple', 'chips'].forEach((k) => { keep[k] = S[k]; });
+  keep.compData.lifetimePulls = S.compData && S.compData.lifetimePulls || 0;
+  keep.casino = {
+    windowStart: 0, bets: 0, lastResult: null,
+    totalBets: S.casino && S.casino.totalBets || 0,
+    totalWins: S.casino && S.casino.totalWins || 0,
+    bestWinStreak: S.casino && S.casino.bestWinStreak || 0,
+    wheelSpins: S.casino && S.casino.wheelSpins || 0,
+    wheelNext: 0
+  };
   keep.ascensions = S.ascensions + 1;
   keep.chips = (keep.chips || 0) + g;
   S = Object.assign(freshState(), keep);
@@ -4877,7 +4909,9 @@ function companionVal(cId) {
   const lvl = Math.min(13, S.compData && S.compData.levels ? (S.compData.levels[cId] || 1) : 1);
   const templeBoost = S.temple && S.temple.includes('companions_boost') ? 1.5 : 1;
   const rarityBoost = { commun: 0.63, peu_commun: 0.63, rare: 0.63, epique: 0.65, legendaire: 0.69, mythique: 0.72 }[c.rarity] || 0.63;
-  return (c.powerBase + (lvl - 1) * c.powerStep) * rarityBoost * templeBoost;
+  const sameEffectCount = COMPANIONS.filter((entry) => entry.powerType === c.powerType).length;
+  const duplicateEffectBalance = sameEffectCount > 1 ? 0.9 : 1;
+  return (c.powerBase + (lvl - 1) * c.powerStep) * rarityBoost * templeBoost * duplicateEffectBalance;
 }
 
 function compHas(powerType) {
@@ -4931,20 +4965,6 @@ function renderCompanions() {
   const maxSlots = maxCompanionSlots();
   while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
   if (S.compData.equipped.length > maxSlots) S.compData.equipped = S.compData.equipped.slice(0, maxSlots);
-
-  const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
-  const filteredCompanions = COMPANIONS.filter(c =>
-    (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
-    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter) &&
-    (currentCompanionEffectFilter === 'all' || companionEffectCategories(c).includes(currentCompanionEffectFilter))
-  );
-  filteredCompanions.sort((a, b) => {
-    if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
-    return rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
-  });
 
   let html = '';
   
@@ -5335,6 +5355,7 @@ function spinGacha(count = 1) {
   
   function rollOneCompanion() {
     S.compData.pulls = (S.compData.pulls || 0) + 1;
+    S.compData.lifetimePulls = (S.compData.lifetimePulls || 0) + 1;
     S.compData.pityTracker = (S.compData.pityTracker || 0) + 1;
     
     let rVal = Math.random() * 100;
@@ -5624,6 +5645,19 @@ function renderGachaPane() {
   
   const pityLeft = Math.max(0, 20 - (S.compData.pityTracker || 0));
   const maxSlots = maxCompanionSlots();
+  const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
+  const filteredCompanions = COMPANIONS.filter(c =>
+    (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
+    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter) &&
+    (currentCompanionEffectFilter === 'all' || companionEffectCategories(c).includes(currentCompanionEffectFilter))
+  );
+  filteredCompanions.sort((a, b) => {
+    if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    return rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
+  });
   
   let html = `
     <div class="gacha-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
