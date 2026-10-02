@@ -188,13 +188,13 @@ const COMPANIONS = [
   { id: 'c_titan', name: 'Cookie Titan Colossal', rarity: 'legendaire', powerType: 'click_master', powerBase: 0.80, powerStep: 0.20, desc: 'Puissance des clics +{val}% (Impact écrasant)', style: { c: ['#2d3436', '#636e72', '#b2bec3'], chip: '#d63031', edge: '#e17055', isTitan: true } },
 
   // Mythiques (Amis avec photo OU Singularité)
-  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'mythique', powerType: 'luck_mult', powerBase: 0.75, powerStep: 0.25, desc: '{val}% de chances de doubler n\'importe quel gain' },
+  { id: 'c_panipuri', name: 'Le panipuri de Vikash', img: 'le_panipuri_de_vikash.png', isFriend: true, rarity: 'mythique', powerType: 'mystery_activate', powerBase: 1, powerStep: 0, desc: 'Invoque un cadeau mystérieux immédiatement, une fois toutes les 10 minutes', flavor: 'Une surprise épicée, au bon moment.' },
   { id: 'c_crane', name: 'Le crâne d\'Ayoub', img: 'le_crane_d_ayoub.png', isFriend: true, rarity: 'mythique', powerType: 'cps_master', powerBase: 2.50, powerStep: 0.60, desc: 'Production globale +{val}% (Singularité gravitationnelle)' },
   { id: 'c_fifa', name: 'Adam sur FIFA', img: 'adam_sur_fifa.png', isFriend: true, rarity: 'mythique', powerType: 'companion_no_cooldown', powerBase: 0, powerStep: 0, desc: 'Changements de compagnons sans délai tant qu’il est équipé', flavor: 'Le mercato ne ferme jamais.' },
   { id: 'c_jolagreen', name: 'Chris sous Jolagreen', img: 'chris_sous_jolagreen.png', isFriend: true, rarity: 'mythique', powerType: 'minigame_god', powerBase: 1.50, powerStep: 0.50, desc: 'Gains de tous les mini-jeux +{val}%' },
   { id: 'c_visionnaire', name: 'Ayoub au tableau', img: 'ayoub_au_tableau.png', isFriend: true, rarity: 'mythique', powerType: 'mystery_vision', powerBase: 1, powerStep: 0, desc: 'Révèle le contenu du cadeau mystérieux avant votre choix', flavor: 'Au tableau, Ayoub a déjà deviné la surprise.' },
   { id: 'c_blackhole', name: 'Cookie Trou Noir Infini', rarity: 'mythique', powerType: 'cps_brain', powerBase: 1.20, powerStep: 0.50, desc: 'Production globale +{val}% (Esprit éclairé)', style: { c: ['#0f0c29', '#302b63', '#24243e'], chip: '#ff007f', edge: '#ff4757', isBlackHole: true } },
-  { id: 'c_invocateur', name: 'Le Conjurateur de cadeaux', rarity: 'mythique', powerType: 'mystery_activate', powerBase: 1, powerStep: 0, desc: 'Invoque un cadeau mystérieux immédiatement, une fois toutes les 10 minutes', flavor: 'Il sait toujours où trouver une surprise.', style: { c: ['#36166d', '#713cc3', '#e3b7ff'], chip: '#f8e71c', edge: '#bd8cff', isMysterySummoner: true } }
+  { id: 'c_invocateur', name: 'Le Conjurateur de cadeaux', rarity: 'mythique', powerType: 'luck_mult', powerBase: 0.75, powerStep: 0.25, desc: '{val}% de chances de doubler n\'importe quel gain', flavor: 'Il sait toujours où trouver une bonne étoile.', style: { c: ['#36166d', '#713cc3', '#e3b7ff'], chip: '#f8e71c', edge: '#bd8cff', isLucky: true } }
 ];
 
 const COMPANION_SLOT_COOLDOWN_MS = 30 * 60 * 1000;
@@ -4883,7 +4883,8 @@ function companionVal(cId) {
   if (!c) return 0;
   const lvl = Math.min(13, S.compData && S.compData.levels ? (S.compData.levels[cId] || 1) : 1);
   const templeBoost = S.temple && S.temple.includes('companions_boost') ? 1.5 : 1;
-  return (c.powerBase + (lvl - 1) * c.powerStep) * 0.6 * templeBoost;
+  const rarityBoost = { commun: 0.63, peu_commun: 0.63, rare: 0.63, epique: 0.65, legendaire: 0.69, mythique: 0.72 }[c.rarity] || 0.63;
+  return (c.powerBase + (lvl - 1) * c.powerStep) * rarityBoost * templeBoost;
 }
 
 function compHas(powerType) {
@@ -5181,7 +5182,7 @@ function isGachaFrenzyActive() {
 
 function gachaCost(count = 1) {
   const pulls = count === 10 ? 10 : 1;
-  const costPerPull = Math.max(25e9, baseCps() * 120);
+  const costPerPull = Math.max(25e9, baseCps() * 135);
   const discount = pulls === 10 ? 0.88 : 1;
   return Math.ceil(costPerPull * pulls * discount);
 }
