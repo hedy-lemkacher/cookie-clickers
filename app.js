@@ -4932,6 +4932,20 @@ function renderCompanions() {
   while (S.compData.equipped.length < maxSlots) S.compData.equipped.push(null);
   if (S.compData.equipped.length > maxSlots) S.compData.equipped = S.compData.equipped.slice(0, maxSlots);
 
+  const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
+  const filteredCompanions = COMPANIONS.filter(c =>
+    (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
+    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter) &&
+    (currentCompanionEffectFilter === 'all' || companionEffectCategories(c).includes(currentCompanionEffectFilter))
+  );
+  filteredCompanions.sort((a, b) => {
+    if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
+    if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    return rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
+  });
+
   let html = '';
   
   for (let slotIdx = 0; slotIdx < maxSlots; slotIdx++) {
@@ -5733,7 +5747,7 @@ function renderGachaPane() {
     <div class="collection-section-header">
       <div class="collection-heading">
         <h3>Collection de compagnons</h3>
-        <span>${unlockedCount} / ${COMPANIONS.length} débloqués</span>
+        <span>${filteredCompanions.length} compagnon${filteredCompanions.length === 1 ? '' : 's'} affiché${filteredCompanions.length === 1 ? '' : 's'} · ${unlockedCount} / ${COMPANIONS.length} débloqués</span>
       </div>
       <div class="companion-tools">
         <div class="companion-view-switch" role="group" aria-label="Collection ou favoris">
@@ -5773,20 +5787,6 @@ function renderGachaPane() {
     </div>
     <div class="companion-grid">
   `;
-  
-  const rarityOrder = { commun: 0, peu_commun: 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
-  const filteredCompanions = COMPANIONS.filter(c =>
-    (currentCompanionView !== 'favorites' || (S.compData.unlocked.includes(c.id) && S.compData.favorites.includes(c.id))) &&
-    (currentRarityFilter === 'all' || c.rarity === currentRarityFilter) &&
-    (currentCompanionEffectFilter === 'all' || companionEffectCategories(c).includes(currentCompanionEffectFilter))
-  );
-  filteredCompanions.sort((a, b) => {
-    if (currentCompanionSort === 'effect-asc') return companionEffectSortRank(a) - companionEffectSortRank(b) || rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'rarity-desc') return rarityOrder[b.rarity] - rarityOrder[a.rarity] || a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'name-asc') return a.name.localeCompare(b.name, 'fr');
-    if (currentCompanionSort === 'level-desc') return (S.compData.levels[b.id] || 1) - (S.compData.levels[a.id] || 1) || rarityOrder[b.rarity] - rarityOrder[a.rarity];
-    return rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name, 'fr');
-  });
   
   for (let c of filteredCompanions) {
     const unl = S.compData.unlocked.includes(c.id);
@@ -5890,9 +5890,12 @@ function renderGachaPane() {
       }
     }
   }
-  
-  if (currentCompanionView === 'favorites' && filteredCompanions.length === 0) {
-    html += '<div class="empty" style="grid-column:1/-1;padding:30px;">Aucun favori pour le moment. Ajoutez-en avec l’étoile affichée sur une carte de compagnon.</div>';
+
+  if (filteredCompanions.length === 0) {
+    const emptyMessage = currentCompanionView === 'favorites'
+      ? 'Aucun favori ne correspond à ces filtres. Ajoutez des favoris ou choisissez « Toutes les raretés » et « Tous les effets ». '
+      : 'Aucun compagnon ne correspond à ces filtres. Choisissez « Toutes les raretés » et « Tous les effets ». ';
+    html += `<div class="empty companion-filter-empty" style="grid-column:1/-1;padding:30px;">${emptyMessage}</div>`;
   }
   html += `</div>`;
   pane.innerHTML = html;
@@ -5921,18 +5924,33 @@ window.toggleCompanionFavorite = function(id) {
   renderGachaPane();
 };
 
-window.filterGachaRarity = function(r) {
-  currentRarityFilter = r;
+function refreshCompanionCollectionAfterFilter(controlId) {
+  const pageScroll = window.scrollY;
+  const pane = document.getElementById('gachaPane');
+  const paneScroll = pane ? pane.scrollTop : 0;
   renderGachaPane();
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: pageScroll, behavior: 'instant' });
+    const refreshedPane = document.getElementById('gachaPane');
+    if (refreshedPane) refreshedPane.scrollTop = paneScroll;
+    const control = document.getElementById(controlId);
+    if (control) control.focus({ preventScroll: true });
+  });
+}
+
+window.filterGachaRarity = function(r) {
+  const validRarities = ['all', ...Object.keys(RARITIES)];
+  currentRarityFilter = validRarities.includes(r) ? r : 'all';
+  refreshCompanionCollectionAfterFilter('companionRaritySelect');
 };
 window.filterCompanionEffect = function(effect) {
   currentCompanionEffectFilter = COMPANION_EFFECT_CATEGORIES.some((category) => category.id === effect) ? effect : 'all';
-  renderGachaPane();
+  refreshCompanionCollectionAfterFilter('companionEffectSelect');
 };
 window.sortGachaCompanions = function(sort) {
   const validSorts = ['rarity-asc', 'rarity-desc', 'effect-asc', 'name-asc', 'level-desc'];
   currentCompanionSort = validSorts.includes(sort) ? sort : 'rarity-asc';
-  renderGachaPane();
+  refreshCompanionCollectionAfterFilter('companionSortSelect');
 };
 
 window.showGachaInfo = function() {
